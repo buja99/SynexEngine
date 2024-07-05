@@ -25,6 +25,7 @@
 #include <sstream>
 #include "ResourceObject.h"
 #include "Input.h"
+#include "WinApp.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -33,7 +34,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 
 
 Math* math = new Math();
@@ -465,24 +466,24 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 }
 
 //window procedure
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
-	WPARAM wparam, LPARAM lparam) {
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
-
-	//メッセージに応じてゲーム固有の処理を行う
-	switch (msg) {
-		//ウィンドウが破棄された
-	case WM_DESTROY:
-		//osに対して、アプリの終了を伝える
-		PostQuitMessage(0);
-		return 0;
-	}
-	//標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-
-}
+//LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
+//	WPARAM wparam, LPARAM lparam) {
+//	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+//		return true;
+//	}
+//
+//	//メッセージに応じてゲーム固有の処理を行う
+//	switch (msg) {
+//		//ウィンドウが破棄された
+//	case WM_DESTROY:
+//		//osに対して、アプリの終了を伝える
+//		PostQuitMessage(0);
+//		return 0;
+//	}
+//	//標準のメッセージ処理を行う
+//	return DefWindowProc(hwnd, msg, wparam, lparam);
+//
+//}
 
 
 
@@ -493,55 +494,59 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChecker leakCheck;
 	
 	//COMの初期化
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	
 
 	Input* input = nullptr;
 
+	WinApp* winApp = nullptr;
 
-	WNDCLASS wc{};
-	//Window Procedure
-	wc.lpfnWndProc = WindowProc;
-	//Window Class Name(何でもいい)
-	wc.lpszClassName = L"CG2WindowClass";
-	//Instance Handle
-	wc.hInstance = GetModuleHandle(nullptr);
-	//Cursor
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	//ウィンドウクラスを登録する
-	RegisterClass(&wc);
+	winApp = new WinApp();
+	winApp->Initialize();
+	HRESULT hr = winApp->GetHRESULT();
+	//WNDCLASS wc{};
+	////Window Procedure
+	//wc.lpfnWndProc = WindowProc;
+	////Window Class Name(何でもいい)
+	//wc.lpszClassName = L"CG2WindowClass";
+	////Instance Handle
+	//wc.hInstance = GetModuleHandle(nullptr);
+	////Cursor
+	//wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	////ウィンドウクラスを登録する
+	//RegisterClass(&wc);
 
-	
+	//
 
-	//size
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
+	////size
+	//const int32_t kClientWidth = 1280;
+	//const int32_t kClientHeight = 720;
 
-	RECT wrc = { 0,0,kClientWidth,kClientHeight };
+	//RECT wrc = { 0,0,kClientWidth,kClientHeight };
 
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-
-
+	//AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
 
-	HWND hwnd = CreateWindow(
 
-		//利用するクラス名
-		wc.lpszClassName,
-		//タイトルバーの文字列
-		L"CG2",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wrc.right - wrc.left,
-		wrc.bottom - wrc.top,
-		nullptr,
-		nullptr,
-		wc.hInstance,
-		nullptr);
+	//HWND hwnd
+	//HWND hwnd = CreateWindow(
+
+	//	//利用するクラス名
+	//	wc.lpszClassName,
+	//	//タイトルバーの文字列
+	//	L"CG2",
+	//	WS_OVERLAPPEDWINDOW,
+	//	CW_USEDEFAULT,
+	//	CW_USEDEFAULT,
+	//	wrc.right - wrc.left,
+	//	wrc.bottom - wrc.top,
+	//	nullptr,
+	//	nullptr,
+	//	wc.hInstance,
+	//	nullptr);
 	  
 
 	input = new Input();
-	input->Initialize(wc.hInstance, hwnd);
+	input->Initialize(winApp);
 
 	input->Update();
 
@@ -556,7 +561,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 #endif // _DEBUG
 
-	ShowWindow(hwnd, SW_SHOW);
+	//ShowWindow(hwnd, SW_SHOW);
 
 
 
@@ -565,7 +570,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// DXGIFactoryの生成
 	ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
 
-	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	//SUCCEEDEDマクロで判定
 	assert(SUCCEEDED(hr));
 
@@ -671,8 +676,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SwapChain生成
 	ComPtr<IDXGISwapChain4> swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = kClientWidth;
-	swapChainDesc.Height = kClientHeight;
+	swapChainDesc.Width = WinApp::kClientWidth;
+	swapChainDesc.Height = WinApp::kClientHeight;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -680,7 +685,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	hr = dxgiFactory->CreateSwapChainForHwnd(
 		commandQueue.Get(), 
-		hwnd, 
+		winApp->GetHwnd(),
 		&swapChainDesc, 
 		nullptr, 
 		nullptr, 
@@ -907,7 +912,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 
-	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
+	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 	ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 	
 	//DSV設定
@@ -946,8 +951,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Viewport
 	D3D12_VIEWPORT viewport{};
 
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHeight;
+	viewport.Width = WinApp::kClientWidth;
+	viewport.Height = WinApp::kClientHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -957,9 +962,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_RECT scissorRect{};
 
 	scissorRect.left = 0;
-	scissorRect.right = kClientWidth;
+	scissorRect.right = WinApp::kClientWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kClientHeight;
+	scissorRect.bottom = WinApp::kClientHeight;
 
 	bool useMonsterBall = false;
 
@@ -1043,7 +1048,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplWin32_Init(winApp->GetHwnd());
 	ImGui_ImplDX12_Init(device.Get(),
 		swapChainDesc.BufferCount,
 		rtvDesc.Format,
@@ -1052,9 +1057,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 
-	MSG msg{};
 
-	while (msg.message != WM_QUIT) {
+	while (true) {
 
 		ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
@@ -1070,10 +1074,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat2("UvScale" ,&uvTransformSprite.scale.x, 0.0f, -10.0f, 10.0f);
 		ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 		ImGui::Render();
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		} else {
+		if (winApp->ProcessMessage()) {
+
+			break;
+		} 
 
 			directionalLightData->direction = normalize(directionalLightData->direction);
 
@@ -1095,7 +1099,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldMatrix = math->MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = math->MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = math->Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = math->MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 projectionMatrix = math->MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrix = math->Multiply(worldMatrix, math->Multiply(viewMatrix, projectionMatrix));
 			transformationMatrix->WVP = worldViewProjectionMatrix;
 			transformationMatrix->World = worldViewProjectionMatrix;
@@ -1107,7 +1111,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Matrix4x4 worldMatrixSprite = math->MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = math->MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = math->MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+			Matrix4x4 projectionMatrixSprite = math->MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth), float(WinApp::kClientHeight), 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite = math->Multiply(worldMatrixSprite, math->Multiply(viewMatrixSprite, projectionMatrixSprite));
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 			transformationMatrixDataSprite->World = worldViewProjectionMatrixSprite;
@@ -1200,7 +1204,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-		}
+		
 	}
 
 	ImGui_ImplDX12_Shutdown();
@@ -1217,10 +1221,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		debugController->Release();
 	}
 #endif
-	CloseWindow(hwnd);
+	//CloseWindow(hwnd);
 
 	//_CrtDumpMemoryLeaks();
-	CoUninitialize();
+	//CoUninitialize();
+
+	winApp->Finalize();
+
 	return 0;
 
 }
