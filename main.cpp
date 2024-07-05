@@ -538,9 +538,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr,
 		wc.hInstance,
 		nullptr);
+	  
 
 	input = new Input();
 	input->Initialize(wc.hInstance, hwnd);
+
+	input->Update();
+
 
 #ifdef _DEBUG
 	ID3D12Debug1* debugController = nullptr;
