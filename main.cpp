@@ -24,6 +24,7 @@
 #include <fstream>
 #include <sstream>
 #include "ResourceObject.h"
+#include "Input.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -494,6 +495,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//COMの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
+	Input* input = nullptr;
+
+
 	WNDCLASS wc{};
 	//Window Procedure
 	wc.lpfnWndProc = WindowProc;
@@ -505,6 +509,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	//ウィンドウクラスを登録する
 	RegisterClass(&wc);
+
+	
 
 	//size
 	const int32_t kClientWidth = 1280;
@@ -532,6 +538,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr,
 		wc.hInstance,
 		nullptr);
+
+	input = new Input();
+	input->Initialize(wc.hInstance, hwnd);
 
 #ifdef _DEBUG
 	ID3D12Debug1* debugController = nullptr;
