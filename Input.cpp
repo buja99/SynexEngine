@@ -31,14 +31,6 @@ void Input::Initialize(WinApp* winApp)
 	assert(SUCCEEDED(result));
 
 
-
-	
-
-
-
-
-
-
 }
 
 void Input::Update()
