@@ -38,6 +38,9 @@ void DirectXCommon::Device()
 {
 	HRESULT hr;
 
+	hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+	assert(SUCCEEDED(hr));
+
 	ComPtr<IDXGIAdapter4> useAdapter = nullptr;
 
 	D3D_FEATURE_LEVEL featureLevels[] = {
@@ -223,7 +226,6 @@ void DirectXCommon::InitializeRTV()
 
 void DirectXCommon::InitializeDSV()
 {
-	HRESULT hr;
 	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
 	dsvHeapDesc.NumDescriptors = 1;
