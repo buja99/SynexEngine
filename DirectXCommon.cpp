@@ -38,10 +38,38 @@ void DirectXCommon::Device()
 {
 	HRESULT hr;
 
+#ifdef _DEBUG
+	ID3D12Debug1* debugController = nullptr;
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+		
+		debugController->EnableDebugLayer();
+		
+		debugController->SetEnableGPUBasedValidation(TRUE);
+	}
+#endif // _DEBUG
+
 	hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
 	assert(SUCCEEDED(hr));
 
 	ComPtr<IDXGIAdapter4> useAdapter = nullptr;
+
+	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i,
+		DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) !=
+		DXGI_ERROR_NOT_FOUND; ++i) {
+		//Adapterの情報を取得する
+		DXGI_ADAPTER_DESC3 adapterDesc{};
+		hr = useAdapter->GetDesc3(&adapterDesc);
+		assert(SUCCEEDED(hr));
+		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+			//wstringでAdapterの情報Logで出力
+			Log(ConvertString(std::format(L"Use Adapter:{}\n", adapterDesc.Description)));
+			break;
+
+		}
+		useAdapter = nullptr;
+	}
+
+	assert(useAdapter != nullptr);
 
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_12_2, D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0
@@ -63,30 +91,55 @@ void DirectXCommon::Device()
 	assert(device != nullptr);
 	Log("Complete create D3D12Device!!!\n");
 
+
+
+#ifdef _DEBUG
+
+	ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
+	if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+		//ヤバイエラー
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+		//エラー
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		//警告
+		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+		//抑制するメッセージのID
+		D3D12_MESSAGE_ID denyIds[] = {
+		D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+		};
+
+		//抑制するレベル
+		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+		D3D12_INFO_QUEUE_FILTER filter{};
+		filter.DenyList.NumIDs = _countof(denyIds);
+		filter.DenyList.pIDList = denyIds;
+		filter.DenyList.NumSeverities = _countof(severities);
+		filter.DenyList.pSeverityList = severities;
+		//指定したメッセージの表示を抑制する
+		infoQueue->PushStorageFilter(&filter);
+	}
+#endif // _DEBUG
+
+
+
 }
 
 void DirectXCommon::Command()
 {
 	HRESULT hr;
-	//コマンドアロケータを生成
-	
-	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 
+
+	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	assert(SUCCEEDED(hr));
 
-	//コマンドリストを生成
-	
+
 	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr,
 		IID_PPV_ARGS(&commandList));
-
 	assert(SUCCEEDED(hr));
 
-	//コマンドキューを生成
-	
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	hr = device->CreateCommandQueue(&commandQueueDesc,
 		IID_PPV_ARGS(&commandQueue));
-
 	assert(SUCCEEDED(hr));
 }
 
@@ -94,7 +147,7 @@ void DirectXCommon::SwapChain()
 {
 	HRESULT hr;
 	
-	
+	//DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = WinApp::kClientWidth;
 	swapChainDesc.Height = WinApp::kClientHeight;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -117,15 +170,14 @@ void DirectXCommon::SwapChain()
 
 void DirectXCommon::CreateDepthBuffer()
 {
-	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+	depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-	//device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	
-
+	device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void DirectXCommon::CreateDescriptorHeaps()
@@ -137,11 +189,11 @@ void DirectXCommon::CreateDescriptorHeaps()
 	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 	srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-
-
 }
 
-ResourceObject DirectXCommon::CreateDepthStencilTextureResource(ComPtr<ID3D12Device> device, int32_t width, int32_t height)
+
+
+ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(ComPtr<ID3D12Device> device, int32_t width, int32_t height)
 {
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = width;
@@ -168,7 +220,10 @@ ResourceObject DirectXCommon::CreateDepthStencilTextureResource(ComPtr<ID3D12Dev
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&depthClearValue,
 		IID_PPV_ARGS(&resource));
-	assert(SUCCEEDED(hr));
+	if (FAILED(hr)) {
+		OutputDebugStringA("Failed to create resource\n");
+		return nullptr;
+	}
 	return resource;
 }
 
@@ -188,68 +243,62 @@ void DirectXCommon::InitializeRTV()
 {
 	HRESULT hr;
 
-
-	//SwapChainからResource
-	ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
-	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
-	assert(SUCCEEDED(hr));
-	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
-	assert(SUCCEEDED(hr));
-
-	//RTV
-	
-	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
-	rtvHandles[0] = rtvStartHandle;
-	device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
-	rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
-
-
-	//for (UINT i = 0; i < 2; ++i) {
-	//	
+	//for (uint32_t i = 0; i < _countof(swapChainBuffers); ++i) {
 	//	hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainBuffers[i]));
-	//	assert(SUCCEEDED(hr));
-	//
-	//	device->CreateRenderTargetView(swapChainBuffers[i].Get(), nullptr, rtvHandle);
-	//
-	//	rtvHandles[i] = rtvHandle;
-	//
-	//	rtvHandle.ptr += rtvDescriptorSize;
+	//	if (FAILED(hr)) {
+	//		OutputDebugStringA("Failed to get buffer from swap chain\n");
+	//		return;
+	//	}
+	//	swapChainResources[i] = swapChainBuffers[i]; 
 	//}
-
-
-
+	////D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+	//rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	//rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	//D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	//for (uint32_t i = 0; i < _countof(swapChainBuffers); ++i) {
+	//	rtvHandles[i] = rtvStartHandle;
+	//	device->CreateRenderTargetView(swapChainBuffers[i].Get(), &rtvDesc, rtvHandles[i]);
+	//	rtvStartHandle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	//}
+	for (int i = 0; i < 2; ++i) {
+		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainResources[i]));
+		assert(SUCCEEDED(hr));
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		rtvHandle.ptr += i * device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		device->CreateRenderTargetView(swapChainResources[i].Get(), nullptr, rtvHandle);
+		rtvHandles[i] = rtvHandle;
+	}
 }
 
 void DirectXCommon::InitializeDSV()
 {
-	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+	depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+
+
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
 	dsvHeapDesc.NumDescriptors = 1;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
 	HRESULT hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvDescriptorHeap));
 	assert(SUCCEEDED(hr));
+
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
+	device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
+
 
 void DirectXCommon::InitializeFence()
 {
 	HRESULT hr;
-	ComPtr<ID3D12Fence> fence = nullptr;
-	uint64_t fenceValue = 0;
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
-	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
 }
 
@@ -276,16 +325,16 @@ void DirectXCommon::InitializeScissor()
 void DirectXCommon::InitializeDXCCompiler()
 {
 	HRESULT hr;
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
+	
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 	assert(SUCCEEDED(hr));
+
 	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 	assert(SUCCEEDED(hr));
 
-	IDxcIncludeHandler* includeHandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
+
 }
 
 void DirectXCommon::InitializeImGui()
@@ -302,6 +351,95 @@ void DirectXCommon::InitializeImGui()
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
+}
+
+void DirectXCommon::PreDraw()
+{
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	if (swapChainResources[backBufferIndex] == nullptr) {
+		OutputDebugStringA("Error: swapChainResources[backBufferIndex] is NULL in PreDraw.\n");
+		return;
+	}
+
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	if (barrier.Transition.pResource == nullptr) {
+		OutputDebugStringA("Error: pResource is NULL in PreDraw.\n");
+		return;
+	}
+
+	commandList->ResourceBarrier(1, &barrier);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	if (dsvHandle.ptr == 0) {
+		OutputDebugStringA("Error: dsvHandle is invalid in PreDraw.\n");
+		return;
+	}
+
+	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+	float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+}
+
+void DirectXCommon::PostDraw()
+{
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	if (swapChainResources[backBufferIndex] == nullptr) {
+		OutputDebugStringA("Error: swapChainResources[backBufferIndex] is NULL in PostDraw.\n");
+		return;
+	}
+
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	HRESULT hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+
+	ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+	hr = swapChain->Present(1, 0);
+	assert(SUCCEEDED(hr));
+
+	fenceVal = fenceValue; 
+	fenceValue++;
+	hr = commandQueue->Signal(fence.Get(), fenceValue);
+	assert(SUCCEEDED(hr));
+
+	if (fence->GetCompletedValue() < fenceValue)
+	{
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		assert(SUCCEEDED(hr));
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) const

@@ -388,48 +388,38 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
 
 
-
-
-
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	D3DResourceLeakChecker leakCheck;
 	
 	//COMの初期化
-	
+	//CoInitialize(NULL);
 
-	Input* input = nullptr;
+	WinApp* winApp = new WinApp();
+	DirectXCommon* dxCommon = new DirectXCommon();
+	Input* input = new Input();
 
-	WinApp* winApp = nullptr;
-
-	DirectXCommon* dxCommon = nullptr;
-
-	winApp = new WinApp();
 	winApp->Initialize();
-
-	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp);
-
-	HRESULT hr = winApp->GetHRESULT();
-	
-	  
-
-	input = new Input();
 	input->Initialize(winApp);
 
-	input->Update();
+
+	//HRESULT hr = winApp->GetHRESULT();
+	//assert(SUCCEEDED(hr));
 
 
-#ifdef _DEBUG
-	ID3D12Debug1* debugController = nullptr;
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
-		//Debug Layer有効化
-		debugController->EnableDebugLayer();
-		//GPU側でもcheakできるように
-		debugController->SetEnableGPUBasedValidation(TRUE);
-	}
-#endif // _DEBUG
+
+	
+
+
+
+//#ifdef _DEBUG
+//	ID3D12Debug1* debugController = nullptr;
+//	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+//		debugController->EnableDebugLayer();
+//		debugController->SetEnableGPUBasedValidation(TRUE);
+//	}
+//#endif // _DEBUG
 
 	//ShowWindow(hwnd, SW_SHOW);
 
@@ -467,7 +457,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 
 	//ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
 	//if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
@@ -492,7 +482,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//	//指定したメッセージの表示を抑制する
 	//	infoQueue->PushStorageFilter(&filter);
 	//}
-#endif // _DEBUG
+//#endif // _DEBUG
 
 
 
@@ -801,7 +791,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			break;
 		} 
-
+		input->Update();
+		dxCommon->PreDraw();
+		dxCommon->PostDraw();
 			//directionalLightData->direction = normalize(directionalLightData->direction);
 			//
 			//UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -939,11 +931,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete math;
 
 
-#ifdef _DEBUG
-	if (debugController != nullptr) {
-		debugController->Release();
-	}
-#endif
+//#ifdef _DEBUG
+//	if (debugController != nullptr) {
+//		debugController->Release();
+//	}
+//#endif
 	//CloseWindow(hwnd);
 
 	//_CrtDumpMemoryLeaks();
@@ -951,6 +943,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	winApp->Finalize();
 
+	CoUninitialize();
 	return 0;
 
 }
