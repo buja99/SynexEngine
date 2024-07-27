@@ -14,8 +14,18 @@
 using namespace Logger;
 using namespace StringUtility;
 
+DirectXCommon::~DirectXCommon()
+{
+	//delete winApp;
+}
+
 void DirectXCommon::Initialize(WinApp* winApp)
 {
+
+	if (this == nullptr) {
+		OutputDebugStringA("DirectXCommon::Initialize: this pointer is null\n");
+		return;
+	}
 	assert(winApp);
 
 	this->winApp = winApp;
@@ -30,6 +40,7 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissor();
+	InitializeDXCCompiler();
 	InitializeImGui();
 
 }
@@ -243,23 +254,6 @@ void DirectXCommon::InitializeRTV()
 {
 	HRESULT hr;
 
-	//for (uint32_t i = 0; i < _countof(swapChainBuffers); ++i) {
-	//	hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainBuffers[i]));
-	//	if (FAILED(hr)) {
-	//		OutputDebugStringA("Failed to get buffer from swap chain\n");
-	//		return;
-	//	}
-	//	swapChainResources[i] = swapChainBuffers[i]; 
-	//}
-	////D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-	//rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	//rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	//D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//for (uint32_t i = 0; i < _countof(swapChainBuffers); ++i) {
-	//	rtvHandles[i] = rtvStartHandle;
-	//	device->CreateRenderTargetView(swapChainBuffers[i].Get(), &rtvDesc, rtvHandles[i]);
-	//	rtvStartHandle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	//}
 	for (int i = 0; i < 2; ++i) {
 		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainResources[i]));
 		assert(SUCCEEDED(hr));
@@ -450,6 +444,169 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t in
 D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) const
 {
 	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+}
+
+ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile)
+{
+	// hlsl
+	Log(ConvertString(std::format(L"Begin CompileShader, path: {}, profile: {}\n", filePath, profile)));
+
+	ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
+	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	assert(SUCCEEDED(hr));
+
+	DxcBuffer shaderSourceBuffer;
+	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+	shaderSourceBuffer.Encoding = DXC_CP_UTF8;
+
+	// Compile
+	LPCWSTR arguments[] = {
+		filePath.c_str(),    // Compiler対象のhlalファイル名
+		L"-E", L"main",
+		L"-T", profile,      // ShaderProfileの設定
+		L"-Zi", L"-Qembed_debug",
+		L"-Od",
+		L"-Zpr"
+	};
+
+	// Shader Compile
+	ComPtr<IDxcResult> shaderResult = nullptr;
+	hr = dxcCompiler->Compile(
+		&shaderSourceBuffer,         // 読み込んだfile
+		arguments,                   // Compile option
+		_countof(arguments),         // Compile optionの数
+		includeHandler,              // includeが含まれた諸々
+		IID_PPV_ARGS(&shaderResult)  // Compile結果
+	);
+	assert(SUCCEEDED(hr));
+
+	// 警告・エラー
+	ComPtr<IDxcBlobUtf8> shaderError = nullptr;
+	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
+		Log(shaderError->GetStringPointer());
+		assert(false);
+	}
+
+	// Shader Blob
+	ComPtr<IDxcBlob> shaderBlob = nullptr;
+	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+	assert(SUCCEEDED(hr));
+	Log(ConvertString(std::format(L"Compile Succeeded, path: {}, profile: {}\n", filePath, profile)));
+
+	return shaderBlob;
+
+
+}
+
+ResourceObject DirectXCommon::CreateBufferResource(ComPtr<ID3D12Device> device, size_t sizeInBytes)
+{
+	//頂点Heap
+	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	//頂点Resource
+	D3D12_RESOURCE_DESC vertexResourceDesc{};
+	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexResourceDesc.Width = sizeInBytes;
+
+	vertexResourceDesc.Height = 1;
+	vertexResourceDesc.DepthOrArraySize = 1;
+	vertexResourceDesc.MipLevels = 1;
+	vertexResourceDesc.SampleDesc.Count = 1;
+
+	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	ID3D12Resource* vertexResource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+		IID_PPV_ARGS(&vertexResource));
+	assert(SUCCEEDED(hr));
+
+	return vertexResource;
+}
+
+ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata)
+{
+	// metadataを基にResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = UINT(metadata.width);
+	resourceDesc.Height = UINT(metadata.height);
+	resourceDesc.MipLevels = UINT16(metadata.mipLevels);
+	resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize);
+	resourceDesc.Format = metadata.format;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);
+	// Heap設定
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+	// Resource生成
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&resource));
+	assert(SUCCEEDED(hr));
+	return resource;
+}
+
+ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)
+{
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	//全MipMap
+	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel)
+	{
+		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
+
+		HRESULT hr = texture.Get()->WriteToSubresource(
+			UINT(mipLevel),
+			nullptr,
+			img->pixels,
+			UINT(img->rowPitch),
+			UINT(img->slicePitch)
+		);
+		assert(SUCCEEDED(hr));
+	}
+	return texture;
+}
+
+DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
+{
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = ConvertString(filePath);
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	
+	assert(SUCCEEDED(hr));
+
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+
+	return mipImages;
+}
+
+void DirectXCommon::Cleanup()
+{
+	
+	
+	if (depthStencilBuffer) {
+		depthStencilBuffer->Release();
+		depthStencilBuffer = nullptr;
+	}
+	//if (device) {
+	//	device->Release();
+	//	device = nullptr;
+	//}
+	
+	delete winApp;
+	
+	
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
