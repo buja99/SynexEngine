@@ -7,6 +7,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 void WinApp::Initialize()
 {
 
+	if (this == nullptr) {
+		OutputDebugStringA("WinApp::Initialize: this pointer is null\n");
+		return;
+	}
+
 	hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 	//WNDCLASS wc{};
@@ -53,7 +58,10 @@ void WinApp::Initialize()
 
 void WinApp::Finalize()
 {
-
+	if (this == nullptr) {
+		OutputDebugStringA("WinApp::Finalize: this pointer is null\n");
+		return;
+	}
 	CloseWindow(hwnd);
 	CoUninitialize();
 

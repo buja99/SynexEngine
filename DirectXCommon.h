@@ -7,6 +7,8 @@
 #include "WinApp.h"
 #include "ResourceObject.h"
 #include <dxcapi.h>
+#include "externals/DirectXTex/DirectXTex.h"
+#include <string>
 
 using Microsoft::WRL::ComPtr;
 
@@ -14,6 +16,7 @@ class DirectXCommon
 {
 
 public:
+	~DirectXCommon();
 
 	void Initialize(WinApp* winApp);
 
@@ -45,6 +48,18 @@ public:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
+
+	ComPtr<IDxcBlob> CompileShader(
+		const std::wstring& filePath,
+		const wchar_t* profile);
+	ResourceObject CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
+	ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	[[nodiscard]] ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
+
+
+	void Cleanup();
 
 private:
 
