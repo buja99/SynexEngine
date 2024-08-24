@@ -32,7 +32,7 @@ public:
 
 	ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ComPtr <ID3D12Device> device, int32_t width, int32_t height);
 	ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(
-		ComPtr <ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+	ComPtr <ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 
 	void InitializeRTV();
@@ -42,6 +42,7 @@ public:
 	void InitializeScissor();
 	void InitializeDXCCompiler();
 	void InitializeImGui();
+	void InitializePSO();
 
 	void PreDraw();
 	void PostDraw();
@@ -49,17 +50,34 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
 
-	ComPtr<IDxcBlob> CompileShader(
+	IDxcBlob* CompileShader(
+
 		const std::wstring& filePath,
-		const wchar_t* profile);
-	ResourceObject CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
-	ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+
+		const wchar_t* profile,
+
+		IDxcUtils* dxcUtils,
+		IDxcCompiler3* dxcCompiler,
+		IDxcIncludeHandler* includeHandler);
+	
+	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
+	ComPtr<ID3D12Resource> CreateTextureResource(ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata);
 	[[nodiscard]] ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
-
-
+	ComPtr<ID3D12Device> GetDevice() const { return device; }
+	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
 	void Cleanup();
+	ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() const { return graphicsPipelineState; }
+
+	void UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+	
+	ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
+
+	uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
+
+	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
+	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
 private:
 
@@ -100,10 +118,13 @@ private:
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
 
-	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
-	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
+	
+
 
 	WinApp* winApp = nullptr;
-
+	ComPtr<ID3D12RootSignature> rootSignature;
+	ComPtr<ID3D12PipelineState> graphicsPipelineState;
+	
+	
 };
 
