@@ -7,7 +7,7 @@
 #include<cassert>
 #include<dxgidebug.h>
 #include <dxcapi.h>
-#include"Math.h"
+//#include"Math.h"
 #include "Vector2.h"
 #include <cmath>
 #include"Matrix3x3.h"
@@ -29,7 +29,7 @@
 #include "DirectXCommon.h"
 #include "Logger.h"
 #include "StringUtility.h"
-
+#include "GameScene.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -42,59 +42,59 @@ using namespace Logger;
 using namespace StringUtility;
 
 
-Math* math = new Math();
+//Math* math = new Math();
+//
+//struct Vector4 final {
+//	float x;
+//	float y;
+//	float z;
+//	float w;
+//};
+//
+//struct Transform
+//{
+//	Vector3 scale;
+//	Vector3 rotate;
+//	Vector3 translate;
+//
+//};
+//
+//struct  VertexData
+//{
+//	Vector4 position;
+//	Vector2 texCoord;
+//	Vector3 normal;
+//};
+//
+//struct  Material
+//{
+//	Vector4 color;
+//	int32_t enableLighting;
+//	float padding[3];
+//	Matrix4x4 uvTransform;
+//};
+//
+//struct TransformationMatrix
+//{
+//	Matrix4x4 WVP;
+//	Matrix4x4 World;
+//};
 
-struct Vector4 final {
-	float x;
-	float y;
-	float z;
-	float w;
-};
-
-struct Transform
-{
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-
-};
-
-struct  VertexData
-{
-	Vector4 position;
-	Vector2 texCoord;
-	Vector3 normal;
-};
-
-struct  Material
-{
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
-
-struct TransformationMatrix
-{
-	Matrix4x4 WVP;
-	Matrix4x4 World;
-};
-
-struct DirectionalLight
-{
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-struct MaterialData
-{
-	std::string textureFilePath;
-};
-struct ModelData
-{
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
+//struct DirectionalLight
+//{
+//	Vector4 color;
+//	Vector3 direction;
+//	float intensity;
+//};
+//struct MaterialData
+//{
+//	std::string textureFilePath;
+//};
+//struct ModelData
+//{
+//	std::vector<VertexData> vertices;
+//	MaterialData material;
+//};
 
 struct D3DResourceLeakChecker {
 	~D3DResourceLeakChecker() {
@@ -108,15 +108,15 @@ struct D3DResourceLeakChecker {
 	}
 };
 
-Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
-
-Transform uvTransformSprite
-{
-	{1.0f,1.0f,1.0f},
-	{0.0f,0.0f,0.0f},
-	{0.0f,0.0f,0.0f}
-};
+//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+//Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
+//
+//Transform uvTransformSprite
+//{
+//	{1.0f,1.0f,1.0f},
+//	{0.0f,0.0f,0.0f},
+//	{0.0f,0.0f,0.0f}
+//};
 
 
 
@@ -131,15 +131,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//COMの初期化
 	//CoInitialize(NULL);
 
+	CoInitializeEx(0, COINIT_MULTITHREADED);
+
 	WinApp* winApp = new WinApp();
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
+	GameScene* gameScene = new GameScene();
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
 	input->Initialize(winApp);
-
-
+	gameScene->Initialize(dxCommon);
 	
 
 
@@ -147,10 +149,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	OutputDebugStringA("Hello,DirectX!\n");
 
 	
-
+	//dxCommon->InitializePSO();
 	
-ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
-ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
+//ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
+//ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
 
 
 	while (true) {
@@ -160,8 +162,13 @@ ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"resources/shaders/O
 
 			break;
 		} 
-		//input->Update();
+		input->Update();
+
+		gameScene->Update();
+
 		dxCommon->PreDraw();
+		dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
+		gameScene->Draw();
 		dxCommon->PostDraw();
 			
 
@@ -174,12 +181,13 @@ ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"resources/shaders/O
 	ImGui::DestroyContext();
 
 	//CloseHandle(fenceEvent);
+	delete gameScene;
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
 	winApp->Finalize();
 	delete input;
 	//delete winApp; 
-	delete math;
+	//delete myMath;
 
 	CoUninitialize();
 	return 0;

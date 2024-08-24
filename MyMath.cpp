@@ -1,6 +1,6 @@
-#include "Math.h"
+#include "MyMath.h"
 
-Matrix4x4 Math::MakeScaleMatrix(const Vector3& scale)
+Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale)
 {
 		Matrix4x4 result;
 
@@ -14,7 +14,7 @@ Matrix4x4 Math::MakeScaleMatrix(const Vector3& scale)
 		return result;
 }
 
-Matrix4x4 Math::MakeTranslateMatrix(const Vector3& translate)
+Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate)
 {
 		Matrix4x4 result;
 
@@ -28,7 +28,7 @@ Matrix4x4 Math::MakeTranslateMatrix(const Vector3& translate)
 		return result;
 }
 
-Matrix4x4 Math::Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
+Matrix4x4 MyMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
 {
 	Matrix4x4 result;
 
@@ -43,7 +43,7 @@ Matrix4x4 Math::Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
 	return result;
 }
 
-Matrix4x4 Math::MakeRotateXMatrix(float radian)
+Matrix4x4 MyMath::MakeRotateXMatrix(float radian)
 {
 	Matrix4x4 result;
 
@@ -55,7 +55,7 @@ Matrix4x4 Math::MakeRotateXMatrix(float radian)
 	return result;
 }
 
-Matrix4x4 Math::MakeRotateYMatrix(float radian)
+Matrix4x4 MyMath::MakeRotateYMatrix(float radian)
 {
 	Matrix4x4 result;
 
@@ -67,7 +67,7 @@ Matrix4x4 Math::MakeRotateYMatrix(float radian)
 	return result;
 }
 
-Matrix4x4 Math::MakeRotateZMatrix(float radian)
+Matrix4x4 MyMath::MakeRotateZMatrix(float radian)
 {
 	Matrix4x4 result;
 
@@ -80,7 +80,7 @@ Matrix4x4 Math::MakeRotateZMatrix(float radian)
 
 }
 
-Matrix4x4 Math::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
+Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
 {
 	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
 	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
@@ -97,7 +97,7 @@ Matrix4x4 Math::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, co
 	return result;
 }
 
-Matrix4x4 Math::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
+Matrix4x4 MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
 {
 	Matrix4x4 result;
 
@@ -111,7 +111,7 @@ Matrix4x4 Math::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float ne
 	return result;
 }
 
-Matrix4x4 Math::MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
+Matrix4x4 MyMath::MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
 {
 	Matrix4x4 result;
 	result = {
@@ -123,7 +123,7 @@ Matrix4x4 Math::MakeOrthographicMatrix(float left, float top, float right, float
 	return result;
 }
 
-Matrix4x4 Math::MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth)
+Matrix4x4 MyMath::MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth)
 {
 	Matrix4x4 result;
 
@@ -138,7 +138,7 @@ Matrix4x4 Math::MakeViewportMatrix(float left, float top, float width, float hei
 	return result;
 }
 
-Vector3 Math::Transform(const Vector3& vector, const Matrix4x4& matrix)
+Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix)
 {
 	Vector3 result;
 	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
@@ -154,7 +154,7 @@ Vector3 Math::Transform(const Vector3& vector, const Matrix4x4& matrix)
 	return result;
 }
 
-Matrix4x4 Math::Inverse(const Matrix4x4& m)
+Matrix4x4 MyMath::Inverse(const Matrix4x4& m)
 {
 	Matrix4x4 result;
 	float A;
@@ -205,7 +205,7 @@ Matrix4x4 Math::Inverse(const Matrix4x4& m)
 	return result;
 }
 
-Matrix4x4 Math::MakeIdentity4x4()
+Matrix4x4 MyMath::MakeIdentity4x4()
 {
 	Matrix4x4 result;
 
