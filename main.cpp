@@ -181,6 +181,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::DestroyContext();
 
 	//CloseHandle(fenceEvent);
+	gameScene->Cleanup();
 	delete gameScene;
 	dxCommon->Cleanup(); 
 	delete dxCommon; 

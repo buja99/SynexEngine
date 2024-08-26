@@ -7,6 +7,7 @@
 #include<Windows.h>
 #include <wrl.h>
 
+
 using Microsoft::WRL::ComPtr;
 
 
@@ -66,13 +67,13 @@ class GameScene
 {
 
 public:
-	GameScene() = default;
+	//GameScene() = default;
 	//~GameScene() = default;
 
 	void Initialize(DirectXCommon* dxCommon);
 	void Update();
 	void Draw();
-
+	void Cleanup();
 
 
 

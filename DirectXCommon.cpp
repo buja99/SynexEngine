@@ -269,7 +269,7 @@ void DirectXCommon::InitializeRTV()
 
 void DirectXCommon::InitializeDSV()
 {
-	depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+	//depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
@@ -756,6 +756,8 @@ void DirectXCommon::Cleanup()
 		depthStencilBuffer->Release();
 		depthStencilBuffer = nullptr;
 	}
+	
+
 	//if (device) {
 	//	device->Release();
 	//	device = nullptr;
