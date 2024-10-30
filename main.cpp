@@ -7,7 +7,6 @@
 #include<cassert>
 #include<dxgidebug.h>
 #include <dxcapi.h>
-//#include"Math.h"
 #include "Vector2.h"
 #include <cmath>
 #include"Matrix3x3.h"
@@ -29,7 +28,9 @@
 #include "DirectXCommon.h"
 #include "Logger.h"
 #include "StringUtility.h"
-#include "GameScene.h"
+#include"Sprite.h"
+#include "SpriteCommon.h"
+#include "TextureManager.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -42,59 +43,6 @@ using namespace Logger;
 using namespace StringUtility;
 
 
-//Math* math = new Math();
-//
-//struct Vector4 final {
-//	float x;
-//	float y;
-//	float z;
-//	float w;
-//};
-//
-//struct Transform
-//{
-//	Vector3 scale;
-//	Vector3 rotate;
-//	Vector3 translate;
-//
-//};
-//
-//struct  VertexData
-//{
-//	Vector4 position;
-//	Vector2 texCoord;
-//	Vector3 normal;
-//};
-//
-//struct  Material
-//{
-//	Vector4 color;
-//	int32_t enableLighting;
-//	float padding[3];
-//	Matrix4x4 uvTransform;
-//};
-//
-//struct TransformationMatrix
-//{
-//	Matrix4x4 WVP;
-//	Matrix4x4 World;
-//};
-
-//struct DirectionalLight
-//{
-//	Vector4 color;
-//	Vector3 direction;
-//	float intensity;
-//};
-//struct MaterialData
-//{
-//	std::string textureFilePath;
-//};
-//struct ModelData
-//{
-//	std::vector<VertexData> vertices;
-//	MaterialData material;
-//};
 
 struct D3DResourceLeakChecker {
 	~D3DResourceLeakChecker() {
@@ -107,18 +55,6 @@ struct D3DResourceLeakChecker {
 		}
 	}
 };
-
-//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-//Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
-//
-//Transform uvTransformSprite
-//{
-//	{1.0f,1.0f,1.0f},
-//	{0.0f,0.0f,0.0f},
-//	{0.0f,0.0f,0.0f}
-//};
-
-
 
 
 
@@ -136,15 +72,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	WinApp* winApp = new WinApp();
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
-	GameScene* gameScene = new GameScene();
+	//GameScene* gameScene = new GameScene();
+	SpriteCommon* spriteCommon = nullptr;
+	//Sprite* sprite = new Sprite();
+	spriteCommon = new SpriteCommon;
+	
+	
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
+	TextureManager::GetInstance()->Initialize(dxCommon);
 	input->Initialize(winApp);
-	gameScene->Initialize(dxCommon);
-	
+	//gameScene->Initialize(dxCommon);
+	spriteCommon->Initialize(dxCommon);
+	//sprite->Initialize(spriteCommon);
 
+	std::vector<Sprite*> sprites;
+	for (uint32_t i = 0; i < 5; ++i) {
+		Sprite* sprite = new Sprite();
+		sprite->Initialize(spriteCommon);
 
+		Vector2 position;
+		position.x = 120.0f * i; 
+		position.y = 0.0f;
+
+		sprite->SetPosition(position); 
+		sprites.push_back(sprite);
+	}
 
 	OutputDebugStringA("Hello,DirectX!\n");
 
@@ -164,16 +118,52 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		} 
 		input->Update();
 
-		gameScene->Update();
+		//gameScene->Update();
+
+		//Vector2 position = sprite->GetPosition();
+		//position.x += 1.0f;
+		//position.y += 1.0f;
+		//sprite->SetPosition(position);   
+		//
+		//float rotation = sprite->GetRotation();
+		//rotation += 0.1f;
+		//sprite->SetRotation(rotation);
+
+		//Vector4 color = sprite->GetColor();
+		//color.x += 0.01f;
+		//if (color.x > 1.0f) {
+		//	color.x -= 1.0f;
+		//}
+		//sprite->SetColor(color);
+		//
+		//Vector2 size = sprite->GetSize();
+		//size.x += 1.0f;
+		//size.y += 1.0f;
+		//sprite->SetSize(size);
+
+		//sprite->Update();
+
+
+		for (auto& sprite : sprites) {
+			sprite->Update();
+		}
 
 		dxCommon->PreDraw();
 		dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
-		gameScene->Draw();
+
+		spriteCommon->CommonDrawSettings();
+		
+		for (auto& sprite : sprites) {
+			sprite->Draw();
+		}
+
+		//sprite->Draw();
+
+
+
+		//gameScene->Draw();
 		dxCommon->PostDraw();
 			
-
-
-		
 	}
 
 	ImGui_ImplDX12_Shutdown();
@@ -181,8 +171,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::DestroyContext();
 
 	//CloseHandle(fenceEvent);
-	gameScene->Cleanup();
-	delete gameScene;
+	//sprite->Cleanup();
+	//delete sprite;
+	for (auto& sprite : sprites) {
+		sprite->Cleanup();
+		delete sprite;
+	}
+	sprites.clear();
+	delete spriteCommon;
+	//gameScene->Cleanup();
+	//delete gameScene;
+	TextureManager::GetInstance()->Finalize();
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
 	winApp->Finalize();

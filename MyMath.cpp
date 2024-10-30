@@ -138,7 +138,7 @@ Matrix4x4 MyMath::MakeViewportMatrix(float left, float top, float width, float h
 	return result;
 }
 
-Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix)
+Vector3 MyMath::Transforms(const Vector3& vector, const Matrix4x4& matrix)
 {
 	Vector3 result;
 	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];

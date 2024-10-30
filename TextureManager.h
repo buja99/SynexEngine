@@ -1,0 +1,59 @@
+#pragma once
+#include <string>
+#include <wrl.h>
+#include "externals/DirectXTex/DirectXTex.h"
+#include <d3d12.h>
+#include "DirectXCommon.h"
+
+using Microsoft::WRL::ComPtr;
+
+class TextureManager
+{
+public:
+
+	static TextureManager* GetInstance();
+
+	void Initialize(DirectXCommon* dxCommon);
+
+	void LoadTexture(const std::string& filePath);
+
+	void Finalize();
+
+	ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
+
+	uint32_t GetTextureIndexByFilepath(const std::string& filePath);
+
+
+private:
+
+	static TextureManager* instance;
+
+	TextureManager() = default;
+	~TextureManager() = default;
+	TextureManager(TextureManager&) = delete;
+	TextureManager& operator=(TextureManager&) = delete;
+
+	static uint32_t kSRVIndexTop;
+
+	
+
+	DirectXCommon* dxCommon_ = nullptr;
+
+
+private:
+
+	struct TextureData {
+		std::string filePath;
+		DirectX::TexMetadata metadata;
+		ComPtr<ID3D12Resource> resource;
+		D3D12_CPU_DESCRIPTOR_HANDLE srvHandleCPU;
+		D3D12_GPU_DESCRIPTOR_HANDLE srvHandleGPU;
+	};
+
+	std::vector<TextureData> textureDatas;
+
+};
+

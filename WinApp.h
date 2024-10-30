@@ -2,8 +2,13 @@
 #include <cstdint>
 #include<Windows.h>
 
+
+#pragma comment(lib, "winmm.lib")
+
 class WinApp {
 public:
+	WinApp();
+	~WinApp();
 
 	//size
 	static const int32_t kClientWidth = 1280;
@@ -26,6 +31,10 @@ public:
 
 private:
    
+	
+	
+	
+
 	
 
 	HWND hwnd = nullptr;
