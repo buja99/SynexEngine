@@ -9,6 +9,7 @@
 #include <dxcapi.h>
 #include "externals/DirectXTex/DirectXTex.h"
 #include <string>
+#include "FPSLimiter.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -66,6 +67,7 @@ public:
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 	ComPtr<ID3D12Device> GetDevice() const { return device; }
+	//ComPtr <ID3D12DescriptorHeap> GetDescriptorHeap() const { return descriptorHeap; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
 	void Cleanup();
 	ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() const { return graphicsPipelineState; }
@@ -78,6 +80,8 @@ public:
 
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+	static const uint32_t kMaxSRVCount;
 
 private:
 
@@ -111,20 +115,22 @@ private:
 	HANDLE fenceEvent;
 	UINT64 fenceVal = 0;
 
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
-	IDxcIncludeHandler* includeHandler = nullptr;
+	//IDxcUtils* dxcUtils = nullptr;
+	//IDxcCompiler3* dxcCompiler = nullptr;
+	//IDxcIncludeHandler* includeHandler = nullptr;
 
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
 
 	
-
+	
 
 	WinApp* winApp = nullptr;
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> graphicsPipelineState;
 	
 	
+	FPSLimiter* fpsLimiter = nullptr;
+
 };
 

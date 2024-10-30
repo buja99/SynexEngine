@@ -14,6 +14,9 @@
 using namespace Logger;
 using namespace StringUtility;
 
+
+const uint32_t DirectXCommon::kMaxSRVCount = 512;
+
 DirectXCommon::~DirectXCommon()
 {
 	//delete winApp;
@@ -30,6 +33,10 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
 	this->winApp = winApp;
 
+	fpsLimiter = new FPSLimiter();
+	fpsLimiter->InitializeFixFPS();
+
+
 	Device();
 	Command();
 	SwapChain();
@@ -40,7 +47,7 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissor();
-	InitializeDXCCompiler();
+	//InitializeDXCCompiler();
 	InitializePSO();
 	InitializeImGui();
 
@@ -201,7 +208,7 @@ void DirectXCommon::CreateDescriptorHeaps()
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 }
 
@@ -321,16 +328,16 @@ void DirectXCommon::InitializeScissor()
 
 void DirectXCommon::InitializeDXCCompiler()
 {
-	HRESULT hr;
+	//HRESULT hr;
 	
-	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-	assert(SUCCEEDED(hr));
-
-	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-	assert(SUCCEEDED(hr));
-
-	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
-	assert(SUCCEEDED(hr));
+	//hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	//assert(SUCCEEDED(hr));
+	//
+	//hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	//assert(SUCCEEDED(hr));
+	//
+	//hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	//assert(SUCCEEDED(hr));
 
 }
 
@@ -354,15 +361,6 @@ void DirectXCommon::InitializePSO()
 {
 	HRESULT hr;
 
-	//Shader Compile
-	ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"resources/shaders/Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
-	assert(vertexShaderBlob != nullptr);
-
-	ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"resources/shaders/Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
-	assert(pixelShaderBlob != nullptr);
-
 	//DXC Compiler 初期化
 	IDxcUtils* dxcUtils = nullptr;
 	IDxcCompiler3* dxcCompiler = nullptr;
@@ -374,6 +372,15 @@ void DirectXCommon::InitializePSO()
 	IDxcIncludeHandler* includeHandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
+
+	//Shader Compile
+	ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"resources/shaders/Object3D.VS.hlsl",
+		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+	assert(vertexShaderBlob != nullptr);
+
+	ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"resources/shaders/Object3D.PS.hlsl",
+		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+	assert(pixelShaderBlob != nullptr);
 
 	//DescriptorRange
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
@@ -534,7 +541,7 @@ void DirectXCommon::PreDraw()
 
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-	float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	float clearColor[] = { 0.2f, 0.2f, 0.4f, 1.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
@@ -568,6 +575,8 @@ void DirectXCommon::PostDraw()
 
 	HRESULT hr = commandList->Close();
 	assert(SUCCEEDED(hr));
+
+	fpsLimiter->UpdateFixFPS();
 
 	ID3D12CommandList* commandLists[] = { commandList.Get() };
 	commandQueue->ExecuteCommandLists(1, commandLists);
@@ -766,7 +775,7 @@ void DirectXCommon::Cleanup()
 	//	debugController->Release();
 	//}
 	delete winApp;
-	
+	delete fpsLimiter;
 	
 }
 

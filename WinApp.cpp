@@ -4,6 +4,17 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+WinApp::WinApp()
+{
+}
+
+WinApp::~WinApp()
+{
+
+	
+
+}
+
 void WinApp::Initialize()
 {
 
@@ -54,6 +65,10 @@ void WinApp::Initialize()
 		nullptr);
 
 	ShowWindow(hwnd, SW_SHOW);
+
+
+	timeBeginPeriod(1);
+	
 }
 
 void WinApp::Finalize()
