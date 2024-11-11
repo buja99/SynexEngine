@@ -4,6 +4,7 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
 #include "DirectXCommon.h"
+#include <map>
 
 using Microsoft::WRL::ComPtr;
 
@@ -18,6 +19,10 @@ public:
 	void LoadTexture(const std::string& filePath);
 
 	void Finalize();
+
+	uint32_t LoadTextureByPath(const std::string& textureFilePath);
+	uint32_t GetOrLoadTextureIndex(const std::string& textureFilePath);
+	void ChangeTexture(uint32_t textureIndex, const std::string& newTextureFilePath);
 
 	ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
@@ -38,10 +43,14 @@ private:
 
 	static uint32_t kSRVIndexTop;
 
-	
+	std::map<std::string, uint32_t> textureIndexMap;
+
 
 	DirectXCommon* dxCommon_ = nullptr;
-
+	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
+	uint32_t descriptorSize_ = 0;
+	std::map<std::string, uint32_t> textureIndexMap;
+	
 
 private:
 

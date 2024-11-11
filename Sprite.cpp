@@ -1,11 +1,12 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 
+
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	this->spriteCommon = spriteCommon;
 
-	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
+	
 
 	mipImages = spriteCommon->LoadTexture("resources/uvChecker.png");
 	metadata = mipImages.GetMetadata();
@@ -107,6 +108,9 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 
 	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
+
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
+
 }
 
 void Sprite::Update()
@@ -149,6 +153,14 @@ void Sprite::Update()
 
 }
 
+
+void Sprite::ChangeTexture(std::string textureFilePath)
+{
+
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
+
+}
+
 void Sprite::Draw()
 {
 
@@ -161,7 +173,7 @@ void Sprite::Draw()
 	spriteCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
 	spriteCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite.Get()->GetGPUVirtualAddress());
 	spriteCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite.Get()->GetGPUVirtualAddress());
-	spriteCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+	spriteCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 	//commandList->DrawInstanced(6, 1, 0, 0);
 	spriteCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
@@ -212,5 +224,7 @@ void Sprite::Cleanup()
 	myMath = nullptr;
 
 }
+
+
 
 
