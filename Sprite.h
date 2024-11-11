@@ -9,6 +9,7 @@
 #include "Material.h"
 #include "VertexData.h"
 #include "DirectionalLight.h"
+#include "TextureManager.h"
 
 class SpriteCommon;
 
@@ -23,8 +24,10 @@ public:
 	void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
 
 	void Update();
+	void ChangeTexture(std::string textureFilePath);
 	void Draw();
 	void Cleanup();
+
 
 
 	//position getter
