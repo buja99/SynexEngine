@@ -276,7 +276,7 @@ void DirectXCommon::InitializeRTV()
 
 void DirectXCommon::InitializeDSV()
 {
-	//depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+	depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
@@ -574,6 +574,9 @@ void DirectXCommon::PostDraw()
 	commandList->ResourceBarrier(1, &barrier);
 
 	HRESULT hr = commandList->Close();
+	if (FAILED(hr)) {
+		OutputDebugStringA("Failed to close command list.\n");
+	}
 	assert(SUCCEEDED(hr));
 
 	fpsLimiter->UpdateFixFPS();
@@ -585,8 +588,11 @@ void DirectXCommon::PostDraw()
 	assert(SUCCEEDED(hr));
 
 	fenceVal = fenceValue; 
-	fenceValue++;
 	hr = commandQueue->Signal(fence.Get(), fenceValue);
+	if (FAILED(hr)) {
+		OutputDebugStringA("Fence signal failed.\n");
+	}
+	fenceValue++;
 	assert(SUCCEEDED(hr));
 
 	if (fence->GetCompletedValue() < fenceValue)

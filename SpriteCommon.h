@@ -17,7 +17,7 @@ public:
 
 	void CommonDrawSettings();
 
-	void CreateDescriptorHeaps();
+	//void CreateDescriptorHeaps();
 
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
@@ -32,15 +32,15 @@ public:
 		IDxcIncludeHandler* includeHandler);
 
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
+	//D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
+	//D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
 
 
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 	ComPtr<ID3D12Resource> CreateTextureResource(ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata);
 	void UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 	ComPtr<ID3D12Device> GetDevice() const { return device; }
-	ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
+	//ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
 
 
 	ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(
@@ -49,7 +49,7 @@ public:
 
 	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
 	ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() const { return graphicsPipelineState; }
-	uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
+	//uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
@@ -68,12 +68,12 @@ private:
 	DirectXCommon* dxCommon_ = nullptr;
 	
 	ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
-	ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
+	/*ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 	uint32_t descriptorSizeSRV;
 	uint32_t descriptorSizeRTV;
-	uint32_t descriptorSizeDSV;
+	uint32_t descriptorSizeDSV;*/
 
 };
 

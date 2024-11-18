@@ -11,7 +11,7 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 
 	device = dxCommon_->GetDevice();
 	commandList = dxCommon_->GetCommandList();
-	CreateDescriptorHeaps();
+	//CreateDescriptorHeaps();
 	CreateGraphicsPipeline();
 }
 
@@ -28,20 +28,21 @@ void SpriteCommon::CommonDrawSettings()
 	
 }
 
-void SpriteCommon::CreateDescriptorHeaps()
-{
-
-	descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-
-
-
-}
+//void SpriteCommon::CreateDescriptorHeaps()
+//{
+//
+//	//descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//	descriptorSizeSRV = dxCommon_->GetDescriptorSizeSRV();
+//	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+//	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+//
+//	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+//	srvDescriptorHeap = dxCommon_->GetSrvDescriptorHeap();
+//	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+//
+//
+//
+//}
 
 IDxcBlob* SpriteCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
 {
@@ -94,15 +95,15 @@ IDxcBlob* SpriteCommon::CompileShader(const std::wstring& filePath, const wchar_
 	return shaderBlob;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SpriteCommon::GetSRVCPUDescriptorHandle(uint32_t index) const
-{
-	return GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-}
-
-D3D12_GPU_DESCRIPTOR_HANDLE SpriteCommon::GetSRVGPUDescriptorHandle(uint32_t index) const
-{
-	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-}
+//D3D12_CPU_DESCRIPTOR_HANDLE SpriteCommon::GetSRVCPUDescriptorHandle(uint32_t index) const
+//{
+//	return GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+//}
+//
+//D3D12_GPU_DESCRIPTOR_HANDLE SpriteCommon::GetSRVGPUDescriptorHandle(uint32_t index) const
+//{
+//	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+//}
 
 DirectX::ScratchImage SpriteCommon::LoadTexture(const std::string& filePath)
 {
