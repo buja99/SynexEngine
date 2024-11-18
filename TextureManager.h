@@ -20,9 +20,11 @@ public:
 
 	void Finalize();
 
-	uint32_t LoadTextureByPath(const std::string& textureFilePath);
-	uint32_t GetOrLoadTextureIndex(const std::string& textureFilePath);
-	void ChangeTexture(uint32_t textureIndex, const std::string& newTextureFilePath);
+	const DirectX::ScratchImage& GetTextureImage(uint32_t textureIndex) const;
+
+	//uint32_t LoadTextureByPath(const std::string& textureFilePath);
+	//uint32_t GetOrLoadTextureIndex(const std::string& textureFilePath);
+	//void ChangeTexture(uint32_t textureIndex, const std::string& newTextureFilePath);
 
 	ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
@@ -49,17 +51,22 @@ private:
 	DirectXCommon* dxCommon_ = nullptr;
 	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
 	uint32_t descriptorSize_ = 0;
-	std::map<std::string, uint32_t> textureIndexMap;
+	
 	
 
 private:
 
 	struct TextureData {
+
+		//TextureData(const TextureData&) = delete; 
+		//TextureData& operator=(const TextureData&) = delete; 
+
 		std::string filePath;
 		DirectX::TexMetadata metadata;
 		ComPtr<ID3D12Resource> resource;
 		D3D12_CPU_DESCRIPTOR_HANDLE srvHandleCPU;
 		D3D12_GPU_DESCRIPTOR_HANDLE srvHandleGPU;
+		DirectX::ScratchImage image;
 	};
 
 	std::vector<TextureData> textureDatas;

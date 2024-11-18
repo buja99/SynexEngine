@@ -49,6 +49,33 @@ public:
 
 private:
 
+	//uint32_t textureIndex = 0;
+	//ComPtr<ID3D12Resource> vertexResourceSprite;
+	//D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
+	//ComPtr<ID3D12Resource> transformationMatrixResourceSprite;
+	//TransformationMatrix* transformationMatrixDataSprite = nullptr;
+	//Transform transformSprite;
+	//VertexData* vertexDataSprite;
+	//ComPtr<ID3D12Resource> indexResourceSprite;
+	//D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
+	//ComPtr<ID3D12Resource>  materialResourceSprite;
+	//Material* materialDataSprite;
+	//uint32_t* indexDataSprite;
+	//DirectX::ScratchImage mipImages;
+	//DirectX::ScratchImage mipImages2;
+	//DirectX::TexMetadata metadata;
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
+	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2;
+	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2;
+	//ComPtr<ID3D12Resource> textureResource;
+	//ComPtr<ID3D12Resource> textureResource2;
+	//ComPtr<ID3D12Resource> materialResource;
+	//ComPtr<ID3D12Resource> wvpResoure;
+	//Material* materialDate;
+	//TransformationMatrix* transformationMatrix;
+
+	uint32_t textureIndex = 0;
 	ComPtr<ID3D12Resource> vertexResourceSprite;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
 	ComPtr<ID3D12Resource> transformationMatrixResourceSprite;
@@ -57,28 +84,19 @@ private:
 	VertexData* vertexDataSprite;
 	ComPtr<ID3D12Resource> indexResourceSprite;
 	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
-	ComPtr<ID3D12Resource>  materialResourceSprite;
+	ComPtr<ID3D12Resource> materialResourceSprite;
 	Material* materialDataSprite;
 	uint32_t* indexDataSprite;
+
 	DirectX::ScratchImage mipImages;
-	DirectX::ScratchImage mipImages2;
-	DirectX::TexMetadata metadata;
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2;
-	ComPtr<ID3D12Resource> textureResource;
-	ComPtr<ID3D12Resource> textureResource2;
-	ComPtr<ID3D12Resource> materialResource;
-	ComPtr<ID3D12Resource> wvpResoure;
-	Material* materialDate;
-	TransformationMatrix* transformationMatrix;
-	Transform uvTransformSprite
-	{
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
+	//DirectX::ScratchImage mipImages2;
+
+	//Transform uvTransformSprite
+	//{
+	//	{1.0f,1.0f,1.0f},
+	//	{0.0f,0.0f,0.0f},
+	//	{0.0f,0.0f,0.0f}
+	//};
 
 	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
@@ -87,7 +105,7 @@ private:
 	float rotation = 0.0f;
 	Vector2 size = { 100.0f,100.0f };
 
-	uint32_t textureIndex = 0;
+	
 
 
 	SpriteCommon* spriteCommon = nullptr;

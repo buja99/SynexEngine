@@ -87,6 +87,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon->Initialize(dxCommon);
 	//sprite->Initialize(spriteCommon);
 
+	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
+
 	std::vector<Sprite*> sprites;
 	for (uint32_t i = 0; i < 5; ++i) {
 		Sprite* sprite = new Sprite();
@@ -98,11 +101,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		sprite->SetPosition(position); 
 		sprites.push_back(sprite);
+
+		OutputDebugStringA(("Texture loaded: resources/texture" + std::to_string(i) + ".png\n").c_str());
 	}
 
 	OutputDebugStringA("Hello,DirectX!\n");
 
 	
+
+
 	//dxCommon->InitializePSO();
 	
 //ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
@@ -144,18 +151,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//sprite->Update();
 
 
-		for (auto& sprite : sprites) {
-			sprite->Update();
-		}
+		//for (auto& sprite : sprites) {
+		//	sprite->Update();
+		//}
 
 		dxCommon->PreDraw();
-		dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
+		//dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
 
-		spriteCommon->CommonDrawSettings();
+		//spriteCommon->CommonDrawSettings();
 		
-		for (auto& sprite : sprites) {
-			sprite->Draw();
-		}
+		//for (auto& sprite : sprites) {
+		//	sprite->Draw();
+		//}
 
 		//sprite->Draw();
 
