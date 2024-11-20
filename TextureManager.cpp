@@ -61,6 +61,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	textureDatas.resize(textureDatas.size() + 1);
 	TextureData& textureData = textureDatas.back();
 
+
 	textureData.filePath = filePath;
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = CreateTextureResource(textureData.metadata);
@@ -104,6 +105,13 @@ void TextureManager::LoadTexture(const std::string& filePath)
 
 void TextureManager::Finalize()
 {
+	for (auto& textureData : textureDatas) {
+		if (textureData.resource) {
+			textureData.resource.Reset();
+		}
+	}
+	textureDatas.clear();
+
 	delete instance;
 	instance = nullptr;
 }
