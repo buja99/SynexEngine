@@ -253,3 +253,10 @@ uint32_t TextureManager::GetTextureIndexByFilepath(const std::string& filePath)
 	assert(0);
 	return 0;
 }
+
+const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureIndex)
+{
+	assert(textureIndex < textureDatas.size());
+	TextureData& textureData = textureDatas[textureIndex];
+	return textureData.metadata;
+}
