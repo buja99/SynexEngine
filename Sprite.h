@@ -47,33 +47,24 @@ public:
 	//size setter
 	void SetSize(const Vector2& size) { this->size = size; }
 
+	const Vector2& GetAncHorPoint() const { return anchorPoint; }
+	void SetAnchorPoint(const Vector2& anchorPont) { this->anchorPoint = anchorPont; }
+
+	bool GetIsFlipX() const { return isFlipX_; }
+	void SetIsFlipX(bool isFlipX) { isFlipX_ = isFlipX; }
+
+	bool GetIsFlipY() const { return isFlipY_; }
+	void SetIsFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
+
+	const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
+	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
+
+	const Vector2& GetTextureSize() const { return textureSize; }
+	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
+
 private:
 
-	//uint32_t textureIndex = 0;
-	//ComPtr<ID3D12Resource> vertexResourceSprite;
-	//D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
-	//ComPtr<ID3D12Resource> transformationMatrixResourceSprite;
-	//TransformationMatrix* transformationMatrixDataSprite = nullptr;
-	//Transform transformSprite;
-	//VertexData* vertexDataSprite;
-	//ComPtr<ID3D12Resource> indexResourceSprite;
-	//D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
-	//ComPtr<ID3D12Resource>  materialResourceSprite;
-	//Material* materialDataSprite;
-	//uint32_t* indexDataSprite;
-	//DirectX::ScratchImage mipImages;
-	//DirectX::ScratchImage mipImages2;
-	//DirectX::TexMetadata metadata;
-	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
-	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2;
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2;
-	//ComPtr<ID3D12Resource> textureResource;
-	//ComPtr<ID3D12Resource> textureResource2;
-	//ComPtr<ID3D12Resource> materialResource;
-	//ComPtr<ID3D12Resource> wvpResoure;
-	//Material* materialDate;
-	//TransformationMatrix* transformationMatrix;
+
 
 	uint32_t textureIndex = 0;
 	ComPtr<ID3D12Resource> vertexResourceSprite;
@@ -98,15 +89,22 @@ private:
 		{0.0f,0.0f,0.0f}
 	};
 
-	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
 
 	Vector2 position = { 0.0f,0.0f };
 	float rotation = 0.0f;
 	Vector2 size = { 100.0f,100.0f };
 
-	
+	bool isFlipX_ = false;
+	bool isFlipY_ = false;
 
+	Vector2 anchorPoint = { 0.0f,0.0f };
+
+	Vector2 textureLeftTop = { 0.0f,0.0f };
+	Vector2 textureSize = { 65.0f,65.0f };
+
+	void AdjustTextureSize();
 
 	SpriteCommon* spriteCommon = nullptr;
 	

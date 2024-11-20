@@ -33,6 +33,7 @@ public:
 
 	uint32_t GetTextureIndexByFilepath(const std::string& filePath);
 
+	const DirectX::TexMetadata& GetMetaData(uint32_t textureIndex);
 
 private:
 

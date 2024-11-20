@@ -1,6 +1,6 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
-
+#include "externals/imgui/imgui.h"
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
@@ -103,25 +103,47 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 
 	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
+	AdjustTextureSize();
 
 }
 
 void Sprite::Update()
 {
-	vertexDataSprite[0].position = { 0.0f,1.0f,0.0f,1.0f };//lower left
-	vertexDataSprite[0].texCoord = { 0.0f,1.0f };
+	float left = 0.0f - anchorPoint.x;
+	float right = 1.0f - anchorPoint.x;
+	float top = 0.0f - anchorPoint.y;
+	float bottom = 1.0f - anchorPoint.y;
+
+	if (isFlipX_) {
+		left = -left;
+		right = -right;
+	}
+	if (isFlipY_) {
+		top = -top;
+		bottom = -bottom;
+	}
+
+	const DirectX::TexMetadata& metadata =
+		TextureManager::GetInstance()->GetMetaData(textureIndex);
+	float tex_left = uvTransformSprite.translate.x / metadata.width;
+	float tex_right = (uvTransformSprite.translate.x+ textureSize.x) / metadata.width;
+	float tex_top = uvTransformSprite.translate.y / metadata.height;
+	float tex_bottom = (uvTransformSprite.translate.y+ textureSize.y) / metadata.height;
+
+	vertexDataSprite[0].position = { left,bottom,0.0f,1.0f };//lower left
+	vertexDataSprite[0].texCoord = { tex_left,tex_bottom };
 	vertexDataSprite[0].normal = { 0.0f,0.0f, 1.0f };
 	
-	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//upper left
-	vertexDataSprite[1].texCoord = { 0.0f,0.0f };
+	vertexDataSprite[1].position = { left,top,0.0f,1.0f };//upper left
+	vertexDataSprite[1].texCoord = { tex_left,tex_top };
 	vertexDataSprite[1].normal = { 0.0f,0.0f, 1.0f };
 	
-	vertexDataSprite[2].position = { 1.0f,1.0f,0.0f,1.0f };//lower right
-	vertexDataSprite[2].texCoord = { 1.0f,1.0f };
+	vertexDataSprite[2].position = { right,bottom,0.0f,1.0f };//lower right
+	vertexDataSprite[2].texCoord = { tex_right,tex_bottom };
 	vertexDataSprite[2].normal = { 0.0f,0.0f, 1.0f };
 	
-	vertexDataSprite[3].position = { 1.0f,0.0f,0.0f,1.0f };//upper left
-	vertexDataSprite[3].texCoord = { 1.0f,0.0f };
+	vertexDataSprite[3].position = { right,top,0.0f,1.0f };//upper left
+	vertexDataSprite[3].texCoord = { tex_right,tex_top };
 	vertexDataSprite[3].normal = { 0.0f,0.0f, 1.0f };
 
 	transformSprite.translate = { position.x,position.y,0.0f };
@@ -143,6 +165,14 @@ void Sprite::Update()
 	transformationMatrixDataSprite->World = worldViewProjectionMatrixSprite;
 
 	
+	ImGui::Begin("Sprite");
+	ImGui::DragFloat("rotate", &rotation, 0.1f);
+	ImGui::DragFloat2("position", &position.x, 1.0f);
+	ImGui::DragFloat2("anchorPoint", &anchorPoint.x, 0.1f);
+	ImGui::Checkbox("isFlipX", &isFlipX_);
+	ImGui::Checkbox("isFlipY", &isFlipY_);
+	ImGui::End();
+
 
 }
 
@@ -215,6 +245,16 @@ void Sprite::Cleanup()
 	//}
 	delete myMath;
 	myMath = nullptr;
+
+}
+
+void Sprite::AdjustTextureSize()
+{
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+	textureSize.x = static_cast<float>(metadata.width);
+	textureSize.y = static_cast<float>(metadata.height);
+
+	size = textureSize;
 
 }
 
