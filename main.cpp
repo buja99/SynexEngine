@@ -73,47 +73,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
 	//GameScene* gameScene = new GameScene();
-	//SpriteCommon* spriteCommon = nullptr;
+	SpriteCommon* spriteCommon = nullptr;
 	//Sprite* sprite = new Sprite();
-	//spriteCommon = new SpriteCommon;
+	spriteCommon = new SpriteCommon;
 	
 	
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
-	//TextureManager::GetInstance()->Initialize(dxCommon);
+	TextureManager::GetInstance()->Initialize(dxCommon);
 	input->Initialize(winApp);
 	//gameScene->Initialize(dxCommon);
-	//spriteCommon->Initialize(dxCommon);
-	//sprite->Initialize(spriteCommon);
+	spriteCommon->Initialize(dxCommon);
+	
 
-	//TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-	//TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
+	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 
-	//std::vector<Sprite*> sprites;
-	//for (uint32_t i = 0; i < 5; ++i) {
-	//	Sprite* sprite = new Sprite();
-	//	sprite->Initialize(spriteCommon, "resources/uvChecker.png");
-	//
-	//	Vector2 position;
-	//	position.x = 120.0f * i; 
-	//	position.y = 0.0f;
-	//
-	//	sprite->SetPosition(position); 
-	//	sprites.push_back(sprite);
-	//
-	//	OutputDebugStringA(("Texture loaded: resources/" + std::to_string(i) + ".png\n").c_str());
-	//}
-	//
-	//OutputDebugStringA("Hello,DirectX!\n");
+	std::vector<Sprite*> sprites;
+	for (uint32_t i = 0; i < 5; ++i) {
+		Sprite* sprite = new Sprite();
+		sprite->Initialize(spriteCommon, "resources/uvChecker.png");
+	
+		Vector2 position;
+		position.x = 120.0f * i; 
+		position.y = 0.0f;
+	
+		sprite->SetPosition(position); 
+		sprites.push_back(sprite);
+	
+		OutputDebugStringA(("Texture loaded: resources/" + std::to_string(i) + ".png\n").c_str());
+	}
+	
+	OutputDebugStringA("Hello,DirectX!\n");
 
 	
 
-
-	//dxCommon->InitializePSO();
-	
-//ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
-//ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
 
 
 	while (true) {
@@ -126,18 +121,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		input->Update();
 
 		
-		//for (auto& sprite : sprites) {
-		//	sprite->Update();
-		//}
+		for (auto& sprite : sprites) {
+			sprite->Update();
+		}
 
 		dxCommon->PreDraw();
 		//dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
 
-		//spriteCommon->CommonDrawSettings();
+		spriteCommon->CommonDrawSettings();
 		
-		//for (auto& sprite : sprites) {
-		//	sprite->Draw();
-		//}
+		for (auto& sprite : sprites) {
+			sprite->Draw();
+		}
 
 		//sprite->Draw();
 
@@ -148,22 +143,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 	}
 
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+
 
 	//CloseHandle(fenceEvent);
 	//sprite->Cleanup();
 	//delete sprite;
-	//for (auto& sprite : sprites) {
-	//	sprite->Cleanup();
-	//	delete sprite;
-	//}
-	//sprites.clear();
-	//delete spriteCommon;
+	for (auto& sprite : sprites) {
+		sprite->Cleanup();
+		delete sprite;
+	}
+	sprites.clear();
+	delete spriteCommon;
 	//gameScene->Cleanup();
 	//delete gameScene;
-	//TextureManager::GetInstance()->Finalize();
+	TextureManager::GetInstance()->Finalize();
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
 	winApp->Finalize();

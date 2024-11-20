@@ -233,7 +233,7 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(ComPtr<I
 	depthClearValue.DepthStencil.Depth = 1.0f;
 	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	ID3D12Resource* resource = nullptr;
+	ComPtr<ID3D12Resource> resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -245,6 +245,7 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(ComPtr<I
 		OutputDebugStringA("Failed to create resource\n");
 		return nullptr;
 	}
+	resource->SetName(L"depthStencilTextureResource");
 	return resource;
 }
 
@@ -689,11 +690,12 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(ComPtr<ID3D12Device> 
 
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	ID3D12Resource* vertexResource = nullptr;
+	ComPtr<ID3D12Resource> vertexResource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&vertexResource));
 	assert(SUCCEEDED(hr));
+	vertexResource->SetName(L"bufferResource");
 
 	return vertexResource;
 }
@@ -716,7 +718,7 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(ComPtr<ID3D12Device>
 	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
 	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
 	// Resource生成
-	ID3D12Resource* resource = nullptr;
+	ComPtr<ID3D12Resource> resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -725,6 +727,8 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(ComPtr<ID3D12Device>
 		nullptr,
 		IID_PPV_ARGS(&resource));
 	assert(SUCCEEDED(hr));
+	resource->SetName(L"textureResource");
+
 	return resource;
 }
 
@@ -767,13 +771,13 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 void DirectXCommon::Cleanup()
 {
 	
-	depthStencilBuffer.Reset();
+	//depthStencilBuffer.Reset();
 	//if (depthStencilBuffer) {
 	//	depthStencilBuffer->Release();
 	//	depthStencilBuffer = nullptr;
 	//}
 
-	fence.Reset();
+	//fence.Reset();
 	//if (fence) {
 	//	fence->Release();
 	//	fence = nullptr;
@@ -786,6 +790,9 @@ void DirectXCommon::Cleanup()
 	//if (debugController != nullptr) {
 	//	debugController->Release();
 	//}
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 	delete winApp;
 	delete fpsLimiter;
 	
