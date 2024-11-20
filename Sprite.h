@@ -91,12 +91,12 @@ private:
 	DirectX::ScratchImage mipImages;
 	//DirectX::ScratchImage mipImages2;
 
-	//Transform uvTransformSprite
-	//{
-	//	{1.0f,1.0f,1.0f},
-	//	{0.0f,0.0f,0.0f},
-	//	{0.0f,0.0f,0.0f}
-	//};
+	Transform uvTransformSprite
+	{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 
 	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };

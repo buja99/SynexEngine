@@ -587,12 +587,13 @@ void DirectXCommon::PostDraw()
 	swapChain->Present(1, 0);
 	assert(SUCCEEDED(hr));
 
-	fenceVal = fenceValue; 
-	hr = commandQueue->Signal(fence.Get(), fenceValue);
-	if (FAILED(hr)) {
-		OutputDebugStringA("Fence signal failed.\n");
-	}
+	//fenceVal = fenceValue; 
+	//hr = commandQueue->Signal(fence.Get(), fenceValue);
+	//if (FAILED(hr)) {
+	//	OutputDebugStringA("Fence signal failed.\n");
+	//}
 	fenceValue++;
+	hr = commandQueue->Signal(fence.Get(), fenceValue);
 	assert(SUCCEEDED(hr));
 
 	if (fence->GetCompletedValue() < fenceValue)
@@ -766,12 +767,17 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 void DirectXCommon::Cleanup()
 {
 	
-	
-	if (depthStencilBuffer) {
-		depthStencilBuffer->Release();
-		depthStencilBuffer = nullptr;
-	}
-	
+	depthStencilBuffer.Reset();
+	//if (depthStencilBuffer) {
+	//	depthStencilBuffer->Release();
+	//	depthStencilBuffer = nullptr;
+	//}
+
+	fence.Reset();
+	//if (fence) {
+	//	fence->Release();
+	//	fence = nullptr;
+	//}
 
 	//if (device) {
 	//	device->Release();

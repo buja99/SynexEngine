@@ -8,7 +8,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 
 	
 
-	//textureIndex = TextureManager::GetInstance()->GetOrLoadTextureIndex(textureFilePath);
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
 
 
 
@@ -108,31 +108,31 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 
 void Sprite::Update()
 {
-	//vertexDataSprite[0].position = { 0.0f,1.0f,0.0f,1.0f };//lower left
-	//vertexDataSprite[0].texCoord = { 0.0f,1.0f };
-	//vertexDataSprite[0].normal = { 0.0f,0.0f, 1.0f };
-	//
-	//vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//upper left
-	//vertexDataSprite[1].texCoord = { 0.0f,0.0f };
-	//vertexDataSprite[1].normal = { 0.0f,0.0f, 1.0f };
-	//
-	//vertexDataSprite[2].position = { 1.0f,1.0f,0.0f,1.0f };//lower right
-	//vertexDataSprite[2].texCoord = { 1.0f,1.0f };
-	//vertexDataSprite[2].normal = { 0.0f,0.0f, 1.0f };
-	//
-	//vertexDataSprite[3].position = { 1.0f,0.0f,0.0f,1.0f };//upper left
-	//vertexDataSprite[3].texCoord = { 1.0f,0.0f };
-	//vertexDataSprite[3].normal = { 0.0f,0.0f, 1.0f };
+	vertexDataSprite[0].position = { 0.0f,1.0f,0.0f,1.0f };//lower left
+	vertexDataSprite[0].texCoord = { 0.0f,1.0f };
+	vertexDataSprite[0].normal = { 0.0f,0.0f, 1.0f };
+	
+	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//upper left
+	vertexDataSprite[1].texCoord = { 0.0f,0.0f };
+	vertexDataSprite[1].normal = { 0.0f,0.0f, 1.0f };
+	
+	vertexDataSprite[2].position = { 1.0f,1.0f,0.0f,1.0f };//lower right
+	vertexDataSprite[2].texCoord = { 1.0f,1.0f };
+	vertexDataSprite[2].normal = { 0.0f,0.0f, 1.0f };
+	
+	vertexDataSprite[3].position = { 1.0f,0.0f,0.0f,1.0f };//upper left
+	vertexDataSprite[3].texCoord = { 1.0f,0.0f };
+	vertexDataSprite[3].normal = { 0.0f,0.0f, 1.0f };
 
 	transformSprite.translate = { position.x,position.y,0.0f };
 	transformSprite.rotate = { 0.0f,0.0f,rotation };
 	transformSprite.scale = { size.x,size.y,1.0f };
 
 
-	//Matrix4x4 uvTransformMatrix = myMath->MakeScaleMatrix(uvTransformSprite.scale);
-	//uvTransformMatrix = myMath->Multiply(uvTransformMatrix, myMath->MakeRotateZMatrix(uvTransformSprite.rotate.z));
-	//uvTransformMatrix = myMath->Multiply(uvTransformMatrix, myMath->MakeTranslateMatrix(uvTransformSprite.translate));
-	//materialDataSprite->uvTransform = uvTransformMatrix;
+	Matrix4x4 uvTransformMatrix = myMath->MakeScaleMatrix(uvTransformSprite.scale);
+	uvTransformMatrix = myMath->Multiply(uvTransformMatrix, myMath->MakeRotateZMatrix(uvTransformSprite.rotate.z));
+	uvTransformMatrix = myMath->Multiply(uvTransformMatrix, myMath->MakeTranslateMatrix(uvTransformSprite.translate));
+	materialDataSprite->uvTransform = uvTransformMatrix;
 
 
 	Matrix4x4 worldMatrixSprite = myMath->MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
