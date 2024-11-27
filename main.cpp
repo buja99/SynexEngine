@@ -33,7 +33,8 @@
 #include "TextureManager.h"
 #include "Object3d.h"
 #include "Object3dCommon.h"
-
+#include "ModelCommon.h"
+#include "Model.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -76,12 +77,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
 
+	ModelCommon* modelCommon = nullptr;
+	modelCommon = new ModelCommon();
+
 	Object3dCommon* object3dCommon = nullptr; 
 	object3dCommon = new Object3dCommon();    
-	object3dCommon->Initialize();
+	
+	Model* model = new Model();
 
 	Object3d* object3d = new Object3d();
-	object3d->Initialize();
+	
 
 	//GameScene* gameScene = new GameScene();
 	SpriteCommon* spriteCommon = nullptr;
@@ -96,7 +101,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	input->Initialize(winApp);
 	//gameScene->Initialize(dxCommon);
 	spriteCommon->Initialize(dxCommon);
-	
+	modelCommon->Initialize(dxCommon);
+	object3dCommon->Initialize(dxCommon);
+	model->Initialize(modelCommon, object3dCommon);
+	object3d->Initialize(object3dCommon);
 
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
@@ -126,6 +134,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 			sprite->Update();
 		
+			object3d->Updata();
+
 		ImGui::Render();
 
 		dxCommon->PreDraw();
@@ -133,10 +143,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		spriteCommon->CommonDrawSettings();
 		
+		object3dCommon->CommonDrawSettings();
 		
 			sprite->Draw();
-		
 
+			object3d->Draw();
+			model->Draw();
 		//sprite->Draw();
 
 
@@ -157,17 +169,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete sprite;
 	
 	delete spriteCommon;
+
+	object3d->Cleanup();
+	delete object3d;
+
+	delete object3dCommon;
 	//gameScene->Cleanup();
 	//delete gameScene;
+	model->Cleanup(); 
+	delete model;
+
+	delete modelCommon;
+
 	TextureManager::GetInstance()->Finalize();
-	delete object3d;
-	delete object3dCommon;
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
 	winApp->Finalize();
 	delete input;
 	//delete winApp; 
-	//delete myMath;
 
 	CoUninitialize();
 	return 0;

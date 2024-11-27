@@ -11,7 +11,7 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 
 	device = dxCommon_->GetDevice();
 	commandList = dxCommon_->GetCommandList();
-	//CreateDescriptorHeaps();
+	
 	CreateGraphicsPipeline();
 }
 
