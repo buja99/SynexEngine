@@ -1,1 +1,1 @@
-![image](https://github.com/user-attachments/assets/59cac0b6-fe3a-4f02-a87e-8a5a0c076420)
+[![DebugBuild](https://github.com/macove/GE3/actions/workflows/DebugBuild.yml/badge.svg)](https://github.com/macove/GE3/actions/workflows/DebugBuild.yml)
