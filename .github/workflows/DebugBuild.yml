@@ -2,7 +2,7 @@ name: DebugBuild
 on:  
   push:
     branches:
-      - main
+      - master
 env:
   SOLUTION_FILE_PATH: GE3/DirectXGame.sln
   CONFIGURATION: Debug
