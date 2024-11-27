@@ -4,7 +4,7 @@ on:
     branches:
       - master
 env:
-  SOLUTION_FILE_PATH: GE3/DirectXGame.sln
+  SOLUTION_FILE_PATH: DirectXGame.sln
   CONFIGURATION: Debug
 jobs:
   build:
