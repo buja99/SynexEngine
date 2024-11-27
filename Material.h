@@ -14,4 +14,5 @@ struct  Material
 struct MaterialData
 {
 	std::string textureFilePath;
+	uint32_t textureIndex = 0;
 };

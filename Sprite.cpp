@@ -169,6 +169,8 @@ void Sprite::Update()
 	ImGui::DragFloat("rotate", &rotation, 0.1f);
 	ImGui::DragFloat2("position", &position.x, 1.0f);
 	ImGui::DragFloat2("anchorPoint", &anchorPoint.x, 0.1f);
+	ImGui::DragFloat3("scl", &transformSprite.scale.x, 0.1f);
+	ImGui::DragFloat2("size", &size.x, 1.0f);
 	ImGui::Checkbox("isFlipX", &isFlipX_);
 	ImGui::Checkbox("isFlipY", &isFlipY_);
 	ImGui::End();
