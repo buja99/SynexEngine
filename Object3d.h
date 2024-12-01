@@ -11,7 +11,7 @@
 #include "DirectionalLight.h"
 #include "TextureManager.h"
 #include "Model.h"
-
+#include "ModelManager.h"
 
 struct ParallelLight {
 	Vector4 color;     
@@ -38,6 +38,7 @@ class Object3d
 
 	void SetModel(Model* model) { this->model = model; }
 
+	void SetModel(const std::string& filePath);
 
 	// setter
 	void SetScale(const Vector3& scale) { transform.scale = scale; }
@@ -46,7 +47,6 @@ class Object3d
 
 
 	// getter
-
 	const Vector3& GetScale() const { return transform.scale; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }

@@ -2,14 +2,15 @@
 #include <fstream>
 
 
-void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon)
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
 
 	modelCommon_ = modelCommon;
 
 	this->object3dCommon = object3dCommon;
 
-	modelData = LoadobjFile("resources", "plane.obj");
+	
+	modelData = LoadobjFile(directorypath, filename);
 
 	InitializeVertexBuffer();
 

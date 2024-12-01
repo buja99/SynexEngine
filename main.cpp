@@ -35,6 +35,7 @@
 #include "Object3dCommon.h"
 #include "ModelCommon.h"
 #include "Model.h"
+#include "ModelManager.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -97,14 +98,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
+	ModelManager::GetInstance()->Initialize(dxCommon);
+	ModelManager::GetInstance()->LoadModel("plane.obj");
+
 	TextureManager::GetInstance()->Initialize(dxCommon);
 	input->Initialize(winApp);
 	//gameScene->Initialize(dxCommon);
 	spriteCommon->Initialize(dxCommon);
 	modelCommon->Initialize(dxCommon);
 	object3dCommon->Initialize(dxCommon);
-	model->Initialize(modelCommon, object3dCommon);
+	model->Initialize(modelCommon, "resources", "plane.obj");
 	object3d->Initialize(object3dCommon);
+	object3d->SetModel("plane.obj");
 
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
@@ -180,7 +185,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete model;
 
 	delete modelCommon;
-
+	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
