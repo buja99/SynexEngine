@@ -1,6 +1,4 @@
 #include "ModelManager.h"
-#include "ModelManager.h"
-#include "ModelManager.h"
 #include "DirectXCommon.h"
 #include "Model.h"
 #include "ModelCommon.h"

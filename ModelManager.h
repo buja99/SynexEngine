@@ -26,7 +26,7 @@ public:
     Model* FindModel(const std::string& filePath);
 
 private:
-	static ModelManager* instance;
+    static ModelManager* instance;
 
     std::map<std::string, std::unique_ptr<Model>> models;
 
