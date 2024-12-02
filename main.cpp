@@ -98,8 +98,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
-	ModelManager::GetInstance()->Initialize(dxCommon);
-	ModelManager::GetInstance()->LoadModel("plane.obj");
+	
 
 	TextureManager::GetInstance()->Initialize(dxCommon);
 	input->Initialize(winApp);
@@ -107,7 +106,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon->Initialize(dxCommon);
 	modelCommon->Initialize(dxCommon);
 	object3dCommon->Initialize(dxCommon);
-	model->Initialize(modelCommon, "resources", "plane.obj");
+	ModelManager::GetInstance()->Initialize(dxCommon);
+	ModelManager::GetInstance()->LoadModel("plane.obj");
+	model->Initialize(modelCommon, object3dCommon, "resources", "plane.obj");
 	object3d->Initialize(object3dCommon);
 	object3d->SetModel("plane.obj");
 
@@ -185,8 +186,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete model;
 
 	delete modelCommon;
-	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
+	ModelManager::GetInstance()->Finalize();
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
 	winApp->Finalize();

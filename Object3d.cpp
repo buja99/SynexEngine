@@ -191,13 +191,13 @@ void Object3d::SetModel(const std::string& filePath)
 {
 	Model* model = ModelManager::GetInstance()->FindModel(filePath);
 
-	if (model) {
-		this->model = model; 
-	} else {
-		
-		ModelManager::GetInstance()->LoadModel(filePath);
-		this->model = ModelManager::GetInstance()->FindModel(filePath);
-	}
+	//if (model) {
+	//	this->model = model; 
+	//} else {
+	//	
+	//	ModelManager::GetInstance()->LoadModel(filePath);
+	//	this->model = ModelManager::GetInstance()->FindModel(filePath);
+	//}
 }
 
 //void Object3d::CreateVertexBuffer()

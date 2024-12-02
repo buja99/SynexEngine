@@ -13,21 +13,18 @@ ModelManager* ModelManager::GetInstance()
     return instance;
 }
 
-void ModelManager::Finalize()
-{
 
-    if (instance) {
-        delete instance;
-        instance = nullptr;
-    }
-
-}
 
 void ModelManager::Initialize(DirectXCommon* dxCommon)
 {
-    modelCommon = new ModelCommon();
+    modelCommon = std::make_unique<ModelCommon>();
     modelCommon->Initialize(dxCommon);
+
+    object3dCommon = std::make_unique<Object3dCommon>();
+    object3dCommon->Initialize(dxCommon);
 }
+
+
 
 void ModelManager::LoadModel(const std::string& filePath)
 {
@@ -35,7 +32,7 @@ void ModelManager::LoadModel(const std::string& filePath)
         return;
     }
     std::unique_ptr<Model> model = std::make_unique<Model>();
-    model->Initialize(modelCommon, "resources", filePath);
+    model->Initialize(modelCommon.get(), object3dCommon.get(),"resources", filePath);
 
     models.insert(std::make_pair(filePath, std::move(model)));
 }
@@ -46,4 +43,15 @@ Model* ModelManager::FindModel(const std::string& filePath)
         return models.at(filePath).get();
     }
     return nullptr;
+}
+
+void ModelManager::Finalize()
+{
+
+
+    if (instance) {
+        delete instance;
+        instance = nullptr;
+    }
+   
 }
