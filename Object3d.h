@@ -11,6 +11,7 @@
 #include "DirectionalLight.h"
 #include "TextureManager.h"
 #include "Model.h"
+#include "ModelManager.h"
 
 
 struct ParallelLight {
@@ -38,6 +39,7 @@ class Object3d
 
 	void SetModel(Model* model) { this->model = model; }
 
+	void SetModel(const std::string& filePath);
 
 	// setter
 	void SetScale(const Vector3& scale) { transform.scale = scale; }

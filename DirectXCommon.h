@@ -42,7 +42,9 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 	void InitializeDXCCompiler();
+#ifdef _DEBUG
 	void InitializeImGui();
+#endif // _DEBUG
 	void InitializePSO();
 
 	void PreDraw();

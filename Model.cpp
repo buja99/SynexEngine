@@ -2,7 +2,7 @@
 #include <fstream>
 
 
-void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon)
+void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon, const std::string& directorypath, const std::string& filename)
 {
 
 	modelCommon_ = modelCommon;
@@ -10,6 +10,8 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon)
 	this->object3dCommon = object3dCommon;
 
 	modelData = LoadobjFile("resources", "plane.obj");
+	
+	modelData = LoadobjFile(directorypath, filename);
 
 	InitializeVertexBuffer();
 
@@ -179,7 +181,7 @@ void Model::InitializeVertexBuffer()
 	//	return;
 	//}
 
-	auto device = object3dCommon->GetDxCommon()->GetDevice();
+	auto device = modelCommon_->GetDxCommon()->GetDevice();
 
 	
 	vertexResource_ = CreateBufferResource(device.Get(), sizeof(VertexData) * modelData.vertices.size());
