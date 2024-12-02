@@ -21,7 +21,6 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 	modelData.material.textureIndex =
 		TextureManager::GetInstance()->GetTextureIndexByFilepath(modelData.material.textureFilePath);
 
-
 }
 
 void Model::Draw()
