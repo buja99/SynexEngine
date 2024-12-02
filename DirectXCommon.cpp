@@ -4,9 +4,11 @@
 #include "StringUtility.h"
 #include <format>
 #include <dxcapi.h>
+#ifdef _DEBUG
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/imgui/imgui_impl_dx12.h"
+#endif // _DEBUG
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -49,7 +51,9 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	InitializeScissor();
 	//InitializeDXCCompiler();
 	InitializePSO();
+#ifdef _DEBUG
 	InitializeImGui();
+#endif // _DEBUG
 
 }
 
@@ -343,6 +347,7 @@ void DirectXCommon::InitializeDXCCompiler()
 	//assert(SUCCEEDED(hr));
 
 }
+#ifdef _DEBUG
 
 void DirectXCommon::InitializeImGui()
 {
@@ -359,6 +364,7 @@ void DirectXCommon::InitializeImGui()
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 }
+#endif // _DEBUG
 
 void DirectXCommon::InitializePSO()
 {
@@ -792,9 +798,11 @@ void DirectXCommon::Cleanup()
 	//if (debugController != nullptr) {
 	//	debugController->Release();
 	//}
+#ifdef _DEBUG
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+#endif // _DEBUG
 	delete winApp;
 	delete fpsLimiter;
 	

@@ -1,7 +1,9 @@
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include <fstream>
+#ifdef _DEBUG
 #include "externals/imgui/imgui.h"
+#endif // _DEBUG
 
 void Object3d::Initialize(Object3dCommon* object3dCommon)
 {
@@ -32,12 +34,18 @@ void Object3d::Updata()
 	Matrix4x4 worldViewProjectionMatrix = myMath->Multiply(worldMatrix, myMath->Multiply(viewMatrix, projectionMatrix));
 	transformationMatrixData->WVP = worldViewProjectionMatrix;
 	transformationMatrixData->World = worldMatrix;
-
+#ifdef _DEBUG
 	ImGui::Begin("plane");
 	ImGui::DragFloat3("translate", &transform.translate.x, 0.1f);
 	ImGui::DragFloat3("scale", &transform.scale.x, 0.1f);
 	ImGui::DragFloat3("rotate", &transform.rotate.x, 0.1f);
 	ImGui::End();
+
+	ImGui::Begin("camera");
+	ImGui::DragFloat3("translate", &cameraTransform.translate.x, 0.1f);
+	ImGui::DragFloat3("rotate", &cameraTransform.rotate.x, 0.1f);
+	ImGui::End();
+#endif // _DEBUG
 
 }
 

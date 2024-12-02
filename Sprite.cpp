@@ -1,6 +1,8 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#ifdef _DEBUG
 #include "externals/imgui/imgui.h"
+#endif // _DEBUG
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
@@ -164,7 +166,7 @@ void Sprite::Update()
 	transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 	transformationMatrixDataSprite->World = worldViewProjectionMatrixSprite;
 
-	
+#ifdef _DEBUG
 	ImGui::Begin("Sprite");
 	ImGui::DragFloat("rotate", &rotation, 0.1f);
 	ImGui::DragFloat2("position", &position.x, 1.0f);
@@ -174,6 +176,7 @@ void Sprite::Update()
 	ImGui::Checkbox("isFlipX", &isFlipX_);
 	ImGui::Checkbox("isFlipY", &isFlipY_);
 	ImGui::End();
+#endif // _DEBUG
 
 
 }

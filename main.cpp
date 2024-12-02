@@ -12,9 +12,11 @@
 #include"Matrix3x3.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#ifdef _DEBUG
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+#endif // _DEBUG
 #include "externals/DirectXTex/DirectXTex.h"
 #include<wrl.h>
 #define _CRTDBG_MAP_ALLOC
@@ -107,10 +109,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	modelCommon->Initialize(dxCommon);
 	object3dCommon->Initialize(dxCommon);
 	ModelManager::GetInstance()->Initialize(dxCommon);
-	ModelManager::GetInstance()->LoadModel("plane.obj");
-	model->Initialize(modelCommon, object3dCommon, "resources", "plane.obj");
+	ModelManager::GetInstance()->LoadModel("axis.obj");
+	model->Initialize(modelCommon, object3dCommon, "resources", "axis.obj");
 	object3d->Initialize(object3dCommon);
-	object3d->SetModel("plane.obj");
+	object3d->SetModel("axis.obj");
 
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
@@ -133,16 +135,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			break;
 		} 
 		input->Update();
-
+#ifdef _DEBUG
 		ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
+
+#endif // _DEBUG
+		
 		
 			sprite->Update();
 		
 			object3d->Updata();
+#ifdef _DEBUG
 
 		ImGui::Render();
+#endif // _DEBUG
 
 		dxCommon->PreDraw();
 		//dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
@@ -157,8 +164,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			model->Draw();
 		//sprite->Draw();
 
-
+#ifdef _DEBUG
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
+#endif // _DEBUG
 
 		//gameScene->Draw();
 		dxCommon->PostDraw();
