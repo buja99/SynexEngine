@@ -62,7 +62,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\Users\PARK YIJUN\Desktop\GE3\project;$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\PARK YIJUN\Desktop\GE3\project;$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)engine\camera;$(ProjectDir)engine\srvManager;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -116,7 +116,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Base\TextureManager.cpp" />
     <ClCompile Include="application\Base\WinApp.cpp" />
     <ClCompile Include="application\Input\Input.cpp" />
-    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="engine\camera\Camera.cpp" />
     <ClCompile Include="engine\2D\Sprite.cpp" />
     <ClCompile Include="engine\2D\SpriteCommon.cpp" />
     <ClCompile Include="engine\3D\Model.cpp" />
@@ -133,7 +133,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="SrvManager.cpp" />
+    <ClCompile Include="engine\srvManager\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\Base\DirectXCommon.h" />
@@ -143,7 +143,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Base\TextureManager.h" />
     <ClInclude Include="application\Base\WinApp.h" />
     <ClInclude Include="application\Input\Input.h" />
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="engine\camera\Camera.h" />
     <ClInclude Include="engine\2D\Sprite.h" />
     <ClInclude Include="engine\2D\SpriteCommon.h" />
     <ClInclude Include="engine\3D\Model.h" />
@@ -169,7 +169,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="SrvManager.h" />
+    <ClInclude Include="engine\srvManager\SrvManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
