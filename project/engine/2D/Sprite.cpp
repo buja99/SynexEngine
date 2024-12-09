@@ -8,60 +8,8 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	this->spriteCommon = spriteCommon;
 
-	
-
 	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
 
-
-
-	//mipImages = spriteCommon->LoadTexture("resources/uvChecker.png");
-	//metadata = mipImages.GetMetadata();
-	//textureResource = spriteCommon->CreateTextureResource(spriteCommon->GetDevice(), metadata);
-	//spriteCommon->UploadTextureDate(textureResource, mipImages);
-	//
-	//mipImages2 = spriteCommon->LoadTexture("resources/monsterBall.png");
-	//const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
-	//textureResource2 = spriteCommon->CreateTextureResource(spriteCommon->GetDevice(), metadata2);
-	//spriteCommon->UploadTextureDate(textureResource2, mipImages2);
-	//
-	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	//srvDesc.Format = metadata.format;
-	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	//srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-	//
-	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
-	//srvDesc2.Format = metadata2.format;
-	//srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	//srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
-	//
-	//textureSrvHandleCPU = spriteCommon->GetSrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-	//textureSrvHandleGPU = spriteCommon->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	//
-	//textureSrvHandleCPU2 = spriteCommon->GetCPUDescriptorHandle(spriteCommon->GetSrvDescriptorHeap(), spriteCommon->GetDescriptorSizeSRV(), 2);
-	//textureSrvHandleGPU2 = spriteCommon->GetGPUDescriptorHandle(spriteCommon->GetSrvDescriptorHeap(), spriteCommon->GetDescriptorSizeSRV(), 2);
-	//
-	//textureSrvHandleCPU.ptr += spriteCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//textureSrvHandleGPU.ptr += spriteCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//
-	//spriteCommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-	//
-	//spriteCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
-	//
-	////Material Resource
-	//materialResource = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(Material));
-	//
-	//materialResource.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialDate));
-	//materialDate->color = { 1.0f,1.0f,1.0f,1.0f };
-	//materialDate->enableLighting = true;
-	//
-	////TransformationMatrix Resource
-	//wvpResoure = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(TransformationMatrix));
-	//
-	//wvpResoure.Get()->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrix));
-	//transformationMatrix->WVP = myMath->MakeIdentity4x4();
-	//transformationMatrix->World = myMath->MakeIdentity4x4();
 
 
 	vertexResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(VertexData) * 6);

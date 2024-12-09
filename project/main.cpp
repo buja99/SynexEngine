@@ -38,6 +38,7 @@
 #include "Model.h"
 #include "ModelManager.h"
 #include "Camera.h"
+#include "SrvManager.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -79,6 +80,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	WinApp* winApp = new WinApp();
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
+	SrvManager* srvManger = nullptr;
+	srvManger = new SrvManager();
 
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
@@ -106,9 +109,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
+	srvManger->Initialize(dxCommon);
 	
 
-	TextureManager::GetInstance()->Initialize(dxCommon);
+	TextureManager::GetInstance()->Initialize(dxCommon, srvManger);
 	input->Initialize(winApp);
 	//gameScene->Initialize(dxCommon);
 	spriteCommon->Initialize(dxCommon);
