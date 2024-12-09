@@ -24,7 +24,7 @@ void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 	textureDatas.reserve(DirectXCommon::kMaxSRVCount);
 
 	dxCommon_ = dxCommon;
-
+	srvManager_ = srvManager;
 	descriptorSize_ = dxCommon_->GetDescriptorSizeSRV();
 	srvDescriptorHeap_ = dxCommon_->GetSrvDescriptorHeap();
 
@@ -35,9 +35,10 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	OutputDebugStringA(("Attempting to load texture from file path: " + filePath + "\n").c_str());
 
 	if (textureDatas.contains(filePath)) {
-		return; // Textures already loaded
+		return; // Textures already loadedS
 	}
 
+	assert(srvManager_->CanAllocate());
 
 	DirectX::ScratchImage image{};
 	std::wstring filePathW = StringUtility::ConvertString(filePath);
@@ -60,8 +61,8 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	//textureData.metadata = mipImages.GetMetadata();
 	//textureData.resource = CreateTextureResource(textureData.metadata);
 
-	TextureData textureData;
-	textureData.filePath = filePath;
+	TextureData& textureData = textureDatas[filePath];
+	//textureData.filePath = filePath;
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = CreateTextureResource(textureData.metadata);
 
@@ -69,20 +70,21 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	//textureData.srvHandleCPU = dxCommon_->GetSRVCPUDescriptorHandle(srvIndex);
 	//textureData.srvHandleGPU = dxCommon_->GetSRVGPUDescriptorHandle(srvIndex);
 	
+
 	// Allocating SRV indexes using SRVManager
 	textureData.srvIndex = srvManager_->Allocate();
 	textureData.srvHandleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
 	textureData.srvHandleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
 
 	// SRV記述子の設定
+	srvManager_->CreatSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(),
+		textureData.metadata.format, UINT(textureData.metadata.mipLevels));
 	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	//srvDesc.Format = textureData.metadata.format;
 	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	//srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
 
-	srvManager_->CreatSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(),
-		textureData.metadata.format, UINT(textureData.metadata.mipLevels));
 
 
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();

@@ -517,6 +517,8 @@ void DirectXCommon::InitializePSO()
 
 void DirectXCommon::PreDraw()
 {
+	
+
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	if (swapChainResources[backBufferIndex] == nullptr) {

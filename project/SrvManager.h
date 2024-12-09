@@ -8,7 +8,10 @@ class SrvManager
 {
 
 public:
-
+	static SrvManager* GetInstance() {
+		static SrvManager instance; 
+		return &instance;
+	}
 	void Initialize(DirectXCommon* dxCommon);
 
 	uint32_t Allocate();
@@ -21,14 +24,14 @@ public:
 
 	void PreDraw();
 	void SetGraphicsRootDesciptorTable(UINT RootPameterIndex, uint32_t srvIndex);
-
+	bool CanAllocate() const;
 private:
 	DirectXCommon* directXCommon = nullptr;
 
 	static const uint32_t kMaxSRVCount;
 	uint32_t descriptorSize;
 	ComPtr<ID3D12DescriptorHeap> descriptorHeap;
-	ComPtr<ID3D12Device> device;
+	//ComPtr<ID3D12Device> device;
 	uint32_t useIndex = 0;
 
 	MyMath* myMath = new MyMath;

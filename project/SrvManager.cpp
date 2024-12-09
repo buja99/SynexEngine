@@ -5,10 +5,10 @@ const uint32_t SrvManager::kMaxSRVCount = 512;
 
 void SrvManager::Initialize(DirectXCommon* dxCommon)
 {
-	this->directXCommon = directXCommon;
-	descriptorHeap = directXCommon->CreateDescriptorHeap(device,
+	this->directXCommon = dxCommon;
+	descriptorHeap = dxCommon->CreateDescriptorHeap(dxCommon->GetDevice(),
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
-	descriptorSize = directXCommon->GetDevice()->GetDescriptorHandleIncrementSize(
+	descriptorSize = dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
@@ -79,4 +79,9 @@ void SrvManager::PreDraw()
 void SrvManager::SetGraphicsRootDesciptorTable(UINT RootPameterIndex, uint32_t srvIndex)
 {
 	directXCommon->GetCommandList()->SetGraphicsRootDescriptorTable(RootPameterIndex, GetGPUDescriptorHandle(srvIndex));
+}
+
+bool SrvManager::CanAllocate() const
+{
+	return useIndex < kMaxSRVCount;
 }

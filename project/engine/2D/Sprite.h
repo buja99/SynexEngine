@@ -61,8 +61,8 @@ public:
 	const Vector2& GetTextureSize() const { return textureSize; }
 	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 
+	//std::unordered_map<uint32_t, std::string> textureIndexToFilePathMap;
 private:
-
 
 
 	uint32_t textureIndex = 0;
@@ -103,10 +103,14 @@ private:
 	Vector2 textureLeftTop = { 0.0f,0.0f };
 	Vector2 textureSize = { 65.0f,65.0f };
 
+	Vector2 textureOriSize = { 100.0f,100.0f };
+
 	void AdjustTextureSize();
 
 	SpriteCommon* spriteCommon = nullptr;
 	
+	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
+
 	MyMath* myMath = new MyMath;
 };
 
