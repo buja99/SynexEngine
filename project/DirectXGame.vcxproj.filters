@@ -1,0 +1,221 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{53807c9f-852f-4a11-a002-707fb4e58f96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application">
+      <UniqueIdentifier>{9cea005d-2ad5-4823-b9bf-15c98d59edf3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\Base">
+      <UniqueIdentifier>{e205a282-9d27-4da1-985a-79fb6ca0f710}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\Input">
+      <UniqueIdentifier>{31117bb5-3111-46b8-9cad-40824fdb7065}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine">
+      <UniqueIdentifier>{f27a29a9-c1bc-4914-a47e-613c3d18ccd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\2D">
+      <UniqueIdentifier>{2dc816db-f235-4de7-856d-a88326759808}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\3D">
+      <UniqueIdentifier>{931b7990-52ad-4f74-9526-55e9f96613d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Math">
+      <UniqueIdentifier>{cae39893-58aa-47e4-8709-bf94585f2875}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="externals\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_demo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Base\DirectXCommon.cpp">
+      <Filter>application\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Base\FPSLimiter.cpp">
+      <Filter>application\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Base\Logger.cpp">
+      <Filter>application\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Base\StringUtility.cpp">
+      <Filter>application\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Base\TextureManager.cpp">
+      <Filter>application\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Base\WinApp.cpp">
+      <Filter>application\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Input\Input.cpp">
+      <Filter>application\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\2D\Sprite.cpp">
+      <Filter>engine\2D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\2D\SpriteCommon.cpp">
+      <Filter>engine\2D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3D\Model.cpp">
+      <Filter>engine\3D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3D\ModelCommon.cpp">
+      <Filter>engine\3D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3D\ModelManager.cpp">
+      <Filter>engine\3D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3D\Object3d.cpp">
+      <Filter>engine\3D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3D\Object3dCommon.cpp">
+      <Filter>engine\3D</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Math\MyMath.cpp">
+      <Filter>engine\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="externals\imgui\imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui_impl_dx12.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui_impl_win32.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imstb_rectpack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imstb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imstb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Base\DirectXCommon.h">
+      <Filter>application\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Base\FPSLimiter.h">
+      <Filter>application\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Base\Logger.h">
+      <Filter>application\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Base\StringUtility.h">
+      <Filter>application\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Base\TextureManager.h">
+      <Filter>application\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Base\WinApp.h">
+      <Filter>application\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Input\Input.h">
+      <Filter>application\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\2D\Sprite.h">
+      <Filter>engine\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\2D\SpriteCommon.h">
+      <Filter>engine\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3D\Model.h">
+      <Filter>engine\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3D\ModelCommon.h">
+      <Filter>engine\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3D\ModelManager.h">
+      <Filter>engine\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3D\Object3d.h">
+      <Filter>engine\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3D\Object3dCommon.h">
+      <Filter>engine\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\DirectionalLight.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Material.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Matrix3x3.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Matrix4x4.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\MyMath.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Transform.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Vector2.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Vector3.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\Vector4.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math\VertexData.h">
+      <Filter>engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="externals\imgui\LICENSE.txt">
+      <Filter>imgui</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

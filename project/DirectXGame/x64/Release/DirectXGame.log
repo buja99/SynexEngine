@@ -1,0 +1,18 @@
+﻿  DirectXCommon.cpp
+  Model.cpp
+  ModelCommon.cpp
+  ModelManager.cpp
+  Object3d.cpp
+  Object3dCommon.cpp
+  Sprite.cpp
+  SpriteCommon.cpp
+  TextureManager.cpp
+  main.cpp
+  コード生成しています。
+  138 of 2712 functions ( 5.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    104 functions had inline decision re-evaluated but remain unchanged
+  コード生成が終了しました。
+  DirectXGame.vcxproj -> C:\Users\PARK YIJUN\Desktop\GE3\x64\Release\DirectXGame.exe
+          1 個のファイルをコピーしました。
+          1 個のファイルをコピーしました。
