@@ -38,6 +38,7 @@
 #include "Model.h"
 #include "ModelManager.h"
 #include "Camera.h"
+#include "SrvManager.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -79,6 +80,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	WinApp* winApp = new WinApp();
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
+	SrvManager* srvManager = SrvManager::GetInstance();
 
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
@@ -106,9 +108,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
+	srvManager->Initialize(dxCommon);
 	
 
-	TextureManager::GetInstance()->Initialize(dxCommon);
+	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
 	input->Initialize(winApp);
 	//gameScene->Initialize(dxCommon);
 	spriteCommon->Initialize(dxCommon);
@@ -159,7 +162,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		dxCommon->PreDraw();
 		//dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
-
+		SrvManager::GetInstance()->PreDraw();
 		spriteCommon->CommonDrawSettings();
 		
 		object3dCommon->CommonDrawSettings();
@@ -171,7 +174,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//sprite->Draw();
 
 #ifdef _DEBUG
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
+	//	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
 #endif // _DEBUG
 
 		//gameScene->Draw();

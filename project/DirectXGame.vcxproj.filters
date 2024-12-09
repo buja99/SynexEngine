@@ -37,6 +37,12 @@
     <Filter Include="engine\Math">
       <UniqueIdentifier>{cae39893-58aa-47e4-8709-bf94585f2875}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\camera">
+      <UniqueIdentifier>{980a3620-beca-4632-a1a9-b467226f9b1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\srvManager">
+      <UniqueIdentifier>{c3648132-ee60-4758-9b65-1d6061357cca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -108,8 +114,11 @@
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="engine\srvManager\SrvManager.cpp">
+      <Filter>engine\srvManager</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\camera\Camera.cpp">
+      <Filter>engine\camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -209,8 +218,11 @@
     <ClInclude Include="engine\Math\VertexData.h">
       <Filter>engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="engine\camera\Camera.h">
+      <Filter>engine\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\srvManager\SrvManager.h">
+      <Filter>engine\srvManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -29,7 +29,7 @@ void Model::Draw()
 
 	object3dCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 
-	auto textureDescriptorHandle = TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureIndex);
+	auto textureDescriptorHandle = TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath);
 	object3dCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureDescriptorHandle);
 
 	object3dCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
