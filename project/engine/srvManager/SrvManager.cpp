@@ -85,3 +85,8 @@ bool SrvManager::CanAllocate() const
 {
 	return useIndex < kMaxSRVCount;
 }
+
+void SrvManager::Finalize()
+{
+	descriptorHeap.Reset();
+}

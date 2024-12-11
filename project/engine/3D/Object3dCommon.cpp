@@ -23,8 +23,8 @@ void Object3dCommon::CommonDrawSettings()
 
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 
-	dxCommon_->GetCommandList()->SetPipelineState(dxCommon_->GetGraphicsPipelineState().Get());
-
+	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 }

@@ -205,6 +205,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete modelCommon;
 	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
+	SrvManager::GetInstance()->Finalize();
 	dxCommon->Cleanup(); 
 	delete dxCommon; 
 	winApp->Finalize();

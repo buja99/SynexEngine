@@ -25,6 +25,8 @@ public:
 	void PreDraw();
 	void SetGraphicsRootDesciptorTable(UINT RootPameterIndex, uint32_t srvIndex);
 	bool CanAllocate() const;
+
+	void Finalize();
 private:
 	DirectXCommon* directXCommon = nullptr;
 
