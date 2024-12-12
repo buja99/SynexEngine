@@ -9,7 +9,7 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 	this->object3dCommon = object3dCommon;
 
-	modelData = LoadobjFile("resources", "plane.obj");
+	//modelData = LoadobjFile("resources", "plane.obj");
 	
 	modelData = LoadobjFile(directorypath, filename);
 

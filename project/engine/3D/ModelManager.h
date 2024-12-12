@@ -21,7 +21,7 @@ public:
 
     void Initialize(DirectXCommon* dxCommon);
 
-    void LoadModel(const std::string& filePath);
+    void LoadModel(const std::string& directorypath,const std::string& filePath);
 
     Model* FindModel(const std::string& filePath);
 

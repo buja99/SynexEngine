@@ -37,7 +37,7 @@ class Object3d
 
 	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
 
-	void SetModel(Model* model) { this->model = model; }
+	void SetModel(Model* model) { this->model_ = model; }
 
 	void SetModel(const std::string& filePath);
 
@@ -57,9 +57,9 @@ class Object3d
 
 private:
 
-	Model* model = nullptr;
+	Model* model_ = nullptr;
 
-	Object3dCommon* object3dCommon = nullptr;
+	Object3dCommon* object3dCommon_ = nullptr;
 
 	//ModelData modelData;
 
@@ -75,8 +75,6 @@ private:
 	ComPtr<ID3D12Resource> parallelLightResource;
 	ParallelLight* parallelLightData = nullptr;
 
-	//void CreateVertexBuffer();
-	//void InitializeMaterial();
 	void InitializeTransformationMatrix();
 	void InitializeParallelLight();
 

@@ -35,7 +35,6 @@
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include "ModelCommon.h"
-#include "Model.h"
 #include "ModelManager.h"
 #include "Camera.h"
 
@@ -88,13 +87,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3dCommon* object3dCommon = nullptr; 
 	object3dCommon = new Object3dCommon();    
 	
-	Model* model = new Model();
-
+	
 	Object3d* object3d = new Object3d();
+	Object3d* object3d1 = new Object3d();
+	Object3d* object3d2 = new Object3d();
 
 	Camera* camera = new Camera();
-	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
-	camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
+	camera->SetRotate({ 1.0f, 0.0f, 0.0f });
+	camera->SetTranslate({ 0.0f, 44.0f, 30.0f });
 	object3dCommon->SetDefaultCamera(camera);
 
 	//GameScene* gameScene = new GameScene();
@@ -115,11 +115,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	modelCommon->Initialize(dxCommon);
 	object3dCommon->Initialize(dxCommon);
 	ModelManager::GetInstance()->Initialize(dxCommon);
-	ModelManager::GetInstance()->LoadModel("axis.obj");
-	model->Initialize(modelCommon, object3dCommon, "resources", "axis.obj");
+	ModelManager::GetInstance()->LoadModel("resources/player/body","body.obj");
+	ModelManager::GetInstance()->LoadModel("resources/player/legL","legL.obj");
+	ModelManager::GetInstance()->LoadModel("resources/player/legR","legR.obj");
 	object3d->Initialize(object3dCommon);
-	object3d->SetModel("axis.obj");
-
+	object3d1->Initialize(object3dCommon);
+	object3d2->Initialize(object3dCommon);
+	object3d->SetModel("body.obj");
+	object3d1->SetModel("legL.obj");
+	object3d2->SetModel("legR.obj");
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 
@@ -147,18 +151,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::NewFrame();
 
 #endif // _DEBUG
-		
+
 		
 			sprite->Update();
 			camera->Update();
 			object3d->Updata();
+			object3d1->Updata();
+			object3d2->Updata();
 #ifdef _DEBUG
 
 		ImGui::Render();
 #endif // _DEBUG
 
 		dxCommon->PreDraw();
-		//dxCommon->GetCommandList()->SetPipelineState(dxCommon->GetGraphicsPipelineState().Get());
 
 		spriteCommon->CommonDrawSettings();
 		
@@ -167,7 +172,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Draw();
 
 			object3d->Draw();
-			model->Draw();
+			object3d1->Draw();
+			object3d2->Draw();
+			
 		//sprite->Draw();
 
 #ifdef _DEBUG
@@ -191,13 +198,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete spriteCommon;
 
 	object3d->Cleanup();
+	object3d1->Cleanup();
+	object3d2->Cleanup();
 	delete object3d;
+	delete object3d1;
+	delete object3d2;
 
 	delete object3dCommon;
 	//gameScene->Cleanup();
 	//delete gameScene;
-	model->Cleanup(); 
-	delete model;
 
 	delete modelCommon;
 	TextureManager::GetInstance()->Finalize();
