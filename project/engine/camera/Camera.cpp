@@ -29,7 +29,7 @@ Camera::Camera()
 
     : transform({ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} })
     ,horizontalFOV(0.45f)
-    ,aspectRatio((WinApp::kClientWidth) / (WinApp::kClientHeight))
+    ,aspectRatio(static_cast<float>(WinApp::kClientWidth) / static_cast<float>(WinApp::kClientHeight))
     ,nearClipDistance(0.1f)
     ,farClipDistance(100.0f)
     ,worldMatrix(myMath->MakeAffineMatrix(transform.scale, transform.rotate, transform.translate))

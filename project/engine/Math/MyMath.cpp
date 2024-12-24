@@ -1,5 +1,21 @@
 #include "MyMath.h"
 
+Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
+{
+	Vector3 result;
+
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+	result.z = v1.z + v2.z;
+
+	return result;
+}
+
+Vector3 MyMath::Multiply(const Vector3& vec, float scalar)
+{
+	return { vec.x * scalar, vec.y * scalar, vec.z * scalar };
+}
+
 Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale)
 {
 		Matrix4x4 result;

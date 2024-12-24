@@ -1,6 +1,7 @@
 #include "ParticleManager.h"
 #include "Logger.h"
 #include "StringUtility.h"
+#include <Model.h>
 
 
 using namespace Logger;
@@ -15,6 +16,9 @@ void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvMa
 
 	CreateGraphicsPipeline();
 	InitializeVertexBuffer();
+
+	modelData = Model::LoadobjFile("resources", "plane.obj");
+
 }
 
 void ParticleManager::CommonDrawSettings()
@@ -191,7 +195,7 @@ void ParticleManager::InitializeVertexBuffer()
 
 	vertexBufferResource_ = CreateBufferResource(dxCommon_->GetDevice(), vertexBufferSize);
 
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	
 	vertexBufferView.BufferLocation = vertexBufferResource_->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = static_cast<UINT>(vertexBufferSize);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
@@ -199,9 +203,92 @@ void ParticleManager::InitializeVertexBuffer()
 	vertexBufferView_ = vertexBufferView;
 }
 
-void ParticleManager::UpdateVertexBuffer()
+
+
+void ParticleManager::Updata()
 {
+
+	Matrix4x4 cameraMatrix = myMath->MakeAffineMatrix(camera->GetScale(), camera->GetRotate(), camera->GetTranslate());
+	Matrix4x4 viewMatrix = myMath->Inverse(cameraMatrix);
+	Matrix4x4 billboardMatrix = myMath->Multiply(backToFrontMatrix, cameraMatrix);
+	billboardMatrix.m[3][0] = 1.0f;
+	billboardMatrix.m[3][1] = 1.0f;
+	billboardMatrix.m[3][2] = 1.0f;
+
+	Matrix4x4 scaleMatrix = myMath->MakeScaleMatrix(transform.scale);
+	Matrix4x4 translateMatrix = myMath->MakeTranslateMatrix(transform.translate);
+	Matrix4x4 worldMatrix = myMath->Multiply(scaleMatrix, myMath->Multiply(billboardMatrix, translateMatrix));
+
+	Matrix4x4 projectionMatrix = myMath->MakePerspectiveFovMatrix(0.45f, static_cast<float>(WinApp::kClientWidth) / static_cast<float>(WinApp::kClientHeight), 0.1f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrix = myMath->Multiply(worldMatrix, myMath->Multiply(viewMatrix, projectionMatrix));
+
 	
+	transformationMatrixData->WVP = worldViewProjectionMatrix;
+	transformationMatrixData->World = worldViewProjectionMatrix;
+
+	Matrix4x4 viewProjectionMatrix = myMath->Multiply(viewMatrix, projectionMatrix);
+
+	for (auto& [name, group] : particleGroups_) {
+		group.instanceCount = 0; 
+
+		for (auto particleIterator = group.particles.begin(); particleIterator != group.particles.end(); ) {
+			
+			if (IsCollision(accelerationField.area, particleIterator->transform.translate)) {
+				particleIterator->velocity = myMath->Add(
+					particleIterator->velocity, myMath->Multiply(accelerationField.acceleration , kDeltaTime));
+			}
+
+			
+			particleIterator->transform.translate = myMath->Add(
+				particleIterator->transform.translate, myMath->Multiply( particleIterator->velocity,kDeltaTime));
+
+			
+			particleIterator->currentTime += kDeltaTime;
+
+			
+			if (group.instanceCount < kNumMaxInstance) {
+				Matrix4x4 worldMatrix = myMath->MakeAffineMatrix(
+					particleIterator->transform.scale,
+					particleIterator->transform.rotate,
+					particleIterator->transform.translate);
+
+				Matrix4x4 worldViewProjectionMatrix = myMath->Multiply(worldMatrix, viewProjectionMatrix);
+
+				
+				group.mappedInstanceData[group.instanceCount].WVP = worldViewProjectionMatrix;
+				group.mappedInstanceData[group.instanceCount].World = worldMatrix;
+				group.mappedInstanceData[group.instanceCount].color = particleIterator->color;
+
+				
+				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
+				group.mappedInstanceData[group.instanceCount].color.w = alpha;
+
+				++group.instanceCount;
+			}
+
+			
+			if (particleIterator->currentTime >= particleIterator->lifeTime) {
+				particleIterator = group.particles.erase(particleIterator);
+				continue;
+			}
+
+			++particleIterator; 
+		}
+	}
+
+
+}
+
+void ParticleManager::Draw()
+{
+	CommonDrawSettings();
+
+	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	//dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, group.instanceResource.Get()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, instancingSrvHandleGPU);
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU3);
+	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);
 }
 
 IDxcBlob* ParticleManager::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
@@ -280,4 +367,52 @@ ComPtr<ID3D12Resource> ParticleManager::CreateBufferResource(ComPtr<ID3D12Device
 	vertexResource->SetName(L"bufferResource");
 
 	return vertexResource;
+}
+
+Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+{
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	Particle particle;
+	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
+	particle.transform.rotate = { 0.0f, 3.14f, 0.0f };
+
+
+	Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	particle.transform.translate = myMath->Add(translate, randomTranslate);
+
+	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+	particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0.0f;
+	return particle;
+}
+
+void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
+{
+	assert(particleGroups_.find(name) == particleGroups_.end() && "ParticleGroup already exists with this name!");
+	ParticleGroup group;
+	group.material.textureFilePath = textureFilePath;
+	TextureManager::GetInstance()->LoadTexture(group.material.textureFilePath);
+	group.material.textureIndex =
+		TextureManager::GetInstance()->GetTextureIndexByFilepath(group.material.textureFilePath);
+
+	group.instanceResource = CreateBufferResource(device, sizeof(ParticleForGPU) * 100);
+	group.instanceResource->Map(0, nullptr, reinterpret_cast<void**>(&group.mappedInstanceData));
+	group.instanceCount = 0;
+	
+	particleGroups_[name] = group;
+
+	uint32_t srvIndex = srvManager_->Allocate();
+	srvManager_->CreatSRVforStruturedBuffer(
+		srvIndex, group.instanceResource.Get(), kNumMaxInstance, sizeof(ParticleForGPU));
+	group.srvIndex = srvIndex;
+}
+
+bool ParticleManager::IsCollision(const AABB& aabb, const Vector3& point)
+{
+	return (point.x >= aabb.min.x && point.x <= aabb.max.x &&
+		point.y >= aabb.min.y && point.y <= aabb.max.y &&
+		point.z >= aabb.min.z && point.z <= aabb.max.z);
 }

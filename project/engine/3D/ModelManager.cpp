@@ -26,13 +26,13 @@ void ModelManager::Initialize(DirectXCommon* dxCommon)
 
 
 
-void ModelManager::LoadModel(const std::string& filePath)
+void ModelManager::LoadModel(const std::string& directorypath, const std::string& filePath)
 {
     if (models.contains(filePath)) {
         return;
     }
     std::unique_ptr<Model> model = std::make_unique<Model>();
-    model->Initialize(modelCommon.get(), object3dCommon.get(),"resources", filePath);
+    model->Initialize(modelCommon.get(), object3dCommon.get(), directorypath, filePath);
 
     models.insert(std::make_pair(filePath, std::move(model)));
 }

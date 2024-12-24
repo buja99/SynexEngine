@@ -48,7 +48,7 @@ private:
 	void InitializeVertexBuffer();
 	void InitializeMaterial();
 
-	Object3dCommon* object3dCommon = nullptr;
+	Object3dCommon* object3dCommon_ = nullptr;
 
 	MyMath* myMath = new MyMath;
 

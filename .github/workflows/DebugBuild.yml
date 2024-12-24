@@ -18,5 +18,5 @@ jobs:
           msbuild-architecture: x64
       - name: Build
         run: |          
-          msbuild DirectXGame.sln /p:Platform=x64,Configuration=Debug
+          msbuild project/DirectXGame.sln /p:Platform=x64,Configuration=Debug
 

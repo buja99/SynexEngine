@@ -35,7 +35,7 @@
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include "ModelCommon.h"
-#include "Model.h"
+//#include "Model.h"
 #include "ModelManager.h"
 #include "Camera.h"
 #include "SrvManager.h"
@@ -90,7 +90,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3dCommon* object3dCommon = nullptr; 
 	object3dCommon = new Object3dCommon();    
 	
-	Model* model = new Model();
+	//Model* model = new Model();
 
 	Object3d* object3d = new Object3d();
 
@@ -118,13 +118,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	modelCommon->Initialize(dxCommon);
 	object3dCommon->Initialize(dxCommon);
 	ModelManager::GetInstance()->Initialize(dxCommon);
-	ModelManager::GetInstance()->LoadModel("axis.obj");
-	model->Initialize(modelCommon, object3dCommon, "resources", "axis.obj");
+	ModelManager::GetInstance()->LoadModel("resources", "axis.obj");
+	//model->Initialize(modelCommon, object3dCommon, "resources", "axis.obj");
 	object3d->Initialize(object3dCommon);
 	object3d->SetModel("axis.obj");
-
-	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 
 	
 	sprite->Initialize(spriteCommon, "resources/uvChecker.png");
@@ -170,7 +167,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Draw();
 
 			object3d->Draw();
-			model->Draw();
+			//model->Draw();
 		//sprite->Draw();
 
 #ifdef _DEBUG
@@ -199,8 +196,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete object3dCommon;
 	//gameScene->Cleanup();
 	//delete gameScene;
-	model->Cleanup(); 
-	delete model;
+	//model->Cleanup(); 
+	//delete model;
 
 	delete modelCommon;
 	TextureManager::GetInstance()->Finalize();

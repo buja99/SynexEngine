@@ -107,7 +107,7 @@ private:
 
 	void AdjustTextureSize();
 
-	SpriteCommon* spriteCommon = nullptr;
+	SpriteCommon* spriteCommon_ = nullptr;
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 

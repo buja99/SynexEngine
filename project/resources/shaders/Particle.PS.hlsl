@@ -28,7 +28,7 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
     
-    float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
+    float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);//안에 이미지를 움직인다 cg2를 확인
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
     //output.color = gMaterial.color * textureColor;
     output.color = gMaterial.color * textureColor * input.color;

@@ -27,6 +27,8 @@ public:
 	bool CanAllocate() const;
 
 	void Finalize();
+
+
 private:
 	DirectXCommon* directXCommon = nullptr;
 

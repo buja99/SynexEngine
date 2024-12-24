@@ -7,7 +7,7 @@
 
 void Object3d::Initialize(Object3dCommon* object3dCommon)
 {
-	this->object3dCommon = object3dCommon;
+	this->object3dCommon_ = object3dCommon;
 	
 
 	//modelData = LoadobjFile("resources", "plane.obj");
@@ -16,7 +16,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon)
 	//modelData.material.textureIndex =
 	//	TextureManager::GetInstance()->GetTextureIndexByFilepath(modelData.material.textureFilePath);
 
-	transform = { {1.0f,1.0f,1.0f},{0.0f,3.14f,0.0f},{0.0f,0.0f,0.0f} };
+	transform = { {1.0f,1.0f,1.0f},{0.0f,3.14f,0.0f},{0.0f,0.0f,10.0f} };
 	cameraTransform = { {1.0f,1.0f,1.0f},{0.3f,0.0f,0.0f},{0.0f,4.0f,-10.0f} };
 
 	//CreateVertexBuffer();
@@ -61,12 +61,12 @@ void Object3d::Draw()
 {
 
 	//obj3d
-	object3dCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource.Get()->GetGPUVirtualAddress());
-	object3dCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, parallelLightResource.Get()->GetGPUVirtualAddress());	
+	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource.Get()->GetGPUVirtualAddress());
+	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, parallelLightResource.Get()->GetGPUVirtualAddress());	
 
-	if (model) {
+	if (model_) {
 
-		model->Draw();
+		model_->Draw();
 	}
 
 }
@@ -205,7 +205,7 @@ ComPtr<ID3D12Resource> Object3d::CreateBufferResource(ComPtr<ID3D12Device> devic
 
 void Object3d::SetModel(const std::string& filePath)
 {
-	Model* model = ModelManager::GetInstance()->FindModel(filePath);
+	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
 	//if (model) {
 	//	this->model = model; 
@@ -255,7 +255,7 @@ void Object3d::SetModel(const std::string& filePath)
 void Object3d::InitializeTransformationMatrix()
 {
 
-	auto device = object3dCommon->GetDxCommon()->GetDevice();
+	auto device = object3dCommon_->GetDxCommon()->GetDevice();
 
 	transformationMatrixResource = CreateBufferResource(device.Get(), sizeof(TransformationMatrix));
 
@@ -267,7 +267,7 @@ void Object3d::InitializeTransformationMatrix()
 
 void Object3d::InitializeParallelLight()
 {
-	auto device = object3dCommon->GetDxCommon()->GetDevice();
+	auto device = object3dCommon_->GetDxCommon()->GetDevice();
 
 	parallelLightResource = CreateBufferResource(device.Get(), sizeof(ParallelLight));
 
