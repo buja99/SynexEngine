@@ -40,7 +40,7 @@ public:
     void Emit(const std::string& name, const Vector3& position, uint32_t count);
     void Update();
     void Draw();
-
+    Vector3 AddVector2AndVector3;
 private:
     DirectXCommon* dxCommon_ = nullptr;
     SpriteCommon* spriteCommon_ = nullptr;

@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector2.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
 #include <assert.h>
@@ -11,6 +12,7 @@ class MyMath
 	public:
 
 	Vector3 Add(const Vector3& v1, const Vector3& v2);
+	Vector3 AddVector2AndVector3(const Vector2& vec2, const Vector3& vec3);
 	Vector3 Multiply(const Vector3& vec, float scalar);
 	Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 	Matrix4x4 MakeTranslateMatrix(const Vector3& translate);

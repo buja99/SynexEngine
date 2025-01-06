@@ -11,6 +11,11 @@ Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
 	return result;
 }
 
+Vector3 MyMath::AddVector2AndVector3(const Vector2& vec2, const Vector3& vec3)
+{
+	return Vector3{ vec2.x + vec3.x, vec2.y + vec3.y, vec3.z };
+}
+
 Vector3 MyMath::Multiply(const Vector3& vec, float scalar)
 {
 	return { vec.x * scalar, vec.y * scalar, vec.z * scalar };

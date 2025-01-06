@@ -18,7 +18,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
     assert(particleGroups_.find(name) == particleGroups_.end() && "ParticleGroup already exists!");
 
     ParticleGroup group;
-    for (size_t i = 0; i < 100; ++i) { // 최대 100개의 파티클을 미리 생성
+    for (size_t i = 0; i < 100; ++i) { 
         Particle particle;
         particle.sprite = new Sprite();
         particle.sprite->Initialize(spriteCommon_, textureFilePath);
@@ -37,10 +37,10 @@ void ParticleManager::Emit(const std::string& name, const Vector3& position, uin
     size_t emitted = 0;
     for (auto& particle : group.particles) {
         if (emitted >= count) break;
-        if (particle.currentTime >= particle.lifetime) { // 수명이 다한 파티클만 재사용
+        if (particle.currentTime >= particle.lifetime) { 
             particle.sprite->SetPosition({ position.x, position.y });
-            particle.velocity = { 0.0f, 1.0f, 0.0f }; // 위로 올라가는 기본 속도
-            particle.lifetime = 1.0f; // 1초 동안 지속
+            particle.velocity = { 0.0f, 1.0f, 0.0f }; 
+            particle.lifetime = 1.0f; 
             particle.currentTime = 0.0f;
             ++emitted;
         }
@@ -55,8 +55,8 @@ void ParticleManager::Update()
         for (auto& particle : group.particles) {
             if (particle.currentTime < particle.lifetime) {
                 particle.currentTime += kDeltaTime;
-                Vector3 newPos = particle.sprite->GetPosition() + math->Add(particle.velocity,kDeltaTime);
-                particle.sprite->SetPosition(newPos);
+                Vector3 newPos = math->AddVector2AndVector3(particle.sprite->GetPosition(),math->Multiply(particle.velocity,kDeltaTime));
+                particle.sprite->SetPosition({ newPos.x, newPos.y });
                 ++activeCount;
             }
         }
