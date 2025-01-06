@@ -23,9 +23,9 @@ StructuredBuffer<ParticleForGPU> gPaticle : register(t0);
 
 struct VertexShaderInput
 {
-    float4 position : POSITION0;
+    float3 position : POSITION0;
     float2 texcoord : TEXCOORD0;
-    float3 normal : NORMAL0;
+   //float3 normal : NORMAL0;
     //float4 color : COLOR0;
 };
 
@@ -34,9 +34,12 @@ struct VertexShaderInput
 VertexShaderOutput main(VertexShaderInput input,uint instanceId : SV_InstanceID)
 {
     VertexShaderOutput output;
-    output.position = mul(input.position, gPaticle[instanceId].WVP);
+    // Particle position
+    float4 particlePosition = gPaticle[instanceId].WVP[3]; // Extract translation component
+    // Apply offset to create a quad
+    output.position = mul(float4(input.position, 1.0f), gPaticle[instanceId].WVP) + particlePosition;
     output.texcoord = input.texcoord;
-    //output.normal = normalize(mul(input.normal, (float3x3) gPaticle[instanceId].World));
     output.color = gPaticle[instanceId].color;
+
     return output;
 }

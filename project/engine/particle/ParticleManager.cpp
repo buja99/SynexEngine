@@ -7,412 +7,70 @@
 using namespace Logger;
 using namespace StringUtility;
 
-void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvManager, std::mt19937* randomEngine)
+void ParticleManager::Initialize(DirectXCommon* directXCommon, SpriteCommon* spriteCommon)
 {
-	this->dxCommon_ = directXCommon;
-	this->srvManager_ = srvManager;
-	this->randomEngine_ = randomEngine;
-	device = dxCommon_->GetDevice();
-
-	CreateGraphicsPipeline();
-	InitializeVertexBuffer();
-
-	modelData = Model::LoadobjFile("resources", "plane.obj");
-
+	dxCommon_ = directXCommon;
+	spriteCommon_ = spriteCommon;
 }
 
-void ParticleManager::CommonDrawSettings()
+void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath)
 {
-	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+    assert(particleGroups_.find(name) == particleGroups_.end() && "ParticleGroup already exists!");
+
+    ParticleGroup group;
+    for (size_t i = 0; i < 100; ++i) { // 최대 100개의 파티클을 미리 생성
+        Particle particle;
+        particle.sprite = new Sprite();
+        particle.sprite->Initialize(spriteCommon_, textureFilePath);
+        particle.lifetime = 0.0f;
+        particle.currentTime = 0.0f;
+        group.particles.push_back(particle);
+    }
+    group.instanceCount = 0;
+    particleGroups_[name] = group;
 }
 
-void ParticleManager::CreateRootSignature()
+void ParticleManager::Emit(const std::string& name, const Vector3& position, uint32_t count)
 {
-	HRESULT hr;
-	//DescriptorRange
-	D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
-	descriptorRangeForInstancing[0].BaseShaderRegister = 0;
-	descriptorRangeForInstancing[0].NumDescriptors = 1;
-	descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    auto& group = particleGroups_[name];
 
-
-	//RootSignature作成
-	D3D12_ROOT_SIGNATURE_DESC particleDescriptionRootSignature{};
-	particleDescriptionRootSignature.Flags =
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	//複数設定できるので配列。今回は結果１つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER particleRootParameters[3] = {};
-	particleRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
-	particleRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
-	particleRootParameters[0].Descriptor.ShaderRegister = 0; //レジスタ番号0とバインド
-
-	particleRootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	particleRootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; ///VertexShaderで使う
-	particleRootParameters[1].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
-	particleRootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
-
-	particleRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //DescriptorTableを使う
-	particleRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
-	particleRootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
-	particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
-
-	particleDescriptionRootSignature.pParameters = particleRootParameters; //rootParameters配列へのポインタ
-	particleDescriptionRootSignature.NumParameters = _countof(particleRootParameters); //配列の長さ
-
-	//Sampler
-	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-	staticSamplers[0].ShaderRegister = 0;
-	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	particleDescriptionRootSignature.pStaticSamplers = staticSamplers;
-	particleDescriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
-
-	//シリアライズしてバイナリする
-	ComPtr<ID3DBlob> signatureBlob = nullptr;
-	ComPtr<ID3DBlob> errorBlob = nullptr;
-	hr = D3D12SerializeRootSignature(&particleDescriptionRootSignature,
-		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-	if (FAILED(hr)) {
-		Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
-		assert(false);
-	}
-	//バイナリを元に生成
-	
-	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
-		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-	assert(SUCCEEDED(hr));
-
+    size_t emitted = 0;
+    for (auto& particle : group.particles) {
+        if (emitted >= count) break;
+        if (particle.currentTime >= particle.lifetime) { // 수명이 다한 파티클만 재사용
+            particle.sprite->SetPosition({ position.x, position.y });
+            particle.velocity = { 0.0f, 1.0f, 0.0f }; // 위로 올라가는 기본 속도
+            particle.lifetime = 1.0f; // 1초 동안 지속
+            particle.currentTime = 0.0f;
+            ++emitted;
+        }
+    }
+    group.instanceCount += emitted;
 }
 
-void ParticleManager::CreateGraphicsPipeline()
+void ParticleManager::Update()
 {
-	HRESULT hr;
-	//DXC Compiler 初期化
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
-	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-	assert(SUCCEEDED(hr));
-	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-	assert(SUCCEEDED(hr));
-	IDxcIncludeHandler* includeHandler = nullptr;
-	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
-	assert(SUCCEEDED(hr));
-
-	//Shader Compile
-	ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"resources/shaders/Particle.VS.hlsl",
-		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
-	assert(vertexShaderBlob != nullptr);
-
-	ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"resources/shaders/Particle.PS.hlsl",
-		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
-	assert(pixelShaderBlob != nullptr);
-
-	// InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
-
-	inputElementDescs[0].SemanticName = "POSITION";
-	inputElementDescs[0].SemanticIndex = 0;
-	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs[1].SemanticName = "TEXCOORD";
-	inputElementDescs[1].SemanticIndex = 0;
-	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs[2].SemanticName = "NORMAL";
-	inputElementDescs[2].SemanticIndex = 0;
-	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-	inputLayoutDesc.pInputElementDescs = inputElementDescs;
-	inputLayoutDesc.NumElements = _countof(inputElementDescs);
-
-	//Blend
-	D3D12_BLEND_DESC blendDesc{};
-
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-
-	//RasterizerState
-	D3D12_RASTERIZER_DESC rasterizerDesc{};
-	//rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
-	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-
-	CreateRootSignature();
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
-	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
-	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
-	vertexShaderBlob->GetBufferSize() };
-	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
-	pixelShaderBlob->GetBufferSize() };
-
-	graphicsPipelineStateDesc.BlendState = blendDesc;
-	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
-
-	graphicsPipelineStateDesc.NumRenderTargets = 1;
-	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-
-	graphicsPipelineStateDesc.PrimitiveTopologyType =
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-	graphicsPipelineStateDesc.SampleDesc.Count = 1;
-	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	depthStencilDesc.DepthEnable = true;
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
-	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
-	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-	
-	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&graphicsPipelineState));
-	assert(SUCCEEDED(hr));
-}
-
-void ParticleManager::InitializeVertexBuffer()
-{
-	const size_t kNumMaxParticles = 1000; 
-	const size_t vertexBufferSize = sizeof(VertexData) * kNumMaxParticles;
-
-	vertexBufferResource_ = CreateBufferResource(dxCommon_->GetDevice(), vertexBufferSize);
-
-	
-	vertexBufferView.BufferLocation = vertexBufferResource_->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = static_cast<UINT>(vertexBufferSize);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	vertexBufferView_ = vertexBufferView;
-}
-
-
-
-void ParticleManager::Updata()
-{
-
-	Matrix4x4 cameraMatrix = myMath->MakeAffineMatrix(camera->GetScale(), camera->GetRotate(), camera->GetTranslate());
-	Matrix4x4 viewMatrix = myMath->Inverse(cameraMatrix);
-	Matrix4x4 billboardMatrix = myMath->Multiply(backToFrontMatrix, cameraMatrix);
-	billboardMatrix.m[3][0] = 1.0f;
-	billboardMatrix.m[3][1] = 1.0f;
-	billboardMatrix.m[3][2] = 1.0f;
-
-	Matrix4x4 scaleMatrix = myMath->MakeScaleMatrix(transform.scale);
-	Matrix4x4 translateMatrix = myMath->MakeTranslateMatrix(transform.translate);
-	Matrix4x4 worldMatrix = myMath->Multiply(scaleMatrix, myMath->Multiply(billboardMatrix, translateMatrix));
-
-	Matrix4x4 projectionMatrix = myMath->MakePerspectiveFovMatrix(0.45f, static_cast<float>(WinApp::kClientWidth) / static_cast<float>(WinApp::kClientHeight), 0.1f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix = myMath->Multiply(worldMatrix, myMath->Multiply(viewMatrix, projectionMatrix));
-
-	
-	transformationMatrixData->WVP = worldViewProjectionMatrix;
-	transformationMatrixData->World = worldViewProjectionMatrix;
-
-	Matrix4x4 viewProjectionMatrix = myMath->Multiply(viewMatrix, projectionMatrix);
-
-	for (auto& [name, group] : particleGroups_) {
-		group.instanceCount = 0; 
-
-		for (auto particleIterator = group.particles.begin(); particleIterator != group.particles.end(); ) {
-			
-			if (IsCollision(accelerationField.area, particleIterator->transform.translate)) {
-				particleIterator->velocity = myMath->Add(
-					particleIterator->velocity, myMath->Multiply(accelerationField.acceleration , kDeltaTime));
-			}
-
-			
-			particleIterator->transform.translate = myMath->Add(
-				particleIterator->transform.translate, myMath->Multiply( particleIterator->velocity,kDeltaTime));
-
-			
-			particleIterator->currentTime += kDeltaTime;
-
-			
-			if (group.instanceCount < kNumMaxInstance) {
-				Matrix4x4 worldMatrix = myMath->MakeAffineMatrix(
-					particleIterator->transform.scale,
-					particleIterator->transform.rotate,
-					particleIterator->transform.translate);
-
-				Matrix4x4 worldViewProjectionMatrix = myMath->Multiply(worldMatrix, viewProjectionMatrix);
-
-				
-				group.mappedInstanceData[group.instanceCount].WVP = worldViewProjectionMatrix;
-				group.mappedInstanceData[group.instanceCount].World = worldMatrix;
-				group.mappedInstanceData[group.instanceCount].color = particleIterator->color;
-
-				
-				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
-				group.mappedInstanceData[group.instanceCount].color.w = alpha;
-
-				++group.instanceCount;
-			}
-
-			
-			if (particleIterator->currentTime >= particleIterator->lifeTime) {
-				particleIterator = group.particles.erase(particleIterator);
-				continue;
-			}
-
-			++particleIterator; 
-		}
-	}
-
-
+    for (auto& [name, group] : particleGroups_) {
+        size_t activeCount = 0;
+        for (auto& particle : group.particles) {
+            if (particle.currentTime < particle.lifetime) {
+                particle.currentTime += kDeltaTime;
+                Vector3 newPos = particle.sprite->GetPosition() + math->Add(particle.velocity,kDeltaTime);
+                particle.sprite->SetPosition(newPos);
+                ++activeCount;
+            }
+        }
+        group.instanceCount = activeCount;
+    }
 }
 
 void ParticleManager::Draw()
 {
-	CommonDrawSettings();
-
-	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	//dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, group.instanceResource.Get()->GetGPUVirtualAddress());
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, instancingSrvHandleGPU);
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU3);
-	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);
-}
-
-IDxcBlob* ParticleManager::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
-{
-	//hlsl
-	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
-
-	IDxcBlobEncoding* shaderSource = nullptr;
-	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
-
-	assert(SUCCEEDED(hr));
-
-	DxcBuffer shaderSourceBuffer;
-	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
-	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
-	shaderSourceBuffer.Encoding = DXC_CP_UTF8;
-
-	//Compile
-	LPCWSTR arguments[] = {
-		filePath.c_str(), //Compiler対象のhlalファイル名
-		L"-E",L"main",
-		L"-T",profile, // ShderProfileの設定
-		L"-Zi",L"-Qembed_debug",
-		L"-Od",
-		L"-Zpr"
-	};
-	//Shader Compile
-	IDxcResult* shaderResult = nullptr;
-	hr = dxcCompiler->Compile(
-		&shaderSourceBuffer,         //読み込んだfile
-		arguments,					 //Compile option
-		_countof(arguments),		 //Compile optionの数
-		includeHandler,				 //includeが含まれた諸々
-		IID_PPV_ARGS(&shaderResult)	 //Compile結果
-	);
-	assert(SUCCEEDED(hr));
-	//警告・エラー
-	IDxcBlobUtf8* shaderError = nullptr;
-	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
-	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
-		Log(shaderError->GetStringPointer());
-		assert(false);
-	}
-	//
-	IDxcBlob* shaderBlob = nullptr;
-	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
-	assert(SUCCEEDED(hr));
-	Log(ConvertString(std::format(L"Compile Succeeded,path:{},profile:{}\n", filePath, profile)));
-	shaderSource->Release();
-	shaderResult->Release();
-	return shaderBlob;
-}
-
-ComPtr<ID3D12Resource> ParticleManager::CreateBufferResource(ComPtr<ID3D12Device> device, size_t sizeInBytes)
-{
-	//頂点Heap
-	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-	//頂点Resource
-	D3D12_RESOURCE_DESC vertexResourceDesc{};
-	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeInBytes;
-
-	vertexResourceDesc.Height = 1;
-	vertexResourceDesc.DepthOrArraySize = 1;
-	vertexResourceDesc.MipLevels = 1;
-	vertexResourceDesc.SampleDesc.Count = 1;
-
-	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	ComPtr<ID3D12Resource> vertexResource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-		IID_PPV_ARGS(&vertexResource));
-	assert(SUCCEEDED(hr));
-	vertexResource->SetName(L"bufferResource");
-
-	return vertexResource;
-}
-
-Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
-{
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	Particle particle;
-	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-	particle.transform.rotate = { 0.0f, 3.14f, 0.0f };
-
-
-	Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	particle.transform.translate = myMath->Add(translate, randomTranslate);
-
-	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-	particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	particle.lifeTime = distTime(randomEngine);
-	particle.currentTime = 0.0f;
-	return particle;
-}
-
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
-{
-	assert(particleGroups_.find(name) == particleGroups_.end() && "ParticleGroup already exists with this name!");
-	ParticleGroup group;
-	group.material.textureFilePath = textureFilePath;
-	TextureManager::GetInstance()->LoadTexture(group.material.textureFilePath);
-	group.material.textureIndex =
-		TextureManager::GetInstance()->GetTextureIndexByFilepath(group.material.textureFilePath);
-
-	group.instanceResource = CreateBufferResource(device, sizeof(ParticleForGPU) * 100);
-	group.instanceResource->Map(0, nullptr, reinterpret_cast<void**>(&group.mappedInstanceData));
-	group.instanceCount = 0;
-	
-	particleGroups_[name] = group;
-
-	uint32_t srvIndex = srvManager_->Allocate();
-	srvManager_->CreatSRVforStruturedBuffer(
-		srvIndex, group.instanceResource.Get(), kNumMaxInstance, sizeof(ParticleForGPU));
-	group.srvIndex = srvIndex;
-}
-
-bool ParticleManager::IsCollision(const AABB& aabb, const Vector3& point)
-{
-	return (point.x >= aabb.min.x && point.x <= aabb.max.x &&
-		point.y >= aabb.min.y && point.y <= aabb.max.y &&
-		point.z >= aabb.min.z && point.z <= aabb.max.z);
+    for (auto& [name, group] : particleGroups_) {
+        for (auto& particle : group.particles) {
+            if (particle.currentTime < particle.lifetime) {
+                particle.sprite->Draw();
+            }
+        }
+    }
 }
