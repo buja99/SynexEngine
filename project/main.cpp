@@ -37,6 +37,8 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 #include "Camera.h"
+#include "Player.h"
+#include "MyMath.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -78,6 +80,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	WinApp* winApp = new WinApp();
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
+	MyMath* math = new MyMath();
 
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
@@ -87,14 +90,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3dCommon* object3dCommon = nullptr; 
 	object3dCommon = new Object3dCommon();    
 	
-	
-	Object3d* object3d = new Object3d();
-	Object3d* object3d1 = new Object3d();
-	Object3d* object3d2 = new Object3d();
+	std::vector<std::unique_ptr<Object3d>> object3ds;
+
+	std::vector<std::string> modelPaths = {
+	"body", "legL", "legR", "head", "armR", "armL"
+	};
+
 
 	Camera* camera = new Camera();
 	camera->SetRotate({ 1.0f, 0.0f, 0.0f });
-	camera->SetTranslate({ 0.0f, 44.0f, 30.0f });
+	camera->SetTranslate({ 0.0f, 90.0f, 10.0f });
 	object3dCommon->SetDefaultCamera(camera);
 
 	//GameScene* gameScene = new GameScene();
@@ -102,7 +107,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sprite* sprite = new Sprite();
 	spriteCommon = new SpriteCommon;
 	
-	
+	Player* player = new Player();
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
@@ -115,15 +120,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	modelCommon->Initialize(dxCommon);
 	object3dCommon->Initialize(dxCommon);
 	ModelManager::GetInstance()->Initialize(dxCommon);
-	ModelManager::GetInstance()->LoadModel("resources/player/body","body.obj");
-	ModelManager::GetInstance()->LoadModel("resources/player/legL","legL.obj");
-	ModelManager::GetInstance()->LoadModel("resources/player/legR","legR.obj");
-	object3d->Initialize(object3dCommon);
-	object3d1->Initialize(object3dCommon);
-	object3d2->Initialize(object3dCommon);
-	object3d->SetModel("body.obj");
-	object3d1->SetModel("legL.obj");
-	object3d2->SetModel("legR.obj");
+
+	for (const auto& modelPath : modelPaths) {
+		ModelManager::GetInstance()->LoadModel("resources/player/" + modelPath, modelPath + ".obj");
+		auto object = std::make_unique<Object3d>();
+		object->Initialize(object3dCommon);
+		object->SetModel(modelPath + ".obj");
+
+		object3ds.emplace_back(std::move(object));
+	}
+	std::vector<Object3d*> playerParts = {
+	object3ds[0].get(),  // body
+	object3ds[1].get(),  // legL
+	object3ds[2].get(),  // legR
+	object3ds[3].get(),  // head
+	object3ds[4].get(),  // armL
+	object3ds[5].get()   // armR
+	};
+	player->Initialize(playerParts);
+
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 
@@ -153,11 +168,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #endif // _DEBUG
 
 		
-			sprite->Update();
-			camera->Update();
-			object3d->Updata();
-			object3d1->Updata();
-			object3d2->Updata();
+		input->Update();
+		player->Updata(input);
+		
+
+		Vector3 playerPos = player->GetPosition();
+		
+
+		Vector3 cameraOffset = { 0.0f, 90.0f, -40.0f };
+		Vector3 cameraPos = math->Add(playerPos, cameraOffset);
+		camera->SetTranslate(cameraPos);
+
+		camera->Update();
+		//object3dCommon->SetViewProjectionMatrix(camera->GetViewProjectionMatrix());
+			for (auto& object : object3ds) {
+				object->Updata();
+			}
+			
+			
+			
+		
+			//Vector3 cameraPos =math->Add( pos,cameraOffset);
+			//camera->SetTranslate(cameraPos);
+			
+
+			
 #ifdef _DEBUG
 
 		ImGui::Render();
@@ -169,12 +204,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		object3dCommon->CommonDrawSettings();
 		
-			sprite->Draw();
+			//sprite->Draw();
 
-			object3d->Draw();
-			object3d1->Draw();
-			object3d2->Draw();
-			
+			//object3d->Draw();
+			//object3d1->Draw();
+			//object3d2->Draw();
+			//object3d3->Draw();
+			//object3d4->Draw();
+			//object3d5->Draw();
+			for (auto& object : object3ds) {
+				object->Draw();
+	}
 		//sprite->Draw();
 
 #ifdef _DEBUG
@@ -197,12 +237,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	delete spriteCommon;
 
-	object3d->Cleanup();
-	object3d1->Cleanup();
-	object3d2->Cleanup();
-	delete object3d;
-	delete object3d1;
-	delete object3d2;
+	//object3d->Cleanup();
+	//object3d1->Cleanup();
+	//object3d2->Cleanup();
+	//object3d3->Cleanup();
+	//object3d4->Cleanup();
+	//object3d5->Cleanup();
+	//delete object3d;
+	//delete object3d1;
+	//delete object3d2;
+	//delete object3d3;
+	//delete object3d4;
+	//delete object3d5;
 
 	delete object3dCommon;
 	//gameScene->Cleanup();
@@ -215,7 +261,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete dxCommon; 
 	winApp->Finalize();
 	delete input;
-	//delete winApp; 
+	delete math;
 
 	CoUninitialize();
 	return 0;

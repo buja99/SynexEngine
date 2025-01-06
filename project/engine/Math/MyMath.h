@@ -10,7 +10,7 @@ class MyMath
 
 	public:
 
-
+	Vector3 Add(const Vector3& v1, const Vector3& v2);
 	Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 	Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
 	Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);

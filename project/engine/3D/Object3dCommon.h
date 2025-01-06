@@ -36,6 +36,9 @@ public:
 	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
 	Camera* GetDefaultCamera() const { return defaultCamera; }
 
+	//void SetViewProjectionMatrix(const Matrix4x4& matrix) { viewProjectionMatrix_ = matrix; }
+	
+	//const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix_; }
 private:
 
 	void CreateRootSignature();
@@ -52,5 +55,7 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 
 	Camera* defaultCamera = nullptr;
+
+	//Matrix4x4 viewProjectionMatrix_;
 };
 
