@@ -47,13 +47,12 @@ void WinApp::Initialize()
 
 
 
-
  hwnd = CreateWindow(
 
 		//利用するクラス名
 		wc.lpszClassName,
 		//タイトルバーの文字列
-		L"CG2",
+		L"One_Bullet",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
