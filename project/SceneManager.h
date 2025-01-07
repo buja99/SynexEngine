@@ -1,5 +1,6 @@
 #pragma once
 #include "Sprite.h"
+#include "SpriteCommon.h"
 enum class SceneType {
     Title,
     Game,
@@ -17,7 +18,8 @@ public:
 
 private:
     SceneType currentScene_ = SceneType::Title; 
-
+    SpriteCommon* title = nullptr;
+    SpriteCommon* clear = nullptr;
     Sprite* titleSprite_ = nullptr;
     Sprite* gameClearSprite_ = nullptr;
 
