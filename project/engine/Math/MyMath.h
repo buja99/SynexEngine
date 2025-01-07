@@ -11,6 +11,7 @@ class MyMath
 	public:
 
 	Vector3 Add(const Vector3& v1, const Vector3& v2);
+	Vector3 Multiply(const float a, const Vector3& vector);
 	Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 	Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
 	Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
@@ -24,6 +25,6 @@ class MyMath
 	Vector3 Transforms(const Vector3& vector, const Matrix4x4& matrix);
 	Matrix4x4 Inverse(const Matrix4x4& m);
 	Matrix4x4 MakeIdentity4x4();
-
+	bool CheckCollision(const Vector3& pos1, const Vector3& scale1, const Vector3& pos2, const Vector3& scale2);
 };
 

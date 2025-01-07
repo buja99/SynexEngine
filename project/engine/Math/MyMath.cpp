@@ -11,6 +11,17 @@ Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
 	return result;
 }
 
+Vector3 MyMath::Multiply(const float a, const Vector3& vector)
+{
+	Vector3 result;
+
+	result.x = vector.x * a;
+	result.y = vector.y * a;
+	result.z = vector.z * a;
+
+	return result;
+}
+
 Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale)
 {
 		Matrix4x4 result;
@@ -228,4 +239,11 @@ Matrix4x4 MyMath::MakeIdentity4x4()
 
 	};
 	return result;
+}
+
+bool MyMath::CheckCollision(const Vector3& pos1, const Vector3& scale1, const Vector3& pos2, const Vector3& scale2)
+{
+	return (fabs(pos1.x - pos2.x) <= (scale1.x + scale2.x) * 0.5f &&
+		fabs(pos1.y - pos2.y) <= (scale1.y + scale2.y) * 0.5f &&
+		fabs(pos1.z - pos2.z) <= (scale1.z + scale2.z) * 0.5f);
 }

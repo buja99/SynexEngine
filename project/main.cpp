@@ -39,6 +39,7 @@
 #include "Camera.h"
 #include "Player.h"
 #include "MyMath.h"
+#include "Enemy.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -93,7 +94,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::vector<std::unique_ptr<Object3d>> object3ds;
 
 	std::vector<std::string> modelPaths = {
-	"body", "legL", "legR", "head", "armR", "armL"
+	"body", "legL", "legR", "head", "armR", "armL","gun"
 	};
 
 
@@ -108,6 +109,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon = new SpriteCommon;
 	
 	Player* player = new Player();
+	//Enemy* enemy = new Enemy();
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
@@ -129,16 +131,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		object3ds.emplace_back(std::move(object));
 	}
+	ModelManager::GetInstance()->LoadModel("resources/bullet", "bullet.obj");
+	auto bulletModel = std::make_unique<Object3d>();
+	bulletModel->Initialize(object3dCommon);
+	bulletModel->SetModel("bullet.obj");
+
+	ModelManager::GetInstance()->LoadModel("resources/enemy", "enemy.obj");
+	auto enemyModel = std::make_unique<Object3d>();
+	enemyModel->Initialize(object3dCommon);
+	enemyModel->SetModel("enemy.obj");
+
+	
+	Enemy enemy;
+	enemy.Initialize(enemyModel.get());
+	
+
 	std::vector<Object3d*> playerParts = {
 	object3ds[0].get(),  // body
 	object3ds[1].get(),  // legL
 	object3ds[2].get(),  // legR
 	object3ds[3].get(),  // head
 	object3ds[4].get(),  // armL
-	object3ds[5].get()   // armR
+	object3ds[5].get(),  // armR
+	object3ds[6].get()   // gun
 	};
-	player->Initialize(playerParts);
-
+	Object3d* bulletModelPtr = bulletModel.get();
+	object3ds.emplace_back(std::move(bulletModel));
+	player->Initialize(playerParts, bulletModelPtr,object3dCommon);
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 
@@ -180,13 +199,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		camera->SetTranslate(cameraPos);
 
 		camera->Update();
+			enemy.Update();
 		//object3dCommon->SetViewProjectionMatrix(camera->GetViewProjectionMatrix());
 			for (auto& object : object3ds) {
 				object->Updata();
 			}
 			
-			
-			
+			for (auto& bullet : player->GetBullets()) {
+				if (math->CheckCollision(bullet.GetPosition(), { 3.0f, 3.0f, 3.0f }, enemy.GetPosition(), enemy.GetScale())) {
+					enemy.Destroy();
+				}
+			}
+			//wwddaenemyModel->Updata();
 		
 			//Vector3 cameraPos =math->Add( pos,cameraOffset);
 			//camera->SetTranslate(cameraPos);
@@ -204,17 +228,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		object3dCommon->CommonDrawSettings();
 		
-			//sprite->Draw();
-
-			//object3d->Draw();
-			//object3d1->Draw();
-			//object3d2->Draw();
-			//object3d3->Draw();
-			//object3d4->Draw();
-			//object3d5->Draw();
+			
 			for (auto& object : object3ds) {
 				object->Draw();
-	}
+	        }
+			for (const auto& bullet : player->GetBullets()) {
+				bullet.GetObject()->Draw();
+			}
+			if (enemy.IsAlive()) {
+				enemy.Draw();
+			}
+
+
+
 		//sprite->Draw();
 
 #ifdef _DEBUG
@@ -236,19 +262,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete sprite;
 	
 	delete spriteCommon;
-
-	//object3d->Cleanup();
-	//object3d1->Cleanup();
-	//object3d2->Cleanup();
-	//object3d3->Cleanup();
-	//object3d4->Cleanup();
-	//object3d5->Cleanup();
-	//delete object3d;
-	//delete object3d1;
-	//delete object3d2;
-	//delete object3d3;
-	//delete object3d4;
-	//delete object3d5;
 
 	delete object3dCommon;
 	//gameScene->Cleanup();
