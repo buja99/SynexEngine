@@ -21,31 +21,32 @@
 //	MaterialData material;
 //};
 
-struct Particle {
-    Sprite* sprite;       // 각 파티클은 Sprite로 관리
-    Vector3 velocity;     // 속도
-    float lifetime;       // 전체 수명
-    float currentTime;    // 현재 경과 시간
+struct ParticleVertex {
+    Vector3 position;  // 3D 위치
+    Vector4 color;     // RGBA 색상
+    float size;        // 파티클 크기
 };
 
-struct ParticleGroup {
-    std::vector<Particle> particles; // 파티클 리스트
-    size_t instanceCount;            // 현재 활성화된 파티클 수
-};
+
 
 class ParticleManager {
 public:
-    void Initialize(DirectXCommon* directXCommon, SpriteCommon* spriteCommon);
-    void CreateParticleGroup(const std::string& name, const std::string& textureFilePath);
-    void Emit(const std::string& name, const Vector3& position, uint32_t count);
+    void Initialize(DirectXCommon* directXCommon);
     void Update();
     void Draw();
-    Vector3 AddVector2AndVector3;
+
+    void Emit(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& color, float size, float lifetime);
+
+    ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
+
 private:
+    void CreateVertexBuffer();
     DirectXCommon* dxCommon_ = nullptr;
-    SpriteCommon* spriteCommon_ = nullptr;
-    std::unordered_map<std::string, ParticleGroup> particleGroups_; // 그룹 컨테이너
-    const float kDeltaTime = 1.0f / 60.0f; // 고정 시간 간격
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_;
+    D3D12_VERTEX_BUFFER_VIEW vbView_;
+    std::vector<ParticleVertex> vertices_;
+    ComPtr<ID3D12Resource> vertexBufferResource_;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
     MyMath* math = nullptr;
 };
 
