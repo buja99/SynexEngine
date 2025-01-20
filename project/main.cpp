@@ -132,9 +132,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		object3ds.emplace_back(std::move(object));
 	}
 	ModelManager::GetInstance()->LoadModel("resources/bullet", "bullet.obj");
-	auto bulletModel = std::make_unique<Object3d>();
-	bulletModel->Initialize(object3dCommon);
-	bulletModel->SetModel("bullet.obj");
+	auto bulletObject = std::make_unique<Object3d>();
+	bulletObject->Initialize(object3dCommon);
+	bulletObject->SetModel("bullet.obj");
+	Object3d* bulletModelPtr = bulletObject.get();
 
 	ModelManager::GetInstance()->LoadModel("resources/enemy", "enemy.obj");
 	auto enemyModel = std::make_unique<Object3d>();
@@ -155,8 +156,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3ds[5].get(),  // armR
 	object3ds[6].get()   // gun
 	};
-	Object3d* bulletModelPtr = bulletModel.get();
-	object3ds.emplace_back(std::move(bulletModel));
+	//object3ds.emplace_back(std::move(bulletModel));
 	player->Initialize(playerParts, bulletModelPtr,object3dCommon);
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
@@ -199,7 +199,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		camera->SetTranslate(cameraPos);
 
 		camera->Update();
-			enemy.Update();
+		enemy.Update();
 		//object3dCommon->SetViewProjectionMatrix(camera->GetViewProjectionMatrix());
 			for (auto& object : object3ds) {
 				object->Updata();
@@ -230,6 +230,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 			
 			for (auto& object : object3ds) {
+			
 				object->Draw();
 	        }
 			for (const auto& bullet : player->GetBullets()) {

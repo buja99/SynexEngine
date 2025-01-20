@@ -5,6 +5,7 @@
 #include "Bullet.h"
 #include "Object3dCommon.h"
 #include "MyMath.h"
+#include "Model.h"
 
 class Player
 {
@@ -12,11 +13,13 @@ class Player
 
 public:
 
-	void Initialize(const std::vector<Object3d*>& playerParts, Object3d* bulletModel, Object3dCommon* Object3dCommon);
+	~Player();
+
+	void Initialize(const std::vector<Object3d*>& playerParts, Object3d* bulletObject3d, Object3dCommon* Object3dCommon);
 
 	void Updata(Input* input);
 
-	void Shoot(Object3d* bulletModel);
+	void Shoot(Model* bulletModel);
 
 	const Vector3& GetPosition() const { return position; }
 
@@ -29,14 +32,18 @@ private:
 
 	std::vector<Object3d*> playerParts_; 
 
-	std::vector<Bullet> bullets_;
+	std::vector<Bullet> bullets_;//유니크 포인터로변경
 
-	Object3d* bulletModel_ = nullptr;
+	Model* bulletModel_ = nullptr;
+
+	Object3d* bulletObject3d_ = nullptr;
 
 	Object3dCommon* Object3dCommon_ = nullptr;
 
 	MyMath* math = nullptr;
 
-	void UpdateAnimation();
+	void UpDownAnimation();
+
+	void LightLeftAnimation();
 };
 

@@ -1,6 +1,6 @@
 #include "Bullet.h"
 
-void Bullet::Initialize(Object3d* model, const Vector3& startPos, const Vector3& direction, float speed, float lifetime)
+void Bullet::Initialize(std::shared_ptr<Object3d> model, const Vector3& startPos, const Vector3& direction, float speed, float lifetime)
 {
 
     model_ = model;
