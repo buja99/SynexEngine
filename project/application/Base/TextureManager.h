@@ -14,6 +14,8 @@ class TextureManager
 {
 public:
 
+	static uint32_t kSRVIndexTop;
+
 	static TextureManager* GetInstance();
 
 	void Initialize(DirectXCommon* dxCommon,SrvManager* srvManager);
@@ -50,7 +52,6 @@ private:
 	TextureManager(TextureManager&) = delete;
 	TextureManager& operator=(TextureManager&) = delete;
 
-	static uint32_t kSRVIndexTop;
 
 	std::map<std::string, uint32_t> textureIndexMap;
 
