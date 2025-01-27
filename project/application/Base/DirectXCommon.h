@@ -9,7 +9,10 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include <string>
 #include "FPSLimiter.h"
-
+#ifdef _DEBUG
+#include <dxgidebug.h>
+#pragma comment(lib, "dxguid.lib")
+#endif
 using Microsoft::WRL::ComPtr;
 
 class DirectXCommon
@@ -41,6 +44,11 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 	void InitializeDXCCompiler();
+
+#ifdef _DEBUG
+	void ReportLiveObjects();
+#endif
+
 #ifdef _DEBUG
 	void InitializeImGui();
 #endif // _DEBUG

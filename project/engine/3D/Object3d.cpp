@@ -68,7 +68,16 @@ void Object3d::Draw()
 void Object3d::Cleanup()
 {
 
-	delete myMath;
+	if (transformationMatrixResource) {
+		transformationMatrixResource.Reset(); // ComPtr 해제
+	}
+
+	if (parallelLightResource) {
+		parallelLightResource.Reset(); // ComPtr 해제
+	}
+
+	delete myMath; // 수동으로 할당된 메모리 해제
+	myMath = nullptr;
 }
 
 

@@ -15,15 +15,17 @@ public:
 
 	~Player();
 
-	void Initialize(const std::vector<Object3d*>& playerParts, Object3d* bulletObject3d, Object3dCommon* Object3dCommon);
+	void Initialize(const std::vector<Object3d*>& playerParts, Object3dCommon* Object3dCommon);
 
 	void Updata(Input* input);
 
 	void Shoot(Model* bulletModel);
 
+	void Darw();
+
 	const Vector3& GetPosition() const { return position; }
 
-	std::vector<Bullet>& GetBullets() { return bullets_; }
+	std::vector<std::unique_ptr<Bullet>>& GetBullets() { return bullets_; }
 private:
 
 	Vector3 position;
@@ -32,11 +34,11 @@ private:
 
 	std::vector<Object3d*> playerParts_; 
 
-	std::vector<Bullet> bullets_;//유니크 포인터로변경
+	std::vector<std::unique_ptr<Bullet>> bullets_;
 
 	Model* bulletModel_ = nullptr;
 
-	Object3d* bulletObject3d_ = nullptr;
+	std::unique_ptr<Object3d> bulletObject3d_ = nullptr;
 
 	Object3dCommon* Object3dCommon_ = nullptr;
 

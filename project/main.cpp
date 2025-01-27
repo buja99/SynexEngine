@@ -132,10 +132,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		object3ds.emplace_back(std::move(object));
 	}
 	ModelManager::GetInstance()->LoadModel("resources/bullet", "bullet.obj");
-	auto bulletObject = std::make_unique<Object3d>();
-	bulletObject->Initialize(object3dCommon);
-	bulletObject->SetModel("bullet.obj");
-	Object3d* bulletModelPtr = bulletObject.get();
+	//auto bulletObject = std::make_unique<Object3d>();
+	//bulletObject->Initialize(object3dCommon);
+	//bulletObject->SetModel("bullet.obj");
+	//Object3d* bulletModelPtr = bulletObject.get();
 
 	ModelManager::GetInstance()->LoadModel("resources/enemy", "enemy.obj");
 	auto enemyModel = std::make_unique<Object3d>();
@@ -157,7 +157,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3ds[6].get()   // gun
 	};
 	//object3ds.emplace_back(std::move(bulletModel));
-	player->Initialize(playerParts, bulletModelPtr,object3dCommon);
+	player->Initialize(playerParts, object3dCommon);
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 
@@ -206,7 +206,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 			
 			for (auto& bullet : player->GetBullets()) {
-				if (math->CheckCollision(bullet.GetPosition(), { 3.0f, 3.0f, 3.0f }, enemy.GetPosition(), enemy.GetScale())) {
+				if (math->CheckCollision(bullet->GetPosition(), { 3.0f, 3.0f, 3.0f }, enemy.GetPosition(), enemy.GetScale())) {
 					enemy.Destroy();
 				}
 			}
@@ -233,12 +233,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 				object->Draw();
 	        }
-			for (const auto& bullet : player->GetBullets()) {
-				bullet.GetObject()->Draw();
-			}
-			if (enemy.IsAlive()) {
-				enemy.Draw();
-			}
+			//for (const auto& bullet : player->GetBullets()) {
+			//	bullet->GetObject()->Draw();
+			//}
+			// 
+			bullet->D 
+			
+			//if (enemy.IsAlive()) {
+			//	enemy.Draw();
+			//}
 
 
 
@@ -253,17 +256,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 	}
 
-
+#ifdef _DEBUG
+	//dxCommon->ReportLiveObjects();
+#endif
 
 	//CloseHandle(fenceEvent);
 	//sprite->Cleanup();
 	//delete sprite;
 	
+	
+
 	sprite->Cleanup();
 	delete sprite;
 	
 	delete spriteCommon;
 
+	delete player;
 	delete object3dCommon;
 	//gameScene->Cleanup();
 	//delete gameScene;
