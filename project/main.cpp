@@ -229,15 +229,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		object3dCommon->CommonDrawSettings();
 		
 			
-			for (auto& object : object3ds) {
-			
-				object->Draw();
-	        }
+		player->Draw();
+
+			//for (auto& object : object3ds) {
+			//
+			//	object->Draw();
+	       //}
 			//for (const auto& bullet : player->GetBullets()) {
 			//	bullet->GetObject()->Draw();
 			//}
 			// 
-			bullet->D 
 			
 			//if (enemy.IsAlive()) {
 			//	enemy.Draw();

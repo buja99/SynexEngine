@@ -21,7 +21,7 @@ public:
 
 	void Shoot(Model* bulletModel);
 
-	void Darw();
+	void Draw();
 
 	const Vector3& GetPosition() const { return position; }
 

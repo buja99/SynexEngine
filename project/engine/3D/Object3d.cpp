@@ -42,10 +42,10 @@ void Object3d::Updata()
 	transformationMatrixData->WVP = worldViewProjectionMatrix;
 	transformationMatrixData->World = worldMatrix;
 #ifdef _DEBUG
-	ImGui::Begin("payer");
-	ImGui::DragFloat3("translate", &transform.translate.x, 0.1f);
-	ImGui::DragFloat3("scale", &transform.scale.x, 0.1f);
-	ImGui::DragFloat3("rotate", &transform.rotate.x, 0.1f);
+	ImGui::Begin("obj");
+	//ImGui::DragFloat3("translate", &transform.translate.x, 0.1f);
+	//ImGui::DragFloat3("scale", &transform.scale.x, 0.1f);
+	//ImGui::DragFloat3("rotate", &transform.rotate.x, 0.1f);
 	ImGui::End();
 #endif // _DEBUG
 
