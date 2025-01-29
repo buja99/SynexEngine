@@ -16,7 +16,6 @@
 #include "MyMath.h"
 
 
-
 //struct ModelData
 //{
 //	std::vector<VertexData> vertices;
@@ -41,6 +40,14 @@ struct  ParticleForGPU
     Matrix4x4 World;
     Vector4 color;
 };
+struct Emitter
+{
+    Transform transform;
+    uint32_t count;
+    float frequency;
+    float frequencyTime;
+
+};
 struct ParticleGroup {
     std::string textureFilePath;           // 텍스처 파일 경로(Texture file path)
     std::list<Particle> particles;         // 파티클 리스트(particle list)
@@ -62,15 +69,15 @@ public:
 
     void CreateParticleGroup(const std::string& name, const std::string& textureFilePath);
 
+   
+
+    
 
 private:
+    Matrix4x4 backToFrontMatrix = math->MakeRotateYMatrix(std::numbers::pi_v<float>);
+
     ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
-    IDxcBlob* CompileShader(
-        const std::wstring& filePath,
-        const wchar_t* profile,
-        IDxcUtils* dxcUtils,
-        IDxcCompiler3* dxcCompiler,
-        IDxcIncludeHandler* includeHandler);
+    IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);
 
     void CreateRootSignature();
     void CreateGraphicsPipeline();
@@ -83,18 +90,17 @@ private:
     DirectXCommon* dxCommon_ = nullptr;
     SrvManager* srvManager_ = nullptr;
     SpriteCommon* spriteCommon_ = nullptr;
+    const Camera* camera_ = nullptr;
     std::vector<ParticleVertex> vertices_;
     ComPtr<ID3D12Resource> vertexBufferResource_;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
+    uint32_t numInstance = 0;
+ 
 
-    /// <summary>
-    /// 문자열 키를 사용하여 파티클 그룹을 관리
-    /// 각 키는 파티클 데이터, 텍스처 정보, 렌더링 정보를 포함한 ParticleGroup에 연결
-    /// Manages particle groups using a unique string key.
-    /// Each key corresponds to a ParticleGroup, which contains particles, texture data,rendering information.
-    /// </summary>
     std::unordered_map<std::string, ParticleGroup> particleGroups;
 
     MyMath* math = nullptr;
+    const uint32_t kNumMaxInstance = 100;
+    
 };
 

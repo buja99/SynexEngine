@@ -27,18 +27,147 @@ void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvMa
 
 	CreateVertexBuffer();
 
+
 }
 
 void ParticleManager::Update()
 {
+	if (!camera_) return;
+
+	Matrix4x4 cameraMatrix = camera_->GetWorldMatrix();
+	Matrix4x4 viewMatrix = camera_->GetViewMatrix();
+	Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
+	Matrix4x4 billboardMatrix = math->Multiply(backToFrontMatrix, cameraMatrix);
+	billboardMatrix.m[3][0] = 1.0f;
+	billboardMatrix.m[3][1] = 1.0f;
+	billboardMatrix.m[3][2] = 1.0f;
+	Matrix4x4 viewProjectionMatrix = math->Multiply(viewMatrix, projectionMatrix);
+	numInstance = 0;
+
+	for (auto& [name, group] : particleGroups) {
+		auto& particles = group.particles;
+
+		group.emitter.frequencyTime += kDeltaTime;
+		if (group.emitter.frequencyTime >= group.emitter.frequency) {
+			std::random_device seedGenerator;
+			std::mt19937 randomEngine(seedGenerator());
+			particles.splice(particles.end(), Emit(group.emitter, randomEngine));
+			group.emitter.frequencyTime -= group.emitter.frequency;
+		}
+
+		for (auto particleIterator = particles.begin(); particleIterator != particles.end(); ) {
+		
+			if (IsCollision(accelerationField.area, particleIterator->transform.translate)) {
+				particleIterator->velocity += accelerationField.acceleration * kDeltaTime;
+			}
+
+			particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
+			particleIterator->currentTime += kDeltaTime;
+
+			
+			if (numInstance < kNumMaxInstance) {
+				Matrix4x4 worldMatrix = math->MakeAffineMatrix(
+					particleIterator->transform.scale,
+					particleIterator->transform.rotate,
+					particleIterator->transform.translate
+				);
+				Matrix4x4 worldViewProjectionMatrix = math->Multiply(worldMatrix, viewProjectionMatrix);
+
+				instancingData[numInstance].WVP = worldViewProjectionMatrix;
+				instancingData[numInstance].World = worldMatrix;
+				instancingData[numInstance].color = particleIterator->color;
+
+				
+				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
+				instancingData[numInstance].color.w = alpha;
+
+				++numInstance;
+			}
+
+			
+			if (particleIterator->currentTime >= particleIterator->lifeTime) {
+				particleIterator = particles.erase(particleIterator);
+				continue;
+			}
+
+			++particleIterator;
+		}
+
+		
+		if (group.mappedInstanceData) {
+			memcpy(group.mappedInstanceData, instancingData, sizeof(ParticleForGPU) * numInstance);
+		}
+
+		group.instanceCount = static_cast<int>(particles.size());
+	}
+
 }
 
 void ParticleManager::Draw()
 {
+	auto commandList = dxCommon_->GetCommandList();
+	commandList->SetGraphicsRootSignature(rootSignature.Get());
+	commandList->SetPipelineState(graphicsPipelineState.Get());
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	for (auto& [name, group] : particleGroups)
+	{
+		if (group.instanceCount > 0) {
+			D3D12_GPU_DESCRIPTOR_HANDLE instanceHandle = srvManager_->GetGPUDescriptorHandle(group.instanceSRVIndex);
+			commandList->SetGraphicsRootDescriptorTable(0, instanceHandle);
+
+			D3D12_GPU_DESCRIPTOR_HANDLE textureHandle = TextureManager::GetInstance()->GetSrvHandleGPU(group.textureFilePath);
+			commandList->SetGraphicsRootDescriptorTable(1, textureHandle);
+
+			commandList->DrawInstanced(6, group.instanceCount, 0, 0);
+		}
+	}
 }
 
 void ParticleManager::Emit(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& color, float size, float lifetime)
 {
+	auto& group = particleGroups["default"];
+
+	std::random_device seedGenerator;
+	std::mt19937 randomEngine(seedGenerator());
+
+	for (int i = 0; i < group.instanceCount; ++i) {
+		Particle particle;
+
+		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+		Vector3 randomTranslate{
+			distribution(randomEngine),
+			distribution(randomEngine),
+			distribution(randomEngine)
+		};
+
+		particle.transform.scale = { size, size, size };
+		particle.transform.rotate = { 0.0f, 3.14f, 0.0f };
+		particle.transform.translate = math->Add(
+			{ position.x, position.y, position.z }, randomTranslate
+		);
+
+		particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+
+		std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+		particle.color = {
+			color.x * distColor(randomEngine),
+			color.y * distColor(randomEngine),
+			color.z * distColor(randomEngine),
+			color.w
+		};
+
+		std::uniform_real_distribution<float> distTime(1.0f, lifetime);
+		particle.lifeTime = distTime(randomEngine);
+		particle.currentTime = 0.0f;
+
+		group.particles.push_back(particle);
+	}
+
+	group.instanceCount = static_cast<int>(group.particles.size());
+
+
 }
 
 void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath)
@@ -59,6 +188,9 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	newGroup.instanceCount = 0;
 	newGroup.mappedInstanceData = nullptr;
 
+
+	newGroup.instanceBuffer= CreateBufferResource(dxCommon_->GetDevice(), sizeof(ParticleForGPU) * kNumMaxInstance);
+
 	// 리소스 매핑
 	HRESULT hr = newGroup.instanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.mappedInstanceData));
 	assert(SUCCEEDED(hr));
@@ -69,7 +201,6 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 		newGroup.mappedInstanceData[i].color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 	}
 
-	memset(newGroup.mappedInstanceData, 0, sizeof(ParticleForGPU) * initialInstanceCount);
 
 	// SRV 생성 (Structured Buffer )
 	newGroup.instanceSRVIndex = srvManager_->Allocate() + TextureManager::kSRVIndexTop;
@@ -174,22 +305,29 @@ void ParticleManager::CreateRootSignature()
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
+	descriptorRangeForInstancing[0].BaseShaderRegister = 0;
+	descriptorRangeForInstancing[0].NumDescriptors = 1;
+	descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	//RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	//複数設定できるので配列。今回は結果１つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[3] = {};
-	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
-	rootParameters[0].Descriptor.ShaderRegister = 0; //レジスタ番号0とバインド
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; //VertexShaderで使う
-	rootParameters[1].Descriptor.ShaderRegister = 0; //レジスタ番号0とバインド
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //DescriptorTableを使う
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
-	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange; //Tableの中身の配列の指定
-	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange); //Tableで利用する数
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
+	//rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
+	//rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
+	//rootParameters[0].Descriptor.ShaderRegister = 0; //レジスタ番号0とバインド
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; ///VertexShaderで使う
+	rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //DescriptorTableを使う
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
+	rootParameters[1].DescriptorTable.pDescriptorRanges = descriptorRange;
+	rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
 	//rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
 	//rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
 	//rootParameters[3].Descriptor.ShaderRegister = 1; //レジスタ番号1
