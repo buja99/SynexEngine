@@ -1,12 +1,13 @@
 #pragma once
+#include "BaseScene.h"
 #include "GameScene.h"
 #include "TitleScene.h"
+#include "DirectXCommon.h"
+#include "Input.h"
+#include "AbstractSceneFactory.h"
+#include "SceneType.h" 
+#include <memory>
 
-enum class SceneType {
-    Title,
-    Game,
-    GameClear
-};
 
 class SceneManager {
 public:
@@ -17,7 +18,18 @@ public:
     void Update();
     void Draw();
 
+    void SetSceneFactory(AbstractSceneFactory* sceneFactory) { sceneFactory_ = sceneFactory; }
+
 private:
+    SceneManager() = default;
+    ~SceneManager() = default;
+    SceneManager(const SceneManager&) = delete;
+    SceneManager& operator=(const SceneManager&) = delete;
+
     SceneType currentScene_ = SceneType::Title;
-    GameScene* gameScene_ = nullptr;
+    std::unique_ptr<BaseScene> currentScenePtr_;
+    AbstractSceneFactory* sceneFactory_ = nullptr;
+
+    DirectXCommon* dxCommon_ = nullptr;
+    Input* input_ = nullptr;
 };

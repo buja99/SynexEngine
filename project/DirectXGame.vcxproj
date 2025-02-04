@@ -117,6 +117,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Base\TextureManager.cpp" />
     <ClCompile Include="application\Base\WinApp.cpp" />
     <ClCompile Include="application\Input\Input.cpp" />
+    <ClCompile Include="BaseScene.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Enemy.cpp" />
@@ -156,6 +157,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractSceneFactory.h" />
     <ClInclude Include="application\Base\DirectXCommon.h" />
     <ClInclude Include="application\Base\FPSLimiter.h" />
     <ClInclude Include="application\Base\Logger.h" />
@@ -163,6 +165,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Base\TextureManager.h" />
     <ClInclude Include="application\Base\WinApp.h" />
     <ClInclude Include="application\Input\Input.h" />
+    <ClInclude Include="BaseScene.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Enemy.h" />
@@ -193,7 +196,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="SceneFactory.h" />
     <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="SceneType.h" />
     <ClInclude Include="TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
