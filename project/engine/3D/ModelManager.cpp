@@ -28,6 +28,8 @@ void ModelManager::Initialize(DirectXCommon* dxCommon)
 
 void ModelManager::LoadModel(const std::string& directorypath,const std::string& filePath)
 {
+    OutputDebugStringA(("Loading model: " + directorypath + "/" + filePath + "\n").c_str());
+
     if (models.contains(filePath)) {
         return;
     }
@@ -35,10 +37,13 @@ void ModelManager::LoadModel(const std::string& directorypath,const std::string&
     model->Initialize(modelCommon.get(), object3dCommon.get(), directorypath, filePath);
 
     models.insert(std::make_pair(filePath, std::move(model)));
+
+    OutputDebugStringA("Model successfully loaded and stored.\n");
 }
 
 Model* ModelManager::FindModel(const std::string& filePath)
 {
+
     if (models.contains(filePath)) {
         return models.at(filePath).get();
     }

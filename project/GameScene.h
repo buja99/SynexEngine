@@ -1,5 +1,4 @@
 #pragma once
-#include "SceneManager.h"
 #include "DirectXCommon.h"
 #include "Input.h"
 #include "Camera.h"

@@ -57,6 +57,7 @@ void Player::Updata(Input* input)
 #ifdef _DEBUG
     ImGui::Begin("payer");
     ImGui::DragFloat3("position", &position.x, 0.1f);
+    ImGui::Text("Gun Position: %.2f, %.2f, %.2f", playerParts_[6]->GetTranslate().x, playerParts_[6]->GetTranslate().y, playerParts_[6]->GetTranslate().z);
     ImGui::Text("Bullets (%d)", static_cast<int>(bullets_.size()));
    // for (size_t i = 0; i < playerParts_.size(); i++) {
    //     std::string label = "Part " + std::to_string(i);
@@ -86,7 +87,7 @@ void Player::Shoot(Model* bulletModel)
     
     auto bulletObject = std::make_unique<Object3d>();
     bulletObject->Initialize(Object3dCommon_);
-    bulletObject->SetModel("bullet.obj");
+    bulletObject->SetModel("resources/bullet/bullet.obj");
    // bulletObject->SetRotate({ 90.0f,90.0f,90.0f });
     bulletObject->SetScale({ 0.01f,0.01f,0.01f });
     Vector3 gunPosition = playerParts_[6]->GetTranslate();
