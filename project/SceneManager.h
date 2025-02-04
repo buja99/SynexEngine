@@ -1,27 +1,23 @@
 #pragma once
-#include "Sprite.h"
-#include "SpriteCommon.h"
+#include "GameScene.h"
+#include "TitleScene.h"
+
 enum class SceneType {
     Title,
     Game,
     GameClear
 };
-class SceneManager
-{
 
+class SceneManager {
 public:
-    static SceneManager* GetInstance();        
-    void ChangeScene(SceneType sceneType);     
-    SceneType GetCurrentScene() const; 
-    void Initialize(); 
-    Sprite* GetCurrentSprite() const;
+    static SceneManager* GetInstance();
+    void ChangeScene(SceneType sceneType);
+    SceneType GetCurrentScene() const;
+    void Initialize(DirectXCommon* dxCommon, Input* input);
+    void Update();
+    void Draw();
 
 private:
-    SceneType currentScene_ = SceneType::Title; 
-    SpriteCommon* title = nullptr;
-    SpriteCommon* clear = nullptr;
-    Sprite* titleSprite_ = nullptr;
-    Sprite* gameClearSprite_ = nullptr;
-
+    SceneType currentScene_ = SceneType::Title;
+    GameScene* gameScene_ = nullptr;
 };
-

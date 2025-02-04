@@ -6,22 +6,29 @@ SceneManager* SceneManager::GetInstance()
     return &instance;
 }
 
-void SceneManager::ChangeScene(SceneType sceneType)
-{
+void SceneManager::ChangeScene(SceneType sceneType) {
     currentScene_ = sceneType;
 }
 
-SceneType SceneManager::GetCurrentScene() const
-{
+SceneType SceneManager::GetCurrentScene() const {
     return currentScene_;
 }
 
-void SceneManager::Initialize()
-{
-    
+void SceneManager::Initialize(DirectXCommon* dxCommon, Input* input) {
+    if (currentScene_ == SceneType::Game) {
+        gameScene_ = new GameScene();
+        gameScene_->Initialize(dxCommon, input);
+    }
 }
 
-Sprite* SceneManager::GetCurrentSprite() const
-{
-    return nullptr;
+void SceneManager::Update() {
+    if (currentScene_ == SceneType::Game) {
+        gameScene_->Update();
+    }
+}
+
+void SceneManager::Draw() {
+    if (currentScene_ == SceneType::Game) {
+        gameScene_->Draw();
+    }
 }
