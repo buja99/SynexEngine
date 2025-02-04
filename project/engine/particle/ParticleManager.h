@@ -22,10 +22,10 @@
 //	MaterialData material;
 //};
 
+
 struct ParticleVertex {
-    Vector3 position;  // 3D 위치
-    Vector4 color;     // RGBA 색상
-    float size;        // 파티클 크기
+    Vector4 position;  // 3D 위치
+    Vector2 texcoord;
 };
 struct Particle {
     Transform transform;
@@ -33,6 +33,7 @@ struct Particle {
     Vector4 color;
     float lifeTime;
     float currentTime;
+
 };
 struct  ParticleForGPU
 {
@@ -46,10 +47,10 @@ struct Emitter
     uint32_t count;
     float frequency;
     float frequencyTime;
-
 };
 struct ParticleGroup {
-    std::string textureFilePath;           // 텍스처 파일 경로(Texture file path)
+    std::string textureFilePath;    
+    uint32_t textureIndex; 
     std::list<Particle> particles;         // 파티클 리스트(particle list)
     int instanceSRVIndex;                  // 인스턴싱 데이터용 SRV 인덱스(SRV index for instancing data)
     ComPtr<ID3D12Resource> instanceBuffer; // 인스턴스 데이터 리소스(Instance data resource)
@@ -57,20 +58,20 @@ struct ParticleGroup {
     ParticleForGPU* mappedInstanceData;    // GPU 메모리에 매핑된 데이터 포인터(Data pointer mapped to GPU memory)
 };
 
-const int32_t initialInstanceCount = 1024;
+const int32_t initialInstanceCount = 100;
 
 class ParticleManager {
 public:
     void Initialize(DirectXCommon* directXCommon, SrvManager* srvManager);
     void Update();
     void Draw();
-
-    void Emit(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& color, float size, float lifetime);
+    Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate);
+    std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine);
 
     void CreateParticleGroup(const std::string& name, const std::string& textureFilePath);
 
    
-
+    void SetCamera(Camera* camera) { camera_ = camera; }
     
 
 private:

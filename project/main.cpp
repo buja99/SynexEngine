@@ -39,17 +39,22 @@
 #include "ModelManager.h"
 #include "Camera.h"
 #include "SrvManager.h"
+#include "ParticleManager.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 
+
+
+
 using Microsoft::WRL::ComPtr;
 
 using namespace Logger;
 using namespace StringUtility;
-
+std::random_device seedGenerator;
+std::mt19937 randomEngine(seedGenerator());
 
 
 struct D3DResourceLeakChecker {
@@ -129,9 +134,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	OutputDebugStringA("Hello,DirectX!\n");
 
-	
+	ParticleManager* particleManager = nullptr;
+	particleManager = new ParticleManager();
+	particleManager->Initialize(dxCommon, srvManager);
+	particleManager->CreateParticleGroup("fire","resources/uvChecker.png");
 
+	particleManager->SetCamera(camera);
 
+	Emitter emitter{};
+	emitter.transform.translate = { 0.0f, 0.0f, 0.0f };
+	emitter.count = 10;
+	emitter.frequency = 0.5f;  
+	emitter.frequencyTime = 0.0f;
 
 	while (true) {
 
@@ -147,11 +161,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::NewFrame();
 
 #endif // _DEBUG
-		
+
+		std::list<Particle> newParticles = particleManager->Emit(emitter, randomEngine);
 		
 			sprite->Update();
 			camera->Update();
 			object3d->Updata();
+			particleManager->Update();
 #ifdef _DEBUG
 
 		ImGui::Render();
@@ -164,11 +180,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		object3dCommon->CommonDrawSettings();
 		
-			sprite->Draw();
+			//sprite->Draw();
 
 			object3d->Draw();
 			//model->Draw();
 		//sprite->Draw();
+
+			particleManager->Draw();
 
 #ifdef _DEBUG
 	//	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
@@ -198,7 +216,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//delete gameScene;
 	//model->Cleanup(); 
 	//delete model;
-
+	delete particleManager;
 	delete modelCommon;
 	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();

@@ -43,63 +43,37 @@ void ParticleManager::Update()
 	billboardMatrix.m[3][2] = 1.0f;
 	Matrix4x4 viewProjectionMatrix = math->Multiply(viewMatrix, projectionMatrix);
 	numInstance = 0;
+	constexpr float deltaTime = 1.0f / 60.0f; // 프레임 속도 일정화
 
-	for (auto& [name, group] : particleGroups) {
-		auto& particles = group.particles;
+	for (auto& [name, group] : particleGroups)
+	{
+		// 🔹 파티클 개수 업데이트
+		group.instanceCount = static_cast<int>(group.particles.size());
 
-		group.emitter.frequencyTime += kDeltaTime;
-		if (group.emitter.frequencyTime >= group.emitter.frequency) {
-			std::random_device seedGenerator;
-			std::mt19937 randomEngine(seedGenerator());
-			particles.splice(particles.end(), Emit(group.emitter, randomEngine));
-			group.emitter.frequencyTime -= group.emitter.frequency;
-		}
+		// 🔹 파티클 생존 여부 체크 후 리스트에서 제거
+		group.particles.remove_if([deltaTime](Particle& p) {
+			p.currentTime += deltaTime;
+			return p.currentTime >= p.lifeTime;
+			});
 
-		for (auto particleIterator = particles.begin(); particleIterator != particles.end(); ) {
-		
-			if (IsCollision(accelerationField.area, particleIterator->transform.translate)) {
-				particleIterator->velocity += accelerationField.acceleration * kDeltaTime;
+		int i = 0;
+		for (auto& p : group.particles)
+		{
+			// 🔹 위치 업데이트
+			p.transform.translate = math->Add(p.transform.translate, p.velocity);
+
+			// 🔹 GPU 메모리 업데이트
+			if (group.mappedInstanceData)
+			{
+				Matrix4x4 worldMatrix = math->MakeAffineMatrix(p.transform.scale, p.transform.rotate, p.transform.translate);
+				group.mappedInstanceData[i].WVP = math->Multiply(worldMatrix, viewProjectionMatrix);
+				group.mappedInstanceData[i].World = worldMatrix;
+				group.mappedInstanceData[i].color = p.color;
 			}
-
-			particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
-			particleIterator->currentTime += kDeltaTime;
-
-			
-			if (numInstance < kNumMaxInstance) {
-				Matrix4x4 worldMatrix = math->MakeAffineMatrix(
-					particleIterator->transform.scale,
-					particleIterator->transform.rotate,
-					particleIterator->transform.translate
-				);
-				Matrix4x4 worldViewProjectionMatrix = math->Multiply(worldMatrix, viewProjectionMatrix);
-
-				instancingData[numInstance].WVP = worldViewProjectionMatrix;
-				instancingData[numInstance].World = worldMatrix;
-				instancingData[numInstance].color = particleIterator->color;
-
-				
-				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
-				instancingData[numInstance].color.w = alpha;
-
-				++numInstance;
-			}
-
-			
-			if (particleIterator->currentTime >= particleIterator->lifeTime) {
-				particleIterator = particles.erase(particleIterator);
-				continue;
-			}
-
-			++particleIterator;
+			++i;
 		}
-
-		
-		if (group.mappedInstanceData) {
-			memcpy(group.mappedInstanceData, instancingData, sizeof(ParticleForGPU) * numInstance);
-		}
-
-		group.instanceCount = static_cast<int>(particles.size());
 	}
+	
 
 }
 
@@ -113,62 +87,62 @@ void ParticleManager::Draw()
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	for (auto& [name, group] : particleGroups)
 	{
-		if (group.instanceCount > 0) {
-			D3D12_GPU_DESCRIPTOR_HANDLE instanceHandle = srvManager_->GetGPUDescriptorHandle(group.instanceSRVIndex);
-			commandList->SetGraphicsRootDescriptorTable(0, instanceHandle);
 
-			D3D12_GPU_DESCRIPTOR_HANDLE textureHandle = TextureManager::GetInstance()->GetSrvHandleGPU(group.textureFilePath);
-			commandList->SetGraphicsRootDescriptorTable(1, textureHandle);
+		for (auto& [name, group] : particleGroups)
+		{
+			if (group.instanceCount > 0) {
 
-			commandList->DrawInstanced(6, group.instanceCount, 0, 0);
+				// 🔹 GPU에 올바른 데이터가 전달되었는지 확인
+				if (!group.mappedInstanceData) continue;
+
+				D3D12_GPU_DESCRIPTOR_HANDLE instanceHandle = srvManager_->GetGPUDescriptorHandle(group.instanceSRVIndex);
+				commandList->SetGraphicsRootDescriptorTable(0, instanceHandle);
+
+				srvManager_->SetGraphicsRootDesciptorTable(1, group.textureIndex);
+
+				commandList->DrawInstanced(6, group.instanceCount, 0, 0);
+			}
 		}
 	}
 }
 
-void ParticleManager::Emit(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& color, float size, float lifetime)
+Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
-	auto& group = particleGroups["default"];
-
-	std::random_device seedGenerator;
-	std::mt19937 randomEngine(seedGenerator());
-
-	for (int i = 0; i < group.instanceCount; ++i) {
-		Particle particle;
-
-		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-		Vector3 randomTranslate{
-			distribution(randomEngine),
-			distribution(randomEngine),
-			distribution(randomEngine)
-		};
-
-		particle.transform.scale = { size, size, size };
-		particle.transform.rotate = { 0.0f, 3.14f, 0.0f };
-		particle.transform.translate = math->Add(
-			{ position.x, position.y, position.z }, randomTranslate
-		);
-
-		particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-
-		std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-		particle.color = {
-			color.x * distColor(randomEngine),
-			color.y * distColor(randomEngine),
-			color.z * distColor(randomEngine),
-			color.w
-		};
-
-		std::uniform_real_distribution<float> distTime(1.0f, lifetime);
-		particle.lifeTime = distTime(randomEngine);
-		particle.currentTime = 0.0f;
-
-		group.particles.push_back(particle);
-	}
-
-	group.instanceCount = static_cast<int>(group.particles.size());
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	Particle particle;
+	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
+	particle.transform.rotate = { 0.0f, 3.14f, 0.0f };
 
 
+	Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	particle.transform.translate = math->Add(translate, randomTranslate);
+
+	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+	particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0.0f;
+	return particle;
 }
+
+std::list<Particle> ParticleManager::Emit(const Emitter& emitter, std::mt19937& randomEngine)
+{
+	std::list<Particle> particles;
+	for (uint32_t count = 0; count < emitter.count; ++count) {
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
+	}
+	if (particleGroups.find("fire") != particleGroups.end()) {
+		particleGroups["fire"].particles.insert(
+			particleGroups["fire"].particles.end(),
+			particles.begin(),
+			particles.end()
+		);
+	}
+	return particles;
+}
+
+
 
 void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath)
 {
@@ -177,10 +151,12 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 		assert(false && "Particle group with the given name already exists!");
 		return; // 디버깅 중이 아니라면 중단하지 않고 반환(If not debugging, return without stopping)
 	}
+
+
 	//new ParticleGroup generation
 	ParticleGroup newGroup;
 
-	newGroup.textureFilePath = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
+	newGroup.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
 
 	const DirectX::TexMetadata& metadata =
 		TextureManager::GetInstance()->GetMetaData(textureFilePath);
@@ -390,7 +366,7 @@ void ParticleManager::CreateGraphicsPipeline()
 
 
 	// InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
 
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
@@ -400,10 +376,6 @@ void ParticleManager::CreateGraphicsPipeline()
 	inputElementDescs[1].SemanticIndex = 0;
 	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs[2].SemanticName = "NORMAL";
-	inputElementDescs[2].SemanticIndex = 0;
-	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -457,13 +429,13 @@ void ParticleManager::CreateGraphicsPipeline()
 void ParticleManager::InitializeVertices()
 {
 	//first triangle
-	vertices_.push_back({ { 0.0f, 360.0f, 0.0f }, { 0.0f, 1.0f }, 1.0f }); // lower left
-	vertices_.push_back({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }, 1.0f });   // upper left
-	vertices_.push_back({ { 640.0f, 360.0f, 0.0f }, { 1.0f, 1.0f }, 1.0f }); // lower right
+	vertices_.push_back({ { 0.0f, 360.0f, 0.0f ,1.0f}, { 0.0f, 1.0f }}); // lower left
+	vertices_.push_back({ { 0.0f, 0.0f, 0.0f ,1.0f}, { 0.0f, 0.0f } });   // upper left
+	vertices_.push_back({ { 640.0f, 360.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 	//second triangle
-	vertices_.push_back({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }, 1.0f });   // lower left
-	vertices_.push_back({ { 640.0f, 0.0f, 0.0f }, { 1.0f, 0.0f }, 1.0f }); // upper right
-	vertices_.push_back({ { 640.0f, 360.0f, 0.0f }, { 1.0f, 1.0f }, 1.0f }); // lower right
+	vertices_.push_back({ { 0.0f, 0.0f, 0.0f,1.0f }, { 0.0f, 0.0f } });   // lower left
+	vertices_.push_back({ { 640.0f, 0.0f, 0.0f ,1.0f}, { 1.0f, 0.0f } }); // upper right
+	vertices_.push_back({ { 640.0f, 360.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 }
 
 void ParticleManager::CreateVertexBuffer()
@@ -478,10 +450,10 @@ void ParticleManager::CreateVertexBuffer()
 	vertexBufferView_.SizeInBytes = sizeof(ParticleVertex) * 6;
 	vertexBufferView_.StrideInBytes = sizeof(ParticleVertex);
 	// GPU 메모리 매핑(GPU Memory Mapping)
-	ParticleVertex* vertexDataSprite = nullptr;
-	vertexBufferResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+	ParticleVertex* vertexDataParticle = nullptr;
+	vertexBufferResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataParticle));
 	// 정점 데이터 복사(Copy vertex data)
-	memcpy(vertexDataSprite, vertices_.data(), sizeof(ParticleVertex) * vertices_.size());
+	memcpy(vertexDataParticle, vertices_.data(), sizeof(ParticleVertex) * vertices_.size());
 	// 매핑 해제(Unmap)
 	vertexBufferResource_->Unmap(0, nullptr); 
 }
