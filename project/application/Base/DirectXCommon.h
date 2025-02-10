@@ -75,7 +75,7 @@ public:
 
 	void UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 	
-	ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
+	//ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
 
 	uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 
@@ -108,7 +108,7 @@ private:
 	uint32_t descriptorSizeDSV;
 
 	ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
+	//ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 
 	ComPtr<ID3D12Fence> fence;
