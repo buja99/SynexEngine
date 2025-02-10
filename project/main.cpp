@@ -40,12 +40,14 @@
 #include "Camera.h"
 #include "SrvManager.h"
 #include "ParticleManager.h"
+#include "Sound.h"
+#include <xaudio2.h>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
-
+#pragma comment(lib, "xaudio2.lib")
 
 
 
@@ -87,6 +89,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Input* input = new Input();
 	SrvManager* srvManager = SrvManager::GetInstance();
 
+	
+
+
+
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
 
@@ -108,13 +114,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	SpriteCommon* spriteCommon = nullptr;
 	Sprite* sprite = new Sprite();
 	spriteCommon = new SpriteCommon;
-	
-	
+
+	//sound
+
+	Sound* sound_ = Sound::GetInstance();
+	sound_->Initialize();
 
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
 	srvManager->Initialize(dxCommon);
 	
+	LoopSoundData soundData = sound_->LoadLoopingWaveFile("resources/sound/maou_bgm_cyber44.wav");
+	sound_->playLoopingSoundWave(soundData, 1.0f);
 
 	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
 	input->Initialize(winApp);
@@ -130,6 +141,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	
 	sprite->Initialize(spriteCommon, "resources/uvChecker.png");
+	
 	
 	
 	OutputDebugStringA("Hello,DirectX!\n");
@@ -168,6 +180,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			camera->Update();
 			object3d->Updata();
 			particleManager->Update();
+
+			
+
 #ifdef _DEBUG
 
 		ImGui::Render();
