@@ -4,6 +4,7 @@
 #include <Model.h>
 
 
+
 using namespace Logger;
 using namespace StringUtility;
 
@@ -429,13 +430,13 @@ void ParticleManager::CreateGraphicsPipeline()
 void ParticleManager::InitializeVertices()
 {
 	//first triangle
-	vertices_.push_back({ { 0.0f, 360.0f, 0.0f ,1.0f}, { 0.0f, 1.0f }}); // lower left
-	vertices_.push_back({ { 0.0f, 0.0f, 0.0f ,1.0f}, { 0.0f, 0.0f } });   // upper left
-	vertices_.push_back({ { 640.0f, 360.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
+	vertices_.push_back({ { 1.0f,1.0f,0.0f,1.0f}, { 0.0f, 1.0f } }); // lower left
+	vertices_.push_back({ { -1.0f,1.0f,0.0f,1.0f}, { 0.0f, 0.0f } });   // upper left
+	vertices_.push_back({ {1.0f,-1.0f,0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 	//second triangle
-	vertices_.push_back({ { 0.0f, 0.0f, 0.0f,1.0f }, { 0.0f, 0.0f } });   // lower left
-	vertices_.push_back({ { 640.0f, 0.0f, 0.0f ,1.0f}, { 1.0f, 0.0f } }); // upper right
-	vertices_.push_back({ { 640.0f, 360.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
+	vertices_.push_back({ { 1.0f, -1.0f, 0.0f,1.0f }, { 0.0f, 0.0f } });   // lower left
+	vertices_.push_back({ { -1.0f, 1.0f, 0.0f ,1.0f}, { 1.0f, 0.0f } }); // upper right
+	vertices_.push_back({ { -1.0f, -1.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 }
 
 void ParticleManager::CreateVertexBuffer()

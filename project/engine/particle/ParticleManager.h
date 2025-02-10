@@ -1,6 +1,6 @@
 #pragma once
 #include "DirectXCommon.h"
-#include "SrvManager.h"
+#include <engine/srvManager/SrvManager.h>
 #include <wrl.h>
 #include <random>
 #include "VertexData.h"
@@ -10,7 +10,7 @@
 #include "TextureManager.h"
 #include <numbers>
 #include <list>
-#include "Camera.h"
+#include <engine/camera/Camera.h>
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "MyMath.h"
