@@ -125,7 +125,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvManager->Initialize(dxCommon);
 	
 	LoopSoundData soundData = sound_->LoadLoopingWaveFile("resources/sound/maou_bgm_cyber44.wav");
-	sound_->playLoopingSoundWave(soundData, 1.0f);
+	//sound_->playLoopingSoundWave(soundData, 1.0f);
 
 	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
 	input->Initialize(winApp);
