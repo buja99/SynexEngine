@@ -13,9 +13,9 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #ifdef _DEBUG
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_dx12.h"
+#include "imgui/imgui_impl_win32.h"
 #endif // _DEBUG
 #include "externals/DirectXTex/DirectXTex.h"
 #include<wrl.h>
@@ -147,6 +147,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	emitter.frequency = 0.5f;  
 	emitter.frequencyTime = 0.0f;
 
+	//OutputDebugStringA("文字列リテラルを出力\n");
+
 	while (true) {
 
 		
@@ -168,6 +170,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			camera->Update();
 			object3d->Updata();
 			particleManager->Update();
+
+			
+
+
+
 #ifdef _DEBUG
 
 		ImGui::Render();
@@ -188,13 +195,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			particleManager->Draw();
 
+			
+
 #ifdef _DEBUG
 	//	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
 #endif // _DEBUG
 
 		//gameScene->Draw();
 		dxCommon->PostDraw();
-			
+
 	}
 
 

@@ -5,9 +5,9 @@
 #include <format>
 #include <dxcapi.h>
 #ifdef _DEBUG
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_win32.h"
-#include "externals/imgui/imgui_impl_dx12.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_win32.h"
+#include "imgui/imgui_impl_dx12.h"
 #endif // _DEBUG
 
 #pragma comment(lib,"d3d12.lib")
@@ -145,7 +145,9 @@ void DirectXCommon::Device()
 	}
 #endif // _DEBUG
 
-	
+	if (device == nullptr) {
+		OutputDebugStringA("Error: device creation failed in Device().\n");
+	}
 
 }
 
@@ -163,9 +165,18 @@ void DirectXCommon::Command()
 	assert(SUCCEEDED(hr));
 
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
-	hr = device->CreateCommandQueue(&commandQueueDesc,
-		IID_PPV_ARGS(&commandQueue));
+	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;   
+	commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+	commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;  
+	commandQueueDesc.NodeMask = 0;
+	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
+	if (FAILED(hr)) {
+		OutputDebugStringA("Failed to create Command Queue!\n");
+	}
 	assert(SUCCEEDED(hr));
+	//hr = device->CreateCommandQueue(&commandQueueDesc,
+	//	IID_PPV_ARGS(&commandQueue));
+	//assert(SUCCEEDED(hr));
 }
 
 void DirectXCommon::SwapChain()
@@ -618,6 +629,13 @@ void DirectXCommon::PostDraw()
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
+
+
+	if (commandQueue == nullptr) {
+		OutputDebugStringA("Error: commandQueue is nullptr in PostDraw.\n");
+		return;  // 이 부분으로 인해 nullptr 접근 방지
+	}
+
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) const

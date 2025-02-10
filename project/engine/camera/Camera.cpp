@@ -1,7 +1,7 @@
 #include "Camera.h"
 #include "WinApp.h" 
 #ifdef _DEBUG
-#include "externals/imgui/imgui.h"
+#include "imgui/imgui.h"
 #endif // _DEBUG
 
 void Camera::Update()
