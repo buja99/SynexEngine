@@ -40,6 +40,7 @@
 #include "Camera.h"
 #include "SrvManager.h"
 #include "ParticleManager.h"
+#include "ImGuiManager.h"
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -86,7 +87,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
 	SrvManager* srvManager = SrvManager::GetInstance();
-
+	ImGuiManager* imGuiManager = new ImGuiManager();
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
 
@@ -114,7 +115,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
 	srvManager->Initialize(dxCommon);
-	
+	imGuiManager->Initialize(winApp, dxCommon);
 
 	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
 	input->Initialize(winApp);
@@ -158,9 +159,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		} 
 		input->Update();
 #ifdef _DEBUG
-		ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+		imGuiManager->BeginFrame();
 
 #endif // _DEBUG
 
@@ -176,8 +175,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 #ifdef _DEBUG
-
-		ImGui::Render();
+			imGuiManager->EndFrame();
+		
 #endif // _DEBUG
 
 		dxCommon->PreDraw();
@@ -198,7 +197,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 
 #ifdef _DEBUG
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
+			imGuiManager->Draw();
 #endif // _DEBUG
 
 		//gameScene->Draw();
@@ -207,10 +206,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 
 
-
 	//CloseHandle(fenceEvent);
-	//sprite->Cleanup();
-	//delete sprite;
+	
 	
 	sprite->Cleanup();
 	delete sprite;
@@ -221,12 +218,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete object3d;
 
 	delete object3dCommon;
-	//gameScene->Cleanup();
-	//delete gameScene;
-	//model->Cleanup(); 
-	//delete model;
 	delete particleManager;
 	delete modelCommon;
+	imGuiManager->Finalize();
+	delete imGuiManager;
 	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();

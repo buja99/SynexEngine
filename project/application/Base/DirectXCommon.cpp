@@ -52,7 +52,7 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	//InitializeDXCCompiler();
 	InitializePSO();
 #ifdef _DEBUG
-	InitializeImGui();
+	//InitializeImGui();
 #endif // _DEBUG
 
 }
@@ -279,7 +279,7 @@ ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(ComPtr<ID3D12De
 void DirectXCommon::InitializeRTV()
 {
 	HRESULT hr;
-	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
 	for (int i = 0; i < 2; ++i) {
@@ -358,24 +358,24 @@ void DirectXCommon::InitializeDXCCompiler()
 	//assert(SUCCEEDED(hr));
 
 }
-#ifdef _DEBUG
+//#ifdef _DEBUG
 
-void DirectXCommon::InitializeImGui()
-{
-	//ImGui初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(winApp->GetHwnd());
-	ImGui_ImplDX12_Init(device.Get(),
-		swapChainDesc.BufferCount,
-		rtvDesc.Format,
-		srvDescriptorHeap.Get(),
-		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
-}
-#endif // _DEBUG
+//void DirectXCommon::InitializeImGui()
+//{
+//	//ImGui初期化
+//	IMGUI_CHECKVERSION();
+//	ImGui::CreateContext();
+//	ImGui::StyleColorsDark();
+//	ImGui_ImplWin32_Init(winApp->GetHwnd());
+//	ImGui_ImplDX12_Init(device.Get(),
+//		swapChainDesc.BufferCount,
+//		rtvDesc.Format,
+//		srvDescriptorHeap.Get(),
+//		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+//		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+//
+//}
+//#endif // _DEBUG
 
 void DirectXCommon::InitializePSO()
 {
@@ -818,11 +818,11 @@ void DirectXCommon::Cleanup()
 	//if (debugController != nullptr) {
 	//	debugController->Release();
 	//}
-#ifdef _DEBUG
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif // _DEBUG
+//#ifdef _DEBUG
+//	ImGui_ImplDX12_Shutdown();
+//	ImGui_ImplWin32_Shutdown();
+//	ImGui::DestroyContext();
+//#endif // _DEBUG
 	delete winApp;
 	delete fpsLimiter;
 	
