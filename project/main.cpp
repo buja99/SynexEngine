@@ -77,11 +77,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXCommon* dxCommon = new DirectXCommon();
 	Input* input = new Input();
 	SrvManager* srvManager = SrvManager::GetInstance();
-
-	
-
-
-
+	ImGuiManager* imGuiManager = new ImGuiManager();
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
 
@@ -112,6 +108,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp->Initialize();
 	dxCommon->Initialize(winApp);
 	srvManager->Initialize(dxCommon);
+	imGuiManager->Initialize(winApp, dxCommon);
+
 	
 	LoopSoundData soundData = sound_->LoadLoopingWaveFile("resources/sound/maou_bgm_cyber44.wav");
 	//sound_->playLoopingSoundWave(soundData, 1.0f);
@@ -148,6 +146,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	emitter.frequency = 0.5f;  
 	emitter.frequencyTime = 0.0f;
 
+	//OutputDebugStringA("文字列リテラルを出力\n");
+
 	while (true) {
 
 		
@@ -157,9 +157,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		} 
 		input->Update();
 #ifdef _DEBUG
-		ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+		imGuiManager->BeginFrame();
 
 #endif // _DEBUG
 
@@ -173,8 +171,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 
 #ifdef _DEBUG
-
-		ImGui::Render();
+			imGuiManager->EndFrame();
+		
 #endif // _DEBUG
 
 		dxCommon->PreDraw();
@@ -192,20 +190,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			particleManager->Draw();
 
+			
+
 #ifdef _DEBUG
-	//	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList().Get());
+			imGuiManager->Draw();
 #endif // _DEBUG
 
 		//gameScene->Draw();
 		dxCommon->PostDraw();
-			
+
 	}
 
 
-
 	//CloseHandle(fenceEvent);
-	//sprite->Cleanup();
-	//delete sprite;
+	
 	
 	sprite->Cleanup();
 	delete sprite;
@@ -216,12 +214,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete object3d;
 
 	delete object3dCommon;
-	//gameScene->Cleanup();
-	//delete gameScene;
-	//model->Cleanup(); 
-	//delete model;
 	delete particleManager;
 	delete modelCommon;
+	imGuiManager->Finalize();
+	delete imGuiManager;
 	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();

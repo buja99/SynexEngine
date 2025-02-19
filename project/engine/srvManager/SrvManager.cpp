@@ -6,7 +6,7 @@ const uint32_t SrvManager::kMaxSRVCount = 512;
 void SrvManager::Initialize(DirectXCommon* dxCommon)
 {
 	this->directXCommon = dxCommon;
-	descriptorHeap = dxCommon->CreateDescriptorHeap(dxCommon->GetDevice(),
+	srvDescriptorHeap = dxCommon->CreateDescriptorHeap(dxCommon->GetDevice(),
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 	descriptorSize = dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -28,14 +28,14 @@ uint32_t SrvManager::Allocate()
 
 D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandle(uint32_t index)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
 
@@ -71,7 +71,7 @@ void SrvManager::CreatSRVforStruturedBuffer(uint32_t srvIndex, ID3D12Resource* p
 
 void SrvManager::PreDraw()
 {
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 	directXCommon->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
 }
@@ -88,5 +88,5 @@ bool SrvManager::CanAllocate() const
 
 void SrvManager::Finalize()
 {
-	descriptorHeap.Reset();
+	srvDescriptorHeap.Reset();
 }

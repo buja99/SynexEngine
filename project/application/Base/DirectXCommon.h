@@ -41,16 +41,16 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 	void InitializeDXCCompiler();
-#ifdef _DEBUG
-	void InitializeImGui();
-#endif // _DEBUG
+//#ifdef _DEBUG
+//	void InitializeImGui();
+//#endif // _DEBUG
 	void InitializePSO();
 
 	void PreDraw();
 	void PostDraw();
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
+	//D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
+	//D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
 
 	IDxcBlob* CompileShader(
 
@@ -75,14 +75,16 @@ public:
 
 	void UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 	
-	ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
-
+	//ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
+	int GetSwapChainResourcesNum() const { return swapChainDesc.BufferCount; }
 	uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
 	static const uint32_t kMaxSRVCount;
+
+	ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
 
 private:
 
@@ -108,7 +110,7 @@ private:
 	uint32_t descriptorSizeDSV;
 
 	ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
+	//ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 
 	ComPtr<ID3D12Fence> fence;

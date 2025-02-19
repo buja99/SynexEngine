@@ -26,7 +26,7 @@ void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 	dxCommon_ = dxCommon;
 	srvManager_ = srvManager;
 	descriptorSize_ = dxCommon_->GetDescriptorSizeSRV();
-	srvDescriptorHeap_ = dxCommon_->GetSrvDescriptorHeap();
+	srvDescriptorHeap_ = srvManager_->GetSrvDescriptorHeap();
 
 }
 
