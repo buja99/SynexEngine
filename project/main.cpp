@@ -1,46 +1,35 @@
-#include<Windows.h>
-#include<cstdint>
-#include<string>
-#include<format>
-#include<d3d12.h>
-#include<dxgi1_6.h>
-#include<cassert>
-#include<dxgidebug.h>
-#include <dxcapi.h>
-#include "Vector2.h"
-#include <cmath>
-#include"Matrix3x3.h"
-#define _USE_MATH_DEFINES
-#include <math.h>
-#ifdef _DEBUG
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
-#endif // _DEBUG
-#include "externals/DirectXTex/DirectXTex.h"
-#include<wrl.h>
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#include <fstream>
-#include <sstream>
-#include "Input.h"
-#include "WinApp.h"
-#include "DirectXCommon.h"
+
+//#include<cstdint>
+//#include<string>
+//#include<format>
+//#include<d3d12.h>
+//#include<dxgi1_6.h>
+//#include<cassert>
+//#include<dxgidebug.h>
+//#include <dxcapi.h>
+//#include"Matrix3x3.h"
+//#define _USE_MATH_DEFINES
+//#include <math.h>
+//#ifdef _DEBUG
+//#include "externals/imgui/imgui.h"
+//#include "externals/imgui/imgui_impl_dx12.h"
+//#include "externals/imgui/imgui_impl_win32.h"
+//#endif // _DEBUG
+//#include "externals/DirectXTex/DirectXTex.h"
+//#include <wrl.h>
+//#define _CRTDBG_MAP_ALLOC
+//#include <stdlib.h>
+//#include <crtdbg.h>
+//#include <fstream>
+//#include <sstream>
+
 #include "Logger.h"
 #include "StringUtility.h"
-#include"Sprite.h"
-#include "SpriteCommon.h"
-#include "TextureManager.h"
-#include "Object3d.h"
-#include "Object3dCommon.h"
-#include "ModelCommon.h"
+
 //#include "Model.h"
 #include "ModelManager.h"
 #include "Camera.h"
-#include "SrvManager.h"
-#include "ParticleManager.h"
-#include "Sound.h"
+
 #include <xaudio2.h>
 
 #pragma comment(lib,"d3d12.lib")
