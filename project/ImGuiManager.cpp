@@ -5,7 +5,7 @@ void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
 
     dxCommon_ = dxCommon;
     srvManager_ = SrvManager::GetInstance();
-
+    uint32_t index = srvManager_->Allocate();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(winApp->GetHwnd());
@@ -25,9 +25,9 @@ void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
     initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     initInfo.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     initInfo.SrvDescriptorHeap = srvManager_->GetSrvDescriptorHeap().Get();
-
-    initInfo.LegacySingleSrvCpuDescriptor = srvManager_->GetSrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-    initInfo.LegacySingleSrvGpuDescriptor = srvManager_->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+    //srvManager_->Allocate();
+    initInfo.LegacySingleSrvCpuDescriptor = srvManager_->GetCPUDescriptorHandle(index);
+    initInfo.LegacySingleSrvGpuDescriptor = srvManager_->GetGPUDescriptorHandle(index);
 
     ImGui_ImplDX12_Init(&initInfo);
 }
