@@ -50,7 +50,7 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	InitializeViewport();
 	InitializeScissor();
 	//InitializeDXCCompiler();
-	InitializePSO();
+	//InitializePSO();
 #ifdef _DEBUG
 	InitializeImGui();
 #endif // _DEBUG
@@ -563,7 +563,7 @@ void DirectXCommon::PreDraw()
 	commandList->RSSetScissorRects(1, &scissorRect);
 
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
-	commandList->SetPipelineState(graphicsPipelineState.Get());
+	//commandList->SetPipelineState(graphicsPipelineState.Get());
 }
 
 void DirectXCommon::PostDraw()
