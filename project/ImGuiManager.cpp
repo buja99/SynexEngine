@@ -22,7 +22,7 @@ void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
     initInfo.Device = dxCommon_->GetDevice().Get();
     initInfo.CommandQueue = dxCommon_->GetCommandQueue().Get();
     initInfo.NumFramesInFlight = dxCommon_->GetSwapChainResourcesNum();
-    initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+    initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     initInfo.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     initInfo.SrvDescriptorHeap = srvManager_->GetSrvDescriptorHeap().Get();
 
