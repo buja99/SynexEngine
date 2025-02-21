@@ -6,7 +6,7 @@
 #include <array>
 #include "WinApp.h"
 #include <dxcapi.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include <string>
 #include "FPSLimiter.h"
 

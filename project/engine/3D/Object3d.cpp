@@ -2,7 +2,7 @@
 #include "Object3dCommon.h"
 #include <fstream>
 #ifdef _DEBUG
-#include "imgui/imgui.h"
+#include "imgui.h"
 #endif // _DEBUG
 
 void Object3d::Initialize(Object3dCommon* object3dCommon)

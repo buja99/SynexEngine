@@ -3,7 +3,7 @@
 #include <wrl.h>
 #include "WinApp.h"
 #include <Windows.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include "Transform.h"
 #include "Material.h"
 #include "VertexData.h"

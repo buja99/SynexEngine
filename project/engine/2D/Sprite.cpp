@@ -1,7 +1,7 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #ifdef _DEBUG
-#include "imgui/imgui.h"
+#include "imgui.h"
 #endif // _DEBUG
 #include "SrvManager.h"
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
