@@ -16,6 +16,9 @@ class DirectXCommon
 {
 
 public:
+
+	static DirectXCommon* GetInstance();
+
 	~DirectXCommon();
 
 	void Initialize(WinApp* winApp);
@@ -87,6 +90,10 @@ public:
 	ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
 
 private:
+
+	DirectXCommon() = default;
+	DirectXCommon(DirectXCommon&) = delete;
+	const DirectXCommon& operator=(DirectXCommon&) = delete;
 
 	ComPtr<ID3D12Device> device;
 	ComPtr<IDXGIFactory7> dxgiFactory = nullptr;

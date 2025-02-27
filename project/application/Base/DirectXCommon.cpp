@@ -19,6 +19,11 @@ using namespace StringUtility;
 
 const uint32_t DirectXCommon::kMaxSRVCount = 512;
 
+DirectXCommon* DirectXCommon::GetInstance() {
+	static DirectXCommon instance;
+	return &instance;
+}
+
 DirectXCommon::~DirectXCommon()
 {
 	//delete winApp;

@@ -118,6 +118,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Base\TextureManager.cpp" />
     <ClCompile Include="application\Base\WinApp.cpp" />
     <ClCompile Include="application\Input\Input.cpp" />
+    <ClCompile Include="BaseScene.cpp" />
     <ClCompile Include="engine\camera\Camera.cpp" />
     <ClCompile Include="engine\2D\Sprite.cpp" />
     <ClCompile Include="engine\2D\SpriteCommon.cpp" />
@@ -127,12 +128,21 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3D\Object3d.cpp" />
     <ClCompile Include="engine\3D\Object3dCommon.cpp" />
     <ClCompile Include="engine\Math\MyMath.cpp" />
+    <ClCompile Include="Framework.cpp" />
+    <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="ImGuiManager.cpp" />
+    <ClCompile Include="LeakCheck.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\srvManager\SrvManager.cpp" />
     <ClCompile Include="engine\particle\ParticleManager.cpp" />
+    <ClCompile Include="MyGame.cpp" />
+    <ClCompile Include="SceneFactory.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractSceneFactory.h" />
     <ClInclude Include="application\Base\DirectXCommon.h" />
     <ClInclude Include="application\Base\FPSLimiter.h" />
     <ClInclude Include="application\Base\Logger.h" />
@@ -140,6 +150,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Base\TextureManager.h" />
     <ClInclude Include="application\Base\WinApp.h" />
     <ClInclude Include="application\Input\Input.h" />
+    <ClInclude Include="BaseScene.h" />
     <ClInclude Include="engine\camera\Camera.h" />
     <ClInclude Include="engine\2D\Sprite.h" />
     <ClInclude Include="engine\2D\SpriteCommon.h" />
@@ -160,7 +171,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Math\VertexData.h" />
     <ClInclude Include="engine\srvManager\SrvManager.h" />
     <ClInclude Include="engine\particle\ParticleManager.h" />
+    <ClInclude Include="Framework.h" />
+    <ClInclude Include="GameScene.h" />
     <ClInclude Include="ImGuiManager.h" />
+    <ClInclude Include="MyGame.h" />
+    <ClInclude Include="SceneFactory.h" />
+    <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="Sound.h" />
+    <ClInclude Include="TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
