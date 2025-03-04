@@ -5,6 +5,8 @@ void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
 
     dxCommon_ = dxCommon;
     srvManager_ = SrvManager::GetInstance();
+
+  
     uint32_t index = srvManager_->Allocate();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();

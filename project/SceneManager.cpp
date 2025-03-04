@@ -7,6 +7,9 @@ SceneManager* SceneManager::GetInstance() {
 }
 
 void SceneManager::Finalize() {
+	scene_.reset();
+	nextScene_.reset();
+	sceneFactory_.reset();
 }
 
 void SceneManager::Update() {
@@ -34,7 +37,9 @@ void SceneManager::Draw() {
 
 void SceneManager::ChangeScene(const std::string& sceneName) {
 	assert(sceneFactory_);
-	assert(nextScene_ == nullptr);
+	if (nextScene_) {  // 기존 씬이 있으면 해제
+		nextScene_.reset();
+	}
 
 	// 次のシーン生成
 	nextScene_ = std::move(sceneFactory_->CreateScene(sceneName));

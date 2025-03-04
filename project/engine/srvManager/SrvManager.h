@@ -27,11 +27,17 @@ public:
 	void PreDraw();
 	void SetGraphicsRootDesciptorTable(UINT RootPameterIndex, uint32_t srvIndex);
 	bool CanAllocate() const;
-
+	bool IsValid() const { return srvDescriptorHeap != nullptr; }
 	void Finalize();
 
 
 private:
+
+	SrvManager() = default;
+	~SrvManager() = default;
+	SrvManager(const SrvManager&) = delete;            
+	SrvManager& operator=(const SrvManager&) = delete; 
+
 	DirectXCommon* directXCommon = nullptr;
 
 	static const uint32_t kMaxSRVCount;

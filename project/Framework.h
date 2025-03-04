@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include "WinApp.h"
 #include "Input.h"
-#include "WinApp.h"
 #include "DirectXCommon.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
@@ -17,10 +16,16 @@
 #include "AbstractSceneFactory.h"
 #ifdef _DEBUG
 #include "ImGuiManager.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_dx12.h"
+#include "imgui/imgui_impl_win32.h"
 #endif // _DEBUG
+#include <crtdbg.h>
 class Framework {
 public:
 	virtual ~Framework() = default;
+
+	void CheckHeap();
 
 	virtual void Initialize();
 
@@ -40,7 +45,7 @@ protected:
 	std::unique_ptr<WinApp> winApp_;
 	DirectXCommon* dxCommon_ = nullptr;
 	Sound* audio_ = nullptr;
-	std::unique_ptr<SrvManager> srvManager_ = nullptr;
+	SrvManager* srvManager_ = nullptr;
 	Input* input_ = nullptr;
 	SceneManager* sceneManager_ = nullptr;
 	

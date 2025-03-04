@@ -20,7 +20,7 @@ using namespace StringUtility;
 const uint32_t DirectXCommon::kMaxSRVCount = 512;
 
 DirectXCommon* DirectXCommon::GetInstance() {
-	static DirectXCommon instance;
+	static DirectXCommon instance; //스타틱 멤버변수로 변경
 	return &instance;
 }
 
@@ -39,8 +39,9 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	assert(winApp);
 
 	this->winApp = winApp;
+	//this->winApp = std::make_unique<WinApp>(*winApp);
 
-	fpsLimiter = new FPSLimiter();
+	fpsLimiter = std::make_unique<FPSLimiter>();
 	fpsLimiter->InitializeFixFPS();
 
 
@@ -325,7 +326,7 @@ void DirectXCommon::InitializeFence()
 	HRESULT hr;
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
-	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	fenceEvent.reset(CreateEvent(NULL, FALSE, FALSE, NULL));
 	assert(fenceEvent != nullptr);
 }
 
@@ -387,24 +388,25 @@ void DirectXCommon::InitializePSO()
 	HRESULT hr;
 
 	//DXC Compiler 初期化
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	ComPtr<IDxcIncludeHandler> includeHandler;
+
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 	assert(SUCCEEDED(hr));
 	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 	assert(SUCCEEDED(hr));
 
-	IDxcIncludeHandler* includeHandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
 	//Shader Compile
 	ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"resources/shaders/Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(vertexShaderBlob != nullptr);
 
 	ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"resources/shaders/Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+		L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(pixelShaderBlob != nullptr);
 
 	//DescriptorRange
@@ -625,9 +627,9 @@ void DirectXCommon::PostDraw()
 
 	if (fence->GetCompletedValue() < fenceValue)
 	{
-		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent.get());
 		assert(SUCCEEDED(hr));
-		WaitForSingleObject(fenceEvent, INFINITE);
+		WaitForSingleObject(fenceEvent.get(), INFINITE);
 	}
 
 	hr = commandAllocator->Reset();
@@ -658,10 +660,11 @@ IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar
 	//hlsl
 	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
 
-	IDxcBlobEncoding* shaderSource = nullptr;
+	ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
 
 	assert(SUCCEEDED(hr));
+
 
 	DxcBuffer shaderSourceBuffer;
 	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
@@ -678,7 +681,7 @@ IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar
 		L"-Zpr"
 	};
 	//Shader Compile
-	IDxcResult* shaderResult = nullptr;
+	ComPtr<IDxcResult> shaderResult = nullptr;
 	hr = dxcCompiler->Compile(
 		&shaderSourceBuffer,         //読み込んだfile
 		arguments,					 //Compile option
@@ -804,33 +807,30 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 void DirectXCommon::Cleanup()
 {
 	
-	//depthStencilBuffer.Reset();
-	//if (depthStencilBuffer) {
-	//	depthStencilBuffer->Release();
-	//	depthStencilBuffer = nullptr;
-	//}
 
-	//fence.Reset();
-	//if (fence) {
-	//	fence->Release();
-	//	fence = nullptr;
-	//}
+	if (commandQueue && fence) {
+		UINT64 fenceValue = 1;
+		commandQueue->Signal(fence.Get(), fenceValue);
+		if (fence->GetCompletedValue() < fenceValue) {
+			fence->SetEventOnCompletion(fenceValue, fenceEvent.get());
+			WaitForSingleObject(fenceEvent.get(), INFINITE);
+		}
+	}
 
-	//if (device) {
-	//	device->Release();
-	//	device = nullptr;
-	//}
-	//if (debugController != nullptr) {
-	//	debugController->Release();
-	//}
-//#ifdef _DEBUG
-//	ImGui_ImplDX12_Shutdown();
-//	ImGui_ImplWin32_Shutdown();
-//	ImGui::DestroyContext();
-//#endif // _DEBUG
-	delete winApp;
-	delete fpsLimiter;
-	
+	swapChain.Reset();
+	commandQueue.Reset();
+	commandList.Reset();
+	commandAllocator.Reset();
+	device.Reset();
+	fence.Reset();
+
+	rtvDescriptorHeap.Reset();
+	dsvDescriptorHeap.Reset();
+	depthStencilBuffer.Reset();
+	graphicsPipelineState.Reset();
+	rootSignature.Reset();
+
+	fpsLimiter.reset();
 }
 
 void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)

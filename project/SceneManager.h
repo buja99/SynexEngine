@@ -17,7 +17,7 @@ public:
 
 	void ChangeScene(const std::string& sceneName);
 
-	void SetSceneFactory(AbstractSceneFactory* sceneFactory) { sceneFactory_ = sceneFactory; }
+    void SetSceneFactory(std::unique_ptr<AbstractSceneFactory> sceneFactory) { sceneFactory_ = std::move(sceneFactory); }
 
 private:
 	~SceneManager() = default;
@@ -29,7 +29,7 @@ private:
 
 	std::unique_ptr<BaseScene> nextScene_ = nullptr;
 
-	AbstractSceneFactory* sceneFactory_ = nullptr;
+	std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
 
 
 };

@@ -14,6 +14,14 @@ Input* Input::GetInstance() {
 	return &instance;
 }
 
+void Input::Finalize() {
+
+	keyboard->Unacquire();
+	keyboard.Reset();
+	directInput.Reset();
+	//winApp_ = nullptr;
+}
+
 void Input::Initialize(WinApp* winApp)
 {
 	

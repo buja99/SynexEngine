@@ -7,7 +7,7 @@ void MyGame::Initialize() {
 	Framework::Initialize();
 
 	sceneFactory_ = std::make_unique<SceneFactory>();
-	sceneManager_->SetSceneFactory(sceneFactory_.get());
+	sceneManager_->SetSceneFactory(std::move(sceneFactory_));
 
 	sceneManager_->ChangeScene("TITLE");
 

@@ -9,6 +9,7 @@
 #include "DirectXTex.h"
 #include <string>
 #include "FPSLimiter.h"
+#include <memory>
 
 using Microsoft::WRL::ComPtr;
 
@@ -122,12 +123,12 @@ private:
 
 	ComPtr<ID3D12Fence> fence;
 	uint64_t fenceValue = 0;
-	HANDLE fenceEvent;
+	std::unique_ptr<void, decltype(&CloseHandle)> fenceEvent{ nullptr, CloseHandle };
 	UINT64 fenceVal = 0;
 
-	//IDxcUtils* dxcUtils = nullptr;
-	//IDxcCompiler3* dxcCompiler = nullptr;
-	//IDxcIncludeHandler* includeHandler = nullptr;
+	/*std::unique_ptr<IDxcUtils, void(*)(IDxcUtils*)> dxcUtils(nullptr, [](IDxcUtils* ptr) { if (ptr) ptr->Release(); });
+	std::unique_ptr<IDxcCompiler3, void(*)(IDxcCompiler3*)> dxcCompiler(nullptr, [](IDxcCompiler3* ptr) { if (ptr) ptr->Release(); });
+	std::unique_ptr<IDxcIncludeHandler, void(*)(IDxcIncludeHandler*)> includeHandler(nullptr, [](IDxcIncludeHandler* ptr) { if (ptr) ptr->Release(); });*/
 
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
@@ -136,11 +137,12 @@ private:
 	
 
 	WinApp* winApp = nullptr;
+	//std::unique_ptr<WinApp> winApp;
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> graphicsPipelineState;
 	
 	
-	FPSLimiter* fpsLimiter = nullptr;
+	std::unique_ptr<FPSLimiter> fpsLimiter;
 
 };
 

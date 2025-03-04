@@ -45,7 +45,7 @@
 //#pragma comment(lib,"d3d12.lib")
 //#pragma comment(lib,"dxgi.lib")
 //#pragma comment(lib,"dxguid.lib")
-//#pragma comment(lib,"dxcompiler.lib")
+
 
 
 
@@ -238,6 +238,9 @@
 
 #include "MyGame.h"
 #include "LeakCheck.h"
+#include <Windows.h>
+
+
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	LeakCheck leakCheck;
@@ -245,6 +248,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::unique_ptr<MyGame> myGame = std::make_unique<MyGame>();
 
 	myGame->Run();
+
 
 	return 0;
 }
