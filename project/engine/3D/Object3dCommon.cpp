@@ -18,13 +18,23 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 
 }
 
+void Object3dCommon::Finalize() {
+	rootSignature.Reset();
+	graphicsPipelineState.Reset();
+	commandList.Reset();
+	device.Reset();
+
+	dxCommon_ = nullptr;
+	defaultCamera = nullptr;
+}
+
 void Object3dCommon::CommonDrawSettings()
 {
 
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 
-	dxCommon_->GetCommandList()->SetPipelineState(dxCommon_->GetGraphicsPipelineState().Get());
-
+	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 }
@@ -142,7 +152,7 @@ void Object3dCommon::CreateRootSignature()
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
 
-
+	rootSignature->SetName(L"Object3DCommonRootSignature");
 
 }
 

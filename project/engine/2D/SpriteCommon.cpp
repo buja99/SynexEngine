@@ -15,13 +15,30 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 	CreateGraphicsPipeline();
 }
 
+void SpriteCommon::Finalize() {
+	if (rootSignature) {
+		rootSignature.Reset();
+	}
+
+	// 그래픽 파이프라인 상태 해제
+	if (graphicsPipelineState) {
+		graphicsPipelineState.Reset();
+	}
+
+	// DirectXCommon이 관리하는 CommandList는 여기서 해제하지 않음
+	commandList = nullptr;
+
+	// Device 해제 (DirectXCommon이 소유하는 경우 여기서 해제하지 않음)
+	device = nullptr;
+}
+
 
 void SpriteCommon::CommonDrawSettings()
 {
 
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 
-	dxCommon_->GetCommandList()->SetPipelineState(dxCommon_->GetGraphicsPipelineState().Get());
+	//dxCommon_->GetCommandList()->SetPipelineState(dxCommon_->GetGraphicsPipelineState().Get());
 
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -179,6 +196,7 @@ ComPtr<ID3D12DescriptorHeap> SpriteCommon::CreateDescriptorHeap(ComPtr<ID3D12Dev
 	descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 	assert(SUCCEEDED(hr));
+	descriptorHeap->SetName(L"SpriteDSVHeap");
 	return descriptorHeap;
 }
 
@@ -282,7 +300,7 @@ void SpriteCommon::CreateRootSignature()
 	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
-
+	rootSignature->SetName(L"SpriteRootSignature");
 	
 	
 }

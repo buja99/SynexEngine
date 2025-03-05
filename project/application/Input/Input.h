@@ -10,7 +10,12 @@ class Input
 
 public:
 	//
+
+	static Input* GetInstance();
+
 	template <class T> using ComPtr= Microsoft::WRL::ComPtr<T>;
+
+	void Finalize();
 
 	void Initialize(WinApp* winApp);
 
@@ -20,7 +25,14 @@ public:
 
 	bool TriggerKey(BYTE keyNumber);
 
+
+
 private:
+
+	Input() = default;
+	~Input() = default;
+	Input(const Input&) = delete;
+	Input& operator=(const Input&) = delete;
 
 	ComPtr<IDirectInputDevice8> keyboard;
 	BYTE key[256] = {};

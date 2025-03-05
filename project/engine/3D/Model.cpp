@@ -7,9 +7,9 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 	modelCommon_ = modelCommon;
 
-	this->object3dCommon = object3dCommon;
+	this->object3dCommon_ = object3dCommon;
 
-	modelData = LoadobjFile("resources", "plane.obj");
+	//modelData = LoadobjFile("resources", "plane.obj");
 	
 	modelData = LoadobjFile(directorypath, filename);
 
@@ -25,14 +25,14 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 void Model::Draw()
 {
-	object3dCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	object3dCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
-	object3dCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 
 	auto textureDescriptorHandle = TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath);
-	object3dCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureDescriptorHandle);
+	object3dCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureDescriptorHandle);
 
-	object3dCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+	object3dCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 }
 

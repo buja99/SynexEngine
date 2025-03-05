@@ -4,12 +4,14 @@
 #include "StringUtility.h"
 #include <format>
 #include <dxcapi.h>
-#ifdef _DEBUG
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_win32.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#endif // _DEBUG
-
+#include <dxgidebug.h>
+#include <iostream>
+//ifdef _DEBUG
+//include "imgui/imgui.h"
+//include "imgui/imgui_impl_win32.h"
+//include "imgui/imgui_impl_dx12.h"
+//endif // _DEBUG
+#pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
@@ -18,6 +20,11 @@ using namespace StringUtility;
 
 
 const uint32_t DirectXCommon::kMaxSRVCount = 512;
+
+DirectXCommon* DirectXCommon::GetInstance() {
+	static DirectXCommon instance; //스타틱 멤버변수로 변경
+	return &instance;
+}
 
 DirectXCommon::~DirectXCommon()
 {
@@ -34,8 +41,9 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	assert(winApp);
 
 	this->winApp = winApp;
+	//this->winApp = std::make_unique<WinApp>(*winApp);
 
-	fpsLimiter = new FPSLimiter();
+	fpsLimiter = std::make_unique<FPSLimiter>();
 	fpsLimiter->InitializeFixFPS();
 
 
@@ -50,9 +58,9 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	InitializeViewport();
 	InitializeScissor();
 	//InitializeDXCCompiler();
-	InitializePSO();
+	//InitializePSO();
 #ifdef _DEBUG
-	InitializeImGui();
+	//InitializeImGui();
 #endif // _DEBUG
 
 }
@@ -72,6 +80,10 @@ void DirectXCommon::Device()
 #endif // _DEBUG
 
 	hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+	if (FAILED(hr)) {
+		OutputDebugStringA("ERROR: Failed to create DXGI Factory.\n");
+		return;
+	}
 	assert(SUCCEEDED(hr));
 
 	ComPtr<IDXGIAdapter4> useAdapter = nullptr;
@@ -104,6 +116,10 @@ void DirectXCommon::Device()
 	for (size_t i = 0; i < _countof(featureLevels); ++i) {
 		//device生成
 		hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
+		if (FAILED(hr)) {
+			OutputDebugStringA("ERROR: Failed to create D3D12 Device.\n");
+			return;
+		}
 		//device生成できるかを確認
 		if (SUCCEEDED(hr)) {
 			Log(std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
@@ -145,7 +161,9 @@ void DirectXCommon::Device()
 	}
 #endif // _DEBUG
 
-	
+	if (device == nullptr) {
+		OutputDebugStringA("Error: device creation failed in Device().\n");
+	}
 
 }
 
@@ -163,9 +181,18 @@ void DirectXCommon::Command()
 	assert(SUCCEEDED(hr));
 
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
-	hr = device->CreateCommandQueue(&commandQueueDesc,
-		IID_PPV_ARGS(&commandQueue));
+	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;   
+	commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+	commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;  
+	commandQueueDesc.NodeMask = 0;
+	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
+	if (FAILED(hr)) {
+		OutputDebugStringA("Failed to create Command Queue!\n");
+	}
 	assert(SUCCEEDED(hr));
+	//hr = device->CreateCommandQueue(&commandQueueDesc,
+	//	IID_PPV_ARGS(&commandQueue));
+	//assert(SUCCEEDED(hr));
 }
 
 void DirectXCommon::SwapChain()
@@ -212,8 +239,10 @@ void DirectXCommon::CreateDescriptorHeaps()
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+	rtvDescriptorHeap->SetName(L"RTVHeap");
+	//srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+	dsvDescriptorHeap->SetName(L"DSVHeap");
 }
 
 
@@ -293,6 +322,7 @@ void DirectXCommon::InitializeDSV()
 
 	HRESULT hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvDescriptorHeap));
 	assert(SUCCEEDED(hr));
+	dsvDescriptorHeap->SetName(L"DepthStencilView");
 
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -309,7 +339,7 @@ void DirectXCommon::InitializeFence()
 	HRESULT hr;
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
-	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	fenceEvent.reset(CreateEvent(NULL, FALSE, FALSE, NULL));
 	assert(fenceEvent != nullptr);
 }
 
@@ -347,48 +377,49 @@ void DirectXCommon::InitializeDXCCompiler()
 	//assert(SUCCEEDED(hr));
 
 }
-#ifdef _DEBUG
+//#ifdef _DEBUG
 
-void DirectXCommon::InitializeImGui()
-{
-	//ImGui初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(winApp->GetHwnd());
-	ImGui_ImplDX12_Init(device.Get(),
-		swapChainDesc.BufferCount,
-		rtvDesc.Format,
-		srvDescriptorHeap.Get(),
-		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
-}
-#endif // _DEBUG
+//void DirectXCommon::InitializeImGui()
+//{
+//	//ImGui初期化
+//	IMGUI_CHECKVERSION();
+//	ImGui::CreateContext();
+//	ImGui::StyleColorsDark();
+//	ImGui_ImplWin32_Init(winApp->GetHwnd());
+//	ImGui_ImplDX12_Init(device.Get(),
+//		swapChainDesc.BufferCount,
+//		rtvDesc.Format,
+//		srvDescriptorHeap.Get(),
+//		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+//		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+//
+//}
+//#endif // _DEBUG
 
 void DirectXCommon::InitializePSO()
 {
 	HRESULT hr;
 
 	//DXC Compiler 初期化
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	ComPtr<IDxcIncludeHandler> includeHandler;
+
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 	assert(SUCCEEDED(hr));
 	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 	assert(SUCCEEDED(hr));
 
-	IDxcIncludeHandler* includeHandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
 	//Shader Compile
 	ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"resources/shaders/Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(vertexShaderBlob != nullptr);
 
 	ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"resources/shaders/Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+		L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(pixelShaderBlob != nullptr);
 
 	//DescriptorRange
@@ -447,7 +478,6 @@ void DirectXCommon::InitializePSO()
 	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
-
 	// InputLayout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 
@@ -556,14 +586,14 @@ void DirectXCommon::PreDraw()
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	//ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
+	//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
-	commandList->SetPipelineState(graphicsPipelineState.Get());
+	//commandList->SetPipelineState(graphicsPipelineState.Get());
 }
 
 void DirectXCommon::PostDraw()
@@ -609,36 +639,44 @@ void DirectXCommon::PostDraw()
 
 	if (fence->GetCompletedValue() < fenceValue)
 	{
-		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent.get());
 		assert(SUCCEEDED(hr));
-		WaitForSingleObject(fenceEvent, INFINITE);
+		WaitForSingleObject(fenceEvent.get(), INFINITE);
 	}
 
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
+
+
+	if (commandQueue == nullptr) {
+		OutputDebugStringA("Error: commandQueue is nullptr in PostDraw.\n");
+		return;  // 이 부분으로 인해 nullptr 접근 방지
+	}
+
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) const
-{
-	return GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-}
+//D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) const
+//{
+//	return GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+//}
 
-D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) const
-{
-	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-}
+//D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) const
+//{
+//	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+//}
 
 IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
 {
 	//hlsl
 	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
 
-	IDxcBlobEncoding* shaderSource = nullptr;
+	ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
 
 	assert(SUCCEEDED(hr));
+
 
 	DxcBuffer shaderSourceBuffer;
 	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
@@ -655,7 +693,7 @@ IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar
 		L"-Zpr"
 	};
 	//Shader Compile
-	IDxcResult* shaderResult = nullptr;
+	ComPtr<IDxcResult> shaderResult = nullptr;
 	hr = dxcCompiler->Compile(
 		&shaderSourceBuffer,         //読み込んだfile
 		arguments,					 //Compile option
@@ -780,34 +818,26 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 
 void DirectXCommon::Cleanup()
 {
-	
-	//depthStencilBuffer.Reset();
-	//if (depthStencilBuffer) {
-	//	depthStencilBuffer->Release();
-	//	depthStencilBuffer = nullptr;
-	//}
 
-	//fence.Reset();
-	//if (fence) {
-	//	fence->Release();
-	//	fence = nullptr;
-	//}
+	fpsLimiter.reset();
+	if (graphicsPipelineState) { graphicsPipelineState.Reset(); }
+	if (rootSignature) { rootSignature.Reset(); }
+	if (rtvHeap) { rtvHeap.Reset(); }
+	if (rtvDescriptorHeap) { rtvDescriptorHeap.Reset(); }
+	if (dsvDescriptorHeap) { dsvDescriptorHeap.Reset(); }
+	if (depthStencilBuffer){ depthStencilBuffer.Reset(); }
+	for (auto& buffer : swapChainResources) {
+		buffer.Reset();
+	}
+	if (swapChain) { swapChain.Reset(); }
+	if (commandList) { commandList.Reset(); }
+	if (commandAllocator) { commandAllocator.Reset(); }
+	if (commandQueue) { commandQueue.Reset(); }
+	if (fence) { fence.Reset(); }
+	//ReportLiveObjects();  // Live Objects 확인
+	device.Reset();
 
-	//if (device) {
-	//	device->Release();
-	//	device = nullptr;
-	//}
-	//if (debugController != nullptr) {
-	//	debugController->Release();
-	//}
-#ifdef _DEBUG
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif // _DEBUG
-	delete winApp;
-	delete fpsLimiter;
-	
+	std::cout << "DirectXCommon: Finalized, all resources released." << std::endl;
 }
 
 void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)
@@ -841,6 +871,16 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const ComPtr<I
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
+}
+
+void DirectXCommon::ReportLiveObjects() {
+#ifdef _DEBUG
+	ComPtr<IDXGIDebug1> debug;
+	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+		OutputDebugStringA("=== Reporting Live Objects ===\n");
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
+	}
+#endif
 }
 
 

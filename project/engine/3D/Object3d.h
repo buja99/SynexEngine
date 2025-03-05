@@ -3,7 +3,7 @@
 #include <wrl.h>
 #include "WinApp.h"
 #include <Windows.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include "Transform.h"
 #include "Material.h"
 #include "VertexData.h"
@@ -37,7 +37,7 @@ class Object3d
 
 	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
 
-	void SetModel(Model* model) { this->model = model; }
+	void SetModel(Model* model) { this->model_ = model; }
 
 	void SetModel(const std::string& filePath);
 
@@ -57,9 +57,9 @@ class Object3d
 
 private:
 
-	Model* model = nullptr;
+	Model* model_ = nullptr;
 
-	Object3dCommon* object3dCommon = nullptr;
+	Object3dCommon* object3dCommon_ = nullptr;
 
 	//ModelData modelData;
 

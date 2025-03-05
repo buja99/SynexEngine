@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <wrl.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include <d3d12.h>
 #include "DirectXCommon.h"
 #include <map>
@@ -13,6 +13,8 @@ using Microsoft::WRL::ComPtr;
 class TextureManager
 {
 public:
+
+	static uint32_t kSRVIndexTop;
 
 	static TextureManager* GetInstance();
 
@@ -50,14 +52,13 @@ private:
 	TextureManager(TextureManager&) = delete;
 	TextureManager& operator=(TextureManager&) = delete;
 
-	static uint32_t kSRVIndexTop;
 
 	std::map<std::string, uint32_t> textureIndexMap;
 
 
 	DirectXCommon* dxCommon_ = nullptr;
 	SrvManager* srvManager_ = nullptr;
-	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
+	ID3D12DescriptorHeap* srvDescriptorHeap_;
 	uint32_t descriptorSize_ = 0;
 	
 	

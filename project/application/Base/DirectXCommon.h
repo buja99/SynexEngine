@@ -6,9 +6,10 @@
 #include <array>
 #include "WinApp.h"
 #include <dxcapi.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include <string>
 #include "FPSLimiter.h"
+#include <memory>
 
 using Microsoft::WRL::ComPtr;
 
@@ -16,6 +17,9 @@ class DirectXCommon
 {
 
 public:
+
+	static DirectXCommon* GetInstance();
+
 	~DirectXCommon();
 
 	void Initialize(WinApp* winApp);
@@ -31,8 +35,7 @@ public:
 	void CreateDescriptorHeaps();
 
 	ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ComPtr <ID3D12Device> device, int32_t width, int32_t height);
-	ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(
-	ComPtr <ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+	ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(ComPtr <ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 
 	void InitializeRTV();
@@ -41,16 +44,16 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 	void InitializeDXCCompiler();
-#ifdef _DEBUG
-	void InitializeImGui();
-#endif // _DEBUG
+//#ifdef _DEBUG
+//	void InitializeImGui();
+//#endif // _DEBUG
 	void InitializePSO();
 
 	void PreDraw();
 	void PostDraw();
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
+	//D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index) const;
+	//D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index) const;
 
 	IDxcBlob* CompileShader(
 
@@ -75,8 +78,8 @@ public:
 
 	void UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 	
-	ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
-
+	//ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
+	int GetSwapChainResourcesNum() const { return swapChainDesc.BufferCount; }
 	uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
@@ -84,7 +87,15 @@ public:
 
 	static const uint32_t kMaxSRVCount;
 
+	ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
+
+	void ReportLiveObjects();
+
 private:
+
+	DirectXCommon() = default;
+	DirectXCommon(DirectXCommon&) = delete;
+	const DirectXCommon& operator=(DirectXCommon&) = delete;
 
 	ComPtr<ID3D12Device> device;
 	ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
@@ -96,7 +107,7 @@ private:
 
 	ComPtr<ID3D12Resource> depthStencilBuffer;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap;
-	ComPtr<ID3D12Resource> swapChainBuffers[2];
+	//ComPtr<ID3D12Resource> swapChainBuffers[2];
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	UINT rtvDescriptorSize;
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
@@ -108,17 +119,17 @@ private:
 	uint32_t descriptorSizeDSV;
 
 	ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
+	//ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 
 	ComPtr<ID3D12Fence> fence;
 	uint64_t fenceValue = 0;
-	HANDLE fenceEvent;
+	std::unique_ptr<void, decltype(&CloseHandle)> fenceEvent{ nullptr, CloseHandle };
 	UINT64 fenceVal = 0;
 
-	//IDxcUtils* dxcUtils = nullptr;
-	//IDxcCompiler3* dxcCompiler = nullptr;
-	//IDxcIncludeHandler* includeHandler = nullptr;
+	/*std::unique_ptr<IDxcUtils, void(*)(IDxcUtils*)> dxcUtils(nullptr, [](IDxcUtils* ptr) { if (ptr) ptr->Release(); });
+	std::unique_ptr<IDxcCompiler3, void(*)(IDxcCompiler3*)> dxcCompiler(nullptr, [](IDxcCompiler3* ptr) { if (ptr) ptr->Release(); });
+	std::unique_ptr<IDxcIncludeHandler, void(*)(IDxcIncludeHandler*)> includeHandler(nullptr, [](IDxcIncludeHandler* ptr) { if (ptr) ptr->Release(); });*/
 
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
@@ -127,11 +138,12 @@ private:
 	
 
 	WinApp* winApp = nullptr;
+	//std::unique_ptr<WinApp> winApp;
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> graphicsPipelineState;
 	
 	
-	FPSLimiter* fpsLimiter = nullptr;
+	std::unique_ptr<FPSLimiter> fpsLimiter;
 
 };
 

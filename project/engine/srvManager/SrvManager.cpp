@@ -6,8 +6,21 @@ const uint32_t SrvManager::kMaxSRVCount = 512;
 void SrvManager::Initialize(DirectXCommon* dxCommon)
 {
 	this->directXCommon = dxCommon;
-	descriptorHeap = dxCommon->CreateDescriptorHeap(dxCommon->GetDevice(),
+
+	if (!directXCommon) {
+		OutputDebugStringA("ERROR: SrvManager::Initialize() - directXCommon is null!\n");
+		return;
+	}
+
+	srvDescriptorHeap = dxCommon->CreateDescriptorHeap(dxCommon->GetDevice(),
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+
+	if (!srvDescriptorHeap) {
+		OutputDebugStringA("ERROR: SrvManager::Initialize() - Failed to create descriptor heap!\n");
+		return;
+	}
+	srvDescriptorHeap->SetName(L"SRVManagerSrvHeap");
+
 	descriptorSize = dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
@@ -28,14 +41,24 @@ uint32_t SrvManager::Allocate()
 
 D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandle(uint32_t index)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	if (!srvDescriptorHeap) {
+		OutputDebugStringA("ERROR: SrvManager::GetCPUDescriptorHandle() - srvDescriptorHeap is null!\n");
+		return {}; // 빈 핸들 반환
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	if (!srvDescriptorHeap) {
+		OutputDebugStringA("ERROR: SrvManager::GetGPUDescriptorHandle() - srvDescriptorHeap is null!\n");
+		return {}; // 빈 핸들 반환
+	}
+
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
 
@@ -71,7 +94,7 @@ void SrvManager::CreatSRVforStruturedBuffer(uint32_t srvIndex, ID3D12Resource* p
 
 void SrvManager::PreDraw()
 {
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 	directXCommon->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
 }
@@ -84,4 +107,10 @@ void SrvManager::SetGraphicsRootDesciptorTable(UINT RootPameterIndex, uint32_t s
 bool SrvManager::CanAllocate() const
 {
 	return useIndex < kMaxSRVCount;
+}
+
+void SrvManager::Finalize()
+{
+	srvDescriptorHeap.Reset();
+
 }

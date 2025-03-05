@@ -1,12 +1,12 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #ifdef _DEBUG
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif // _DEBUG
 #include "SrvManager.h"
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
-	this->spriteCommon = spriteCommon;
+	this->spriteCommon_ = spriteCommon;
 
 	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
 
@@ -144,17 +144,17 @@ void Sprite::Draw()
 
 	//ID3D12DescriptorHeap* descriptorHeaps[] = { spriteCommon->GetSrvDescriptorHeap().Get() };
 	//spriteCommon->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-	spriteCommon->GetCommandList()->SetPipelineState(spriteCommon->GetGraphicsPipelineState().Get());
+	spriteCommon_->GetCommandList()->SetPipelineState(spriteCommon_->GetGraphicsPipelineState().Get());
 
-	spriteCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	spriteCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-	spriteCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
-	spriteCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite.Get()->GetGPUVirtualAddress());
-	spriteCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite.Get()->GetGPUVirtualAddress());
-	spriteCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, GPUHandle);
+	spriteCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	spriteCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+	spriteCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
+	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite.Get()->GetGPUVirtualAddress());
+	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite.Get()->GetGPUVirtualAddress());
+	spriteCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, GPUHandle);
 	
 	//commandList->DrawInstanced(6, 1, 0, 0);
-	spriteCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	spriteCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 }
 

@@ -3,7 +3,7 @@
 #include <wrl.h>
 #include "WinApp.h"
 #include <Windows.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include "Transform.h"
 #include "Material.h"
 #include "VertexData.h"
@@ -107,7 +107,7 @@ private:
 
 	void AdjustTextureSize();
 
-	SpriteCommon* spriteCommon = nullptr;
+	SpriteCommon* spriteCommon_ = nullptr;
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 
