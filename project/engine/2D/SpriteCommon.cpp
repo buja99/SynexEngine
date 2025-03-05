@@ -15,6 +15,23 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 	CreateGraphicsPipeline();
 }
 
+void SpriteCommon::Finalize() {
+	if (rootSignature) {
+		rootSignature.Reset();
+	}
+
+	// 그래픽 파이프라인 상태 해제
+	if (graphicsPipelineState) {
+		graphicsPipelineState.Reset();
+	}
+
+	// DirectXCommon이 관리하는 CommandList는 여기서 해제하지 않음
+	commandList = nullptr;
+
+	// Device 해제 (DirectXCommon이 소유하는 경우 여기서 해제하지 않음)
+	device = nullptr;
+}
+
 
 void SpriteCommon::CommonDrawSettings()
 {

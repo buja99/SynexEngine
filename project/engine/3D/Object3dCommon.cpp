@@ -18,6 +18,16 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 
 }
 
+void Object3dCommon::Finalize() {
+	rootSignature.Reset();
+	graphicsPipelineState.Reset();
+	commandList.Reset();
+	device.Reset();
+
+	dxCommon_ = nullptr;
+	defaultCamera = nullptr;
+}
+
 void Object3dCommon::CommonDrawSettings()
 {
 

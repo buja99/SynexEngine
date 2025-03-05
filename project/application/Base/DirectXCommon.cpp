@@ -4,12 +4,14 @@
 #include "StringUtility.h"
 #include <format>
 #include <dxcapi.h>
+#include <dxgidebug.h>
+#include <iostream>
 //ifdef _DEBUG
 //include "imgui/imgui.h"
 //include "imgui/imgui_impl_win32.h"
 //include "imgui/imgui_impl_dx12.h"
 //endif // _DEBUG
-
+#pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
@@ -78,6 +80,10 @@ void DirectXCommon::Device()
 #endif // _DEBUG
 
 	hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+	if (FAILED(hr)) {
+		OutputDebugStringA("ERROR: Failed to create DXGI Factory.\n");
+		return;
+	}
 	assert(SUCCEEDED(hr));
 
 	ComPtr<IDXGIAdapter4> useAdapter = nullptr;
@@ -110,6 +116,10 @@ void DirectXCommon::Device()
 	for (size_t i = 0; i < _countof(featureLevels); ++i) {
 		//device生成
 		hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
+		if (FAILED(hr)) {
+			OutputDebugStringA("ERROR: Failed to create D3D12 Device.\n");
+			return;
+		}
 		//device生成できるかを確認
 		if (SUCCEEDED(hr)) {
 			Log(std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
@@ -806,31 +816,26 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 
 void DirectXCommon::Cleanup()
 {
-	
-
-	if (commandQueue && fence) {
-		UINT64 fenceValue = 1;
-		commandQueue->Signal(fence.Get(), fenceValue);
-		if (fence->GetCompletedValue() < fenceValue) {
-			fence->SetEventOnCompletion(fenceValue, fenceEvent.get());
-			WaitForSingleObject(fenceEvent.get(), INFINITE);
-		}
-	}
-
-	swapChain.Reset();
-	commandQueue.Reset();
-	commandList.Reset();
-	commandAllocator.Reset();
-	device.Reset();
-	fence.Reset();
-
-	rtvDescriptorHeap.Reset();
-	dsvDescriptorHeap.Reset();
-	depthStencilBuffer.Reset();
-	graphicsPipelineState.Reset();
-	rootSignature.Reset();
 
 	fpsLimiter.reset();
+	if (commandQueue) { commandQueue.Reset(); }
+	if (commandAllocator) { commandAllocator.Reset(); }
+	if (commandList) { commandList.Reset(); }
+	if (graphicsPipelineState) { graphicsPipelineState.Reset(); }
+	if (rootSignature) { rootSignature.Reset(); }
+	if (rtvHeap) { rtvHeap.Reset(); }
+	if (rtvDescriptorHeap) { rtvDescriptorHeap.Reset(); }
+	if (dsvDescriptorHeap) { dsvDescriptorHeap.Reset(); }
+	if (depthStencilBuffer){ depthStencilBuffer.Reset(); }
+	if (swapChain) { swapChain.Reset(); }
+	if (fence) { fence.Reset(); }
+	for (auto& buffer : swapChainBuffers) {
+		buffer.Reset();
+	}
+	ReportLiveObjects();  // Live Objects 확인
+	device.Reset();
+
+	std::cout << "DirectXCommon: Finalized, all resources released." << std::endl;
 }
 
 void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)
@@ -864,6 +869,16 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const ComPtr<I
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
+}
+
+void DirectXCommon::ReportLiveObjects() {
+#ifdef _DEBUG
+	ComPtr<IDXGIDebug1> debug;
+	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+		OutputDebugStringA("=== Reporting Live Objects ===\n");
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
+	}
+#endif
 }
 
 

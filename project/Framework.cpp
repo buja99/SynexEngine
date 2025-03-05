@@ -58,13 +58,15 @@ void Framework::Initialize() {
 
 void Framework::Finalize() {
 
+	
+#ifdef _DEBUG
+	if (imGuiManager_) {
+		imGuiManager_->Finalize();
+		imGuiManager_.reset();
+	}
+#endif // _DEBUG
 
-	//sceneManager_->Finalize();
-	//input_->Finalize();
-	//srvManager_->Finalize();
-	//dxCommon_->Cleanup();
-	//winApp_->Finalize();
-
+	// DirectX 관련 객체들 먼저 해제
 	if (sceneManager_) {
 		sceneManager_->Finalize();
 		sceneManager_ = nullptr;
@@ -74,6 +76,13 @@ void Framework::Finalize() {
 		srvManager_->Finalize();
 		srvManager_ = nullptr;
 	}
+
+	spriteCommon_.reset();
+	object3dCommon_.reset();
+	modelCommon_.reset();
+
+	particleManager_.reset();
+	camera_.reset();
 
 	if (input_) {
 		input_->Finalize();
@@ -85,12 +94,10 @@ void Framework::Finalize() {
 		dxCommon_ = nullptr;
 	}
 
-	//if (winApp_) {
-	//	winApp_->Finalize();
-	//	winApp_.reset();
-	//}
-
-	
+	if (winApp_) {
+		winApp_->Finalize();
+		winApp_.reset();
+	}
 }
 
 void Framework::Update() {
@@ -106,17 +113,7 @@ void Framework::Update() {
 
 #endif // _DEBUG
 
-	/*if (_CrtIsValidHeapPointer(input_)) {
-		input_->Update();
-	} else {
-		OutputDebugStringA("ERROR: input_ is invalid!\n");
-	}
-
-	if (_CrtIsValidHeapPointer(sceneManager_)) {
-		sceneManager_->Update();
-	} else {
-		OutputDebugStringA("ERROR: sceneManager_ is invalid!\n");
-	}*/
+	
 
 	input_->Update();
 	

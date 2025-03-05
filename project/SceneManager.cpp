@@ -1,5 +1,6 @@
 #include "SceneManager.h"
 #include <assert.h>
+#include <iostream>
 
 SceneManager* SceneManager::GetInstance() {
 	static SceneManager instance;
@@ -7,9 +8,18 @@ SceneManager* SceneManager::GetInstance() {
 }
 
 void SceneManager::Finalize() {
-	scene_.reset();
-	nextScene_.reset();
-	sceneFactory_.reset();
+	if (scene_) {
+		scene_.reset();
+	}
+	if (nextScene_) {
+		nextScene_.reset();
+	}
+	if (sceneFactory_) {
+		sceneFactory_.reset();
+	}
+
+	// 디버그 로그 추가
+	std::cout << "SceneManager: Finalized, all scenes deleted." << std::endl;
 }
 
 void SceneManager::Update() {

@@ -90,6 +90,8 @@ public:
 
 	ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
 
+	void ReportLiveObjects();
+
 private:
 
 	DirectXCommon() = default;

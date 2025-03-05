@@ -1,5 +1,6 @@
 #include "ImGuiManager.h"
 #include "SrvManager.h"
+#include <iostream>
 
 void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
 
@@ -57,4 +58,5 @@ void ImGuiManager::Finalize() {
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+    std::cout << "ImGuiManager: Finalized." << std::endl;
 }
