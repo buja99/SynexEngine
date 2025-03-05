@@ -58,7 +58,7 @@ private:
 
 	DirectXCommon* dxCommon_ = nullptr;
 	SrvManager* srvManager_ = nullptr;
-	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
+	ID3D12DescriptorHeap* srvDescriptorHeap_;
 	uint32_t descriptorSize_ = 0;
 	
 	

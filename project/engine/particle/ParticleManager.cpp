@@ -338,6 +338,8 @@ void ParticleManager::CreateRootSignature()
 	hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
+
+	rootSignature->SetName(L"ParticleRootSignature");
 }
 
 void ParticleManager::CreateGraphicsPipeline()

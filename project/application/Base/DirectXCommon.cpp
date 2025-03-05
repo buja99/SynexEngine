@@ -239,8 +239,10 @@ void DirectXCommon::CreateDescriptorHeaps()
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+	rtvDescriptorHeap->SetName(L"RTVHeap");
 	//srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+	dsvDescriptorHeap->SetName(L"DSVHeap");
 }
 
 
@@ -320,6 +322,7 @@ void DirectXCommon::InitializeDSV()
 
 	HRESULT hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvDescriptorHeap));
 	assert(SUCCEEDED(hr));
+	dsvDescriptorHeap->SetName(L"DepthStencilView");
 
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -475,7 +478,6 @@ void DirectXCommon::InitializePSO()
 	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
-
 	// InputLayout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 
@@ -818,21 +820,21 @@ void DirectXCommon::Cleanup()
 {
 
 	fpsLimiter.reset();
-	if (commandQueue) { commandQueue.Reset(); }
-	if (commandAllocator) { commandAllocator.Reset(); }
-	if (commandList) { commandList.Reset(); }
 	if (graphicsPipelineState) { graphicsPipelineState.Reset(); }
 	if (rootSignature) { rootSignature.Reset(); }
 	if (rtvHeap) { rtvHeap.Reset(); }
 	if (rtvDescriptorHeap) { rtvDescriptorHeap.Reset(); }
 	if (dsvDescriptorHeap) { dsvDescriptorHeap.Reset(); }
 	if (depthStencilBuffer){ depthStencilBuffer.Reset(); }
-	if (swapChain) { swapChain.Reset(); }
-	if (fence) { fence.Reset(); }
-	for (auto& buffer : swapChainBuffers) {
+	for (auto& buffer : swapChainResources) {
 		buffer.Reset();
 	}
-	ReportLiveObjects();  // Live Objects 확인
+	if (swapChain) { swapChain.Reset(); }
+	if (commandList) { commandList.Reset(); }
+	if (commandAllocator) { commandAllocator.Reset(); }
+	if (commandQueue) { commandQueue.Reset(); }
+	if (fence) { fence.Reset(); }
+	//ReportLiveObjects();  // Live Objects 확인
 	device.Reset();
 
 	std::cout << "DirectXCommon: Finalized, all resources released." << std::endl;

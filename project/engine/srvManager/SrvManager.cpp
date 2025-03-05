@@ -19,6 +19,7 @@ void SrvManager::Initialize(DirectXCommon* dxCommon)
 		OutputDebugStringA("ERROR: SrvManager::Initialize() - Failed to create descriptor heap!\n");
 		return;
 	}
+	srvDescriptorHeap->SetName(L"SRVManagerSrvHeap");
 
 	descriptorSize = dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

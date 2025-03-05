@@ -152,7 +152,7 @@ void Object3dCommon::CreateRootSignature()
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
 
-
+	rootSignature->SetName(L"Object3DCommonRootSignature");
 
 }
 

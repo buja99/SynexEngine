@@ -196,6 +196,7 @@ ComPtr<ID3D12DescriptorHeap> SpriteCommon::CreateDescriptorHeap(ComPtr<ID3D12Dev
 	descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 	assert(SUCCEEDED(hr));
+	descriptorHeap->SetName(L"SpriteDSVHeap");
 	return descriptorHeap;
 }
 
@@ -299,7 +300,7 @@ void SpriteCommon::CreateRootSignature()
 	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
-
+	rootSignature->SetName(L"SpriteRootSignature");
 	
 	
 }

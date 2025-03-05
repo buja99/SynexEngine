@@ -27,7 +27,7 @@ void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
     initInfo.NumFramesInFlight = dxCommon_->GetSwapChainResourcesNum();
     initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     initInfo.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    initInfo.SrvDescriptorHeap = srvManager_->GetSrvDescriptorHeap().Get();
+    initInfo.SrvDescriptorHeap = srvManager_->GetSrvDescriptorHeap();
     //srvManager_->Allocate();
     initInfo.LegacySingleSrvCpuDescriptor = srvManager_->GetCPUDescriptorHandle(index);
     initInfo.LegacySingleSrvGpuDescriptor = srvManager_->GetGPUDescriptorHandle(index);
@@ -47,9 +47,9 @@ void ImGuiManager::EndFrame() {
 }
 
 void ImGuiManager::Draw() {
-    ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList().Get();
-    ID3D12DescriptorHeap* ppHeaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-    commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    //ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList().Get();
+    //ID3D12DescriptorHeap* ppHeaps[] = { srvManager_->GetSrvDescriptorHeap() };
+    //commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon_->GetCommandList().Get());
 
 }
