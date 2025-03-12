@@ -32,5 +32,11 @@ private:
 	Sound* audio_;
 	Input* input_;
 
+
+
+
+
+
+
 };
 

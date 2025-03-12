@@ -3,7 +3,7 @@
 #include "Matrix4x4.h"
 #include "MyMath.h"
 #include "Vector3.h"
-
+#include <memory>
 class Camera
 {
 
@@ -45,7 +45,7 @@ private:
 
 	
 
-	MyMath* myMath = new MyMath;
+	std::unique_ptr<MyMath> myMath;
 
 private:
 	
