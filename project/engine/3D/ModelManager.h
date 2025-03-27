@@ -33,7 +33,7 @@ private:
     std::map<std::string, std::unique_ptr<Model>> models;
 
     std::unique_ptr<ModelCommon> modelCommon;
-    std::unique_ptr<Object3dCommon> object3dCommon;
+    Object3dCommon* object3dCommon;
 
     //constructor
     ModelManager() = default;

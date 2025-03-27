@@ -5,6 +5,7 @@
 using namespace Logger;
 using namespace StringUtility;
 
+
 void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 {
 

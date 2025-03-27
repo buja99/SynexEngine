@@ -44,7 +44,7 @@ void Framework::Initialize() {
 	spriteCommon_ = SpriteCommon::GetInstance();
 	spriteCommon_->Initialize(dxCommon_);
 
-	object3dCommon_ = std::make_unique<Object3dCommon>();
+	object3dCommon_ = Object3dCommon::GetInstance();
 	object3dCommon_->Initialize(dxCommon_);
 
 	modelCommon_ = std::make_unique<ModelCommon>();
@@ -84,7 +84,10 @@ void Framework::Finalize() {
 
 	TextureManager::GetInstance()->Finalize();
 
-	object3dCommon_.reset();
+	if (object3dCommon_) {
+		object3dCommon_->Finalize();
+		object3dCommon_ = nullptr;
+	}
 	modelCommon_.reset();
 
 	particleManager_.reset();

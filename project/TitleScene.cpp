@@ -10,6 +10,12 @@ void TitleScene::Initialize() {
 	audio_ = Sound::GetInstance();
 	input_ = Input::GetInstance();
 
+	model_ = std::make_unique<Object3d>();
+	model_->Initialize(Object3dCommon::GetInstance());
+
+	ModelManager::GetInstance()->LoadModel("resources", "axis.obj");
+	model_->SetModel("axis.obj");
+
 	/*TextureManager::GetInstance()->LoadTexture("resources/title.png");
 
 	title = std::make_unique<Sprite>();
@@ -24,6 +30,8 @@ void TitleScene::Update() {
 
 	//title->Update();
 
+	model_->Updata();
+
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
 
@@ -36,6 +44,11 @@ void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->CommonDrawSettings();
 	//title->Draw();	
+	DirectXCommon::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->PreDraw();
+	Object3dCommon::GetInstance()->CommonDrawSettings();
+
+	model_->Draw();
 }
 
 void TitleScene::Finalize() {

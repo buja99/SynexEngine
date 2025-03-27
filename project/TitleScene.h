@@ -35,6 +35,8 @@ private:
 	std::unique_ptr<Sprite> title = nullptr;
 
 
+	std::unique_ptr<Object3d> model_ = nullptr;
+	//std::unique_ptr<WorldTransform> worldTransform_ = nullptr;
 
 
 

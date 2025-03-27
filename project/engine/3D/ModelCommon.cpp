@@ -8,5 +8,5 @@ void ModelCommon::Initialize(DirectXCommon* dxCommon)
 }
 
 void ModelCommon::Finalize() {
-	dxCommon_ = nullptr;
+	//dxCommon_ = nullptr;
 }

@@ -12,6 +12,10 @@ class Object3dCommon
 
 public:
 
+	static Object3dCommon* GetInstance() {
+		static Object3dCommon instance;
+		return &instance;
+	}
 
 	void Initialize(DirectXCommon* dxCommon);
 
@@ -39,6 +43,11 @@ public:
 	Camera* GetDefaultCamera() const { return defaultCamera; }
 
 private:
+
+	Object3dCommon() = default;
+	~Object3dCommon() = default;
+	Object3dCommon(const Object3dCommon&) = delete;
+	Object3dCommon& operator=(const Object3dCommon&) = delete;
 
 	void CreateRootSignature();
 	void CreateGraphicsPipeline();

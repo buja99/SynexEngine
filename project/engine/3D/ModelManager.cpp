@@ -17,11 +17,13 @@ ModelManager* ModelManager::GetInstance()
 
 void ModelManager::Initialize(DirectXCommon* dxCommon)
 {
+	
+
     modelCommon = std::make_unique<ModelCommon>();
     modelCommon->Initialize(dxCommon);
 
-    object3dCommon = std::make_unique<Object3dCommon>();
-    object3dCommon->Initialize(dxCommon);
+    object3dCommon = Object3dCommon::GetInstance();
+    //object3dCommon->Initialize(dxCommon);
 }
 
 
@@ -32,7 +34,7 @@ void ModelManager::LoadModel(const std::string& directorypath, const std::string
         return;
     }
     std::unique_ptr<Model> model = std::make_unique<Model>();
-    model->Initialize(modelCommon.get(), object3dCommon.get(), directorypath, filePath);
+    model->Initialize(modelCommon.get(), object3dCommon, directorypath, filePath);
 
     models.insert(std::make_pair(filePath, std::move(model)));
 }

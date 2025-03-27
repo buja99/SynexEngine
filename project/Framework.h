@@ -50,7 +50,7 @@ protected:
 	SceneManager* sceneManager_ = nullptr;
 	
 	SpriteCommon* spriteCommon_ = nullptr;
-	std::unique_ptr<Object3dCommon> object3dCommon_ = nullptr;
+	Object3dCommon* object3dCommon_ = nullptr;
 #ifdef _DEBUG
 	std::unique_ptr<ImGuiManager> imGuiManager_ = nullptr;
 #endif // _DEBUG
