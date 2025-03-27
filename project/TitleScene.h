@@ -32,7 +32,7 @@ private:
 	Sound* audio_;
 	Input* input_;
 
-
+	std::unique_ptr<Sprite> title = nullptr;
 
 
 

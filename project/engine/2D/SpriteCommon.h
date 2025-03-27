@@ -13,6 +13,11 @@ class SpriteCommon
 
 public:
 
+	static SpriteCommon* GetInstance() {
+		static SpriteCommon instance;
+		return &instance;
+	}
+
 	void Initialize(DirectXCommon* dxCommon);
 
 	void Finalize();
@@ -47,6 +52,11 @@ public:
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
 private:
+
+	SpriteCommon() = default;
+	~SpriteCommon() = default;
+	SpriteCommon(const SpriteCommon&) = delete;
+	SpriteCommon& operator=(const SpriteCommon&) = delete;
 
 	void CreateRootSignature();
 	void CreateGraphicsPipeline();

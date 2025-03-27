@@ -45,7 +45,10 @@ public:
 
 private:
 
-	static TextureManager* instance;
+	static std::unique_ptr<TextureManager> instance;
+
+	friend std::unique_ptr<TextureManager> std::make_unique<TextureManager>();
+	friend std::default_delete<TextureManager>;
 
 	TextureManager() = default;
 	~TextureManager() = default;
@@ -66,17 +69,11 @@ private:
 private:
 
 	struct TextureData {
-
-		//TextureData(const TextureData&) = delete; 
-		//TextureData& operator=(const TextureData&) = delete; 
-
-		std::string filePath;
 		DirectX::TexMetadata metadata;
 		ComPtr<ID3D12Resource> resource;
 		uint32_t srvIndex;
 		D3D12_CPU_DESCRIPTOR_HANDLE srvHandleCPU;
 		D3D12_GPU_DESCRIPTOR_HANDLE srvHandleGPU;
-		DirectX::ScratchImage image;
 	};
 
 	//std::vector<TextureData> textureDatas;

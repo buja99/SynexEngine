@@ -161,44 +161,11 @@ void Sprite::Draw()
 void Sprite::Cleanup()
 {
 
-	if (vertexResourceSprite) {
-		vertexResourceSprite->Release();
-		vertexResourceSprite = nullptr;
-	}
-	if (transformationMatrixResourceSprite) {
-		transformationMatrixResourceSprite->Release();
-		transformationMatrixResourceSprite = nullptr;
-	}
-	if (indexResourceSprite) {
-		indexResourceSprite->Release();
-		indexResourceSprite = nullptr;
-	}
-	if (materialResourceSprite) {
-		materialResourceSprite->Release();
-		materialResourceSprite = nullptr;
-	}
-	//if (textureResource) {
-	//	textureResource->Release();
-	//	textureResource = nullptr;
-	//}
-	//if (textureResource2) {
-	//	textureResource2->Release();
-	//	textureResource2 = nullptr;
-	//}
-	//if (materialResource) {
-	//	materialResource->Release();
-	//	materialResource = nullptr;
-	//}
-	//if (wvpResoure) {
-	//	wvpResoure->Release();
-	//	wvpResoure = nullptr;
-	//}
 
+	if (spriteCommon_) {
+		spriteCommon_ = nullptr;
+	}
 
-	//if (mipImages) {
-   //	 mipImages->Release();
-   //	 mipImages = nullptr;
-	//}
 	delete myMath;
 	myMath = nullptr;
 

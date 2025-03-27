@@ -49,7 +49,7 @@ protected:
 	Input* input_ = nullptr;
 	SceneManager* sceneManager_ = nullptr;
 	
-	std::unique_ptr<SpriteCommon> spriteCommon_ = nullptr;
+	SpriteCommon* spriteCommon_ = nullptr;
 	std::unique_ptr<Object3dCommon> object3dCommon_ = nullptr;
 #ifdef _DEBUG
 	std::unique_ptr<ImGuiManager> imGuiManager_ = nullptr;
