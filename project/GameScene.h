@@ -10,6 +10,7 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "Sound.h"
+//#include "WorldTransform.h"
 
 class GameScene : public BaseScene {
 public:
@@ -28,5 +29,11 @@ private:
 	DirectXCommon* dxCommon_;
 	Sound* audio_;
 	Input* input_;
+
+	std::unique_ptr<Object3d> model_ = nullptr;
+	//std::unique_ptr<WorldTransform> worldTransform_ = nullptr;
+
+
+
 };
 
