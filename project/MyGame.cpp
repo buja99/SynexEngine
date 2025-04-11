@@ -11,6 +11,7 @@ void MyGame::Initialize() {
 
 	sceneManager_->ChangeScene("TITLE");
 
+
 }
 
 void MyGame::Finalize() {

@@ -10,6 +10,7 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "Sound.h"
+#include "WorldTransform.h"
 
 class TitleScene : public BaseScene {
 
@@ -36,9 +37,9 @@ private:
 
 
 	std::unique_ptr<Object3d> model_ = nullptr;
-	//std::unique_ptr<WorldTransform> worldTransform_ = nullptr;
+	std::unique_ptr<WorldTransform> worldTransform_ = nullptr;
 
-
+	std::unique_ptr<Camera> camera_ = nullptr;
 
 };
 

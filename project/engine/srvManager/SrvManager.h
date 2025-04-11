@@ -46,7 +46,6 @@ private:
 	//ComPtr<ID3D12Device> device;
 	uint32_t useIndex = 0;
 
-	MyMath* myMath = new MyMath;
 
 };
 

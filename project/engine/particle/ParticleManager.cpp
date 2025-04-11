@@ -38,11 +38,11 @@ void ParticleManager::Update()
 	Matrix4x4 cameraMatrix = camera_->GetWorldMatrix();
 	Matrix4x4 viewMatrix = camera_->GetViewMatrix();
 	Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
-	Matrix4x4 billboardMatrix = math->Multiply(backToFrontMatrix, cameraMatrix);
+	Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, cameraMatrix);
 	billboardMatrix.m[3][0] = 1.0f;
 	billboardMatrix.m[3][1] = 1.0f;
 	billboardMatrix.m[3][2] = 1.0f;
-	Matrix4x4 viewProjectionMatrix = math->Multiply(viewMatrix, projectionMatrix);
+	Matrix4x4 viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
 	numInstance = 0;
 	constexpr float deltaTime = 1.0f / 60.0f; // 프레임 속도 일정화
 
@@ -61,13 +61,13 @@ void ParticleManager::Update()
 		for (auto& p : group.particles)
 		{
 			// 🔹 위치 업데이트
-			p.transform.translate = math->Add(p.transform.translate, p.velocity);
+			p.transform.translate = MyMath::Add(p.transform.translate, p.velocity);
 
 			// 🔹 GPU 메모리 업데이트
 			if (group.mappedInstanceData)
 			{
-				Matrix4x4 worldMatrix = math->MakeAffineMatrix(p.transform.scale, p.transform.rotate, p.transform.translate);
-				group.mappedInstanceData[i].WVP = math->Multiply(worldMatrix, viewProjectionMatrix);
+				Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(p.transform.scale, p.transform.rotate, p.transform.translate);
+				group.mappedInstanceData[i].WVP = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 				group.mappedInstanceData[i].World = worldMatrix;
 				group.mappedInstanceData[i].color = p.color;
 			}
@@ -116,7 +116,7 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 
 
 	Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	particle.transform.translate = math->Add(translate, randomTranslate);
+	particle.transform.translate = MyMath::Add(translate, randomTranslate);
 
 	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
@@ -173,8 +173,8 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	assert(SUCCEEDED(hr));
 	for (int i = 0; i < initialInstanceCount; i++)
 	{
-		newGroup.mappedInstanceData[i].WVP = math->MakeIdentity4x4();
-		newGroup.mappedInstanceData[i].World = math->MakeIdentity4x4();
+		newGroup.mappedInstanceData[i].WVP = MyMath::MakeIdentity4x4();
+		newGroup.mappedInstanceData[i].World = MyMath::MakeIdentity4x4();
 		newGroup.mappedInstanceData[i].color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 	}
 

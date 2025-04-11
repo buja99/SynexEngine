@@ -6,10 +6,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-class MyMath
+namespace  MyMath
 {
 
-	public:
+	
 
 	Vector3 Add(const Vector3& v1, const Vector3& v2);
 	Vector3 AddVector2AndVector3(const Vector2& vec2, const Vector3& vec3);
@@ -27,6 +27,12 @@ class MyMath
 	Vector3 Transforms(const Vector3& vector, const Matrix4x4& matrix);
 	Matrix4x4 Inverse(const Matrix4x4& m);
 	Matrix4x4 MakeIdentity4x4();
-
+	Vector3 Subtract(const Vector3& v1, const Vector3& v2);
+	float Dot(Vector3 c, Vector3 d);
+	Vector3 cross(const Vector3& u, const Vector3& v);
+	float length(Vector3 distance);
+	Vector3 normalize(Vector3 distance);
+	Matrix4x4 CreateLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up);
+	Matrix4x4 Transpose(const Matrix4x4& m);
 };
 

@@ -49,7 +49,9 @@ Model* ModelManager::FindModel(const std::string& filePath)
 
 void ModelManager::Finalize()
 {
-
+	/*models.clear();
+    modelCommon.reset();
+    object3dCommon = nullptr;*/
 
     if (instance) {
         delete instance;

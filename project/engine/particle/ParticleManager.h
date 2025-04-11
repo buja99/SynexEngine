@@ -75,7 +75,7 @@ public:
     
 
 private:
-    Matrix4x4 backToFrontMatrix = math->MakeRotateYMatrix(std::numbers::pi_v<float>);
+    Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
 
     ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
     IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);
@@ -100,7 +100,7 @@ private:
 
     std::unordered_map<std::string, ParticleGroup> particleGroups;
 
-    MyMath* math = nullptr;
+   
     const uint32_t kNumMaxInstance = 100;
     
 };

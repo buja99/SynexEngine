@@ -7,7 +7,7 @@
 #include "Transform.h"
 #include "Material.h"
 #include "VertexData.h"
-#include "DirectionalLight.h"
+//#include "Lighting.h"
 #include "TextureManager.h"
 
 class SpriteCommon;
@@ -111,6 +111,6 @@ private:
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 
-	MyMath* myMath = new MyMath;
+	
 };
 

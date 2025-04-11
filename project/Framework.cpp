@@ -44,11 +44,12 @@ void Framework::Initialize() {
 	spriteCommon_ = SpriteCommon::GetInstance();
 	spriteCommon_->Initialize(dxCommon_);
 
+	modelCommon_ = std::make_unique<ModelCommon>();
+	modelCommon_->Initialize(dxCommon_);
+
 	object3dCommon_ = Object3dCommon::GetInstance();
 	object3dCommon_->Initialize(dxCommon_);
 
-	modelCommon_ = std::make_unique<ModelCommon>();
-	modelCommon_->Initialize(dxCommon_);
 
 	//camera_ = std::make_unique<Camera>();
 	
@@ -83,7 +84,7 @@ void Framework::Finalize() {
 	}
 
 	TextureManager::GetInstance()->Finalize();
-
+	ModelManager::GetInstance()->Finalize();
 	if (object3dCommon_) {
 		object3dCommon_->Finalize();
 		object3dCommon_ = nullptr;

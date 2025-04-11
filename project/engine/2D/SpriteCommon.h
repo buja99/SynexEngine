@@ -3,9 +3,13 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
-
+#include "Matrix4x4.h"
+#include "Lighting.h"
 using Microsoft::WRL::ComPtr;
 
+struct ConstBufferData {
+	Matrix4x4 mat;
+};
 
 class SpriteCommon
 {
@@ -51,6 +55,8 @@ public:
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
+	ComPtr<ID3D12Resource> GetDirectionLightBuffer() const { return directionLightBuffer_; }
+
 private:
 
 	SpriteCommon() = default;
@@ -71,6 +77,6 @@ private:
 	
 	ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 	
-
+	ComPtr<ID3D12Resource> directionLightBuffer_;
 };
 

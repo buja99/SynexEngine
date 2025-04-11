@@ -565,7 +565,7 @@ void DirectXCommon::PreDraw()
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
+	
 	if (barrier.Transition.pResource == nullptr) {
 		OutputDebugStringA("Error: pResource is NULL in PreDraw.\n");
 		return;

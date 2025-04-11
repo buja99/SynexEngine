@@ -25,9 +25,9 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 void Model::Draw()
 {
-	object3dCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
-	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+
+	object3dCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
 	auto textureDescriptorHandle = TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath);
 	object3dCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureDescriptorHandle);
@@ -38,8 +38,18 @@ void Model::Draw()
 
 void Model::Cleanup()
 {
+	if (vertexResource_) {
+		vertexResource_.Reset();
+	}
 
-	delete myMath;
+	if (materialResource_) {
+		materialResource_.Reset();
+		materialData_ = nullptr;
+	}
+
+	object3dCommon_ = nullptr;
+	modelCommon_ = nullptr;
+	
 }
 
 ModelData Model::LoadobjFile(const std::string& directoryPath, const std::string& filename)
@@ -208,7 +218,9 @@ void Model::InitializeMaterial()
 	materialResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->enableLighting = false;
-	materialData_->uvTransform = myMath->MakeIdentity4x4();
+	materialData_->enableLighting = true;               // ✅ 조명 ON
+	materialData_->uvTransform = MyMath::MakeIdentity4x4();
+	materialData_->shininess = 32.0f;                   // ✅ 스페큘러 적용
+	materialData_->reflectModel = 2;
 
 }

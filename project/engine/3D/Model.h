@@ -31,6 +31,8 @@ public:
 
 	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
 
+	Material GetMaterialData() const { return *materialData_; }
+
 private:
 	ModelCommon* modelCommon_ = nullptr;
 	// Obj file
@@ -49,8 +51,6 @@ private:
 	void InitializeMaterial();
 
 	Object3dCommon* object3dCommon_ = nullptr;
-
-	MyMath* myMath = new MyMath;
 
 };
 

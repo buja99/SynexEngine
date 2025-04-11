@@ -48,8 +48,8 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	
 	transformationMatrixResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(TransformationMatrix));
 	transformationMatrixResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
-	transformationMatrixDataSprite->World = myMath->MakeIdentity4x4();
-	transformationMatrixDataSprite->WVP = myMath->MakeIdentity4x4();
+	transformationMatrixDataSprite->World = MyMath::MakeIdentity4x4();
+	transformationMatrixDataSprite->WVP = MyMath::MakeIdentity4x4();
 
 	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
@@ -102,16 +102,16 @@ void Sprite::Update()
 	transformSprite.scale = { size.x,size.y,1.0f };
 
 
-	Matrix4x4 uvTransformMatrix = myMath->MakeScaleMatrix(uvTransformSprite.scale);
-	uvTransformMatrix = myMath->Multiply(uvTransformMatrix, myMath->MakeRotateZMatrix(uvTransformSprite.rotate.z));
-	uvTransformMatrix = myMath->Multiply(uvTransformMatrix, myMath->MakeTranslateMatrix(uvTransformSprite.translate));
+	Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale);
+	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate.z));
+	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate));
 	materialDataSprite->uvTransform = uvTransformMatrix;
 
 
-	Matrix4x4 worldMatrixSprite = myMath->MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-	Matrix4x4 viewMatrixSprite = myMath->MakeIdentity4x4();
-	Matrix4x4 projectionMatrixSprite = myMath->MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth), float(WinApp::kClientHeight), 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrixSprite = myMath->Multiply(worldMatrixSprite, myMath->Multiply(viewMatrixSprite, projectionMatrixSprite));
+	Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+	Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
+	Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth), float(WinApp::kClientHeight), 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrixSprite = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite));
 	transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 	transformationMatrixDataSprite->World = worldViewProjectionMatrixSprite;
 
@@ -149,9 +149,10 @@ void Sprite::Draw()
 	spriteCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	spriteCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 	spriteCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
-	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite.Get()->GetGPUVirtualAddress());
-	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite.Get()->GetGPUVirtualAddress());
-	spriteCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, GPUHandle);
+	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress()); // Material (b0)
+	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, spriteCommon_->GetDirectionLightBuffer()->GetGPUVirtualAddress()); // DirectionLight (b1) 추가!
+	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(2, transformationMatrixResourceSprite->GetGPUVirtualAddress()); // TransformMatrix (b2)
+	spriteCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(3, GPUHandle);
 	
 	//commandList->DrawInstanced(6, 1, 0, 0);
 	spriteCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
@@ -166,8 +167,8 @@ void Sprite::Cleanup()
 		spriteCommon_ = nullptr;
 	}
 
-	delete myMath;
-	myMath = nullptr;
+	
+	
 
 }
 
