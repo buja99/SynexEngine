@@ -28,6 +28,9 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 }
 
 void SpriteCommon::Finalize() {
+
+	directionLightBuffer_.Reset();
+
 	if (rootSignature) {
 		rootSignature.Reset();
 	}
