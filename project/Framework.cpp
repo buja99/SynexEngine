@@ -1,4 +1,5 @@
 #include "Framework.h"
+#include <dxgidebug.h>
 
 void Framework::CheckHeap() {
 	HANDLE heap = GetProcessHeap();
@@ -107,6 +108,10 @@ void Framework::Finalize() {
 	if (winApp_) {
 		winApp_->Finalize();
 		winApp_.reset();
+	}
+	ComPtr<IDXGIDebug1> debug;
+	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
 	}
 }
 

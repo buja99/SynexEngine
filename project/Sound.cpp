@@ -136,7 +136,12 @@ void Sound::UnloadSoundData(SoundData* soundData) {
 }
 
 void Sound::UnloadSoundData(LoopSoundData* loopSoundData) {
-	delete loopSoundData->pSourceVoice;
+	if (loopSoundData->pSourceVoice) {
+		loopSoundData->pSourceVoice->Stop(0);
+		loopSoundData->pSourceVoice->FlushSourceBuffers();
+		loopSoundData->pSourceVoice->DestroyVoice(); // 안전한 해제
+		loopSoundData->pSourceVoice = nullptr;
+	}
 
 	UnloadSoundData(&loopSoundData->soundData);
 }

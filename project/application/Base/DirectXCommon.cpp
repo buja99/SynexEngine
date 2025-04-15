@@ -743,7 +743,7 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(ComPtr<ID3D12Device> 
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&vertexResource));
 	assert(SUCCEEDED(hr));
-	vertexResource->SetName(L"bufferResource");
+	vertexResource->SetName(L"DirectXCommonBufferResource");
 
 	return vertexResource;
 }
@@ -837,7 +837,7 @@ void DirectXCommon::Cleanup()
 	//ReportLiveObjects();  // Live Objects 확인
 	device.Reset();
 
-	std::cout << "DirectXCommon: Finalized, all resources released." << std::endl;
+	OutputDebugStringA("DirectXCommon: Finalized, all resources released\n");
 }
 
 void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)

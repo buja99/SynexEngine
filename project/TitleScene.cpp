@@ -111,6 +111,15 @@ void TitleScene::Draw() {
 }
 
 void TitleScene::Finalize() {
-
+	if (model_) {
+		model_->Cleanup(); 
+		model_.reset();
+	}
+	if (worldTransform_) {
+		worldTransform_->Cleanup(); 
+		worldTransform_.reset();
+	}
+    camera_.reset();
+    
 	title.reset();
 }

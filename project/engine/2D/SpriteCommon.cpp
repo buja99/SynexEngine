@@ -50,28 +50,11 @@ void SpriteCommon::CommonDrawSettings()
 
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 
-	//dxCommon_->GetCommandList()->SetPipelineState(dxCommon_->GetGraphicsPipelineState().Get());
-
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	
 }
 
-//void SpriteCommon::CreateDescriptorHeaps()
-//{
-//
-//	//descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-//	descriptorSizeSRV = dxCommon_->GetDescriptorSizeSRV();
-//	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-//	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-//
-//	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-//	srvDescriptorHeap = dxCommon_->GetSrvDescriptorHeap();
-//	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-//
-//
-//
-//}
 
 IDxcBlob* SpriteCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
 {
@@ -167,7 +150,7 @@ ComPtr<ID3D12Resource> SpriteCommon::CreateTextureResource(ComPtr<ID3D12Device> 
 	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
 	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
 	// Resource生成
-	ID3D12Resource* resource = nullptr;
+	ComPtr<ID3D12Resource> resource;
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -229,7 +212,7 @@ ComPtr<ID3D12Resource> SpriteCommon::CreateBufferResource(ComPtr<ID3D12Device> d
 
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	ID3D12Resource* vertexResource = nullptr;
+	ComPtr<ID3D12Resource> vertexResource;
 	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&vertexResource));

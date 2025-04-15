@@ -6,13 +6,18 @@
 #endif // _DEBUG
 
 
+Object3d::~Object3d() {
+	OutputDebugStringA("Object3d Destructor Called\n");
+	Cleanup();
+}
+
 void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldTransform)
 {
 	assert(object3dCommon != nullptr);
 	assert(worldTransform != nullptr);
 
 	this->object3dCommon_ = object3dCommon;
-	this->worldTransform_ = worldTransform;
+	worldTransform_ = std::make_unique<WorldTransform>();
 
 	//modelData = LoadobjFile("resources", "plane.obj");
 
@@ -116,12 +121,26 @@ void Object3d::Cleanup()
 		pointLightResource_.Reset();
 		pointLightData_ = nullptr;
 	}
-
+	if (cameraResource_) {
+		cameraResource_.Reset();         
+		cameraData_ = nullptr;
+	}
+	if (materialResource_) {
+		materialResource_.Reset();             
+		materialData_ = nullptr;               
+	}
 	//model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
-	worldTransform_ = nullptr;
+	if (worldTransform_) {
+		worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
+		worldTransform_.reset();     // unique_ptr 해제
+	}
 	object3dCommon_ = nullptr;
 	camera = nullptr;
 	defaultCamera = nullptr;
+	transformationMatrixData = nullptr;
+	directionalLightData_ = nullptr;
+	pointLightData_ = nullptr;
+	cameraData_ = nullptr;
 }
 
 void Object3d::InitializeMaterial() {
@@ -188,41 +207,6 @@ void Object3d::SetPointLight(const Vector3& position, float intensity, float rad
 	}
 }
 
-//void Object3d::CreateVertexBuffer()
-//{
-//
-//	auto device = object3dCommon->GetDxCommon()->GetDevice();
-//
-//	
-//	vertexResource = CreateBufferResource(device.Get(), sizeof(VertexData) * modelData.vertices.size());
-//	vertexBufferView.BufferLocation = vertexResource.Get()->GetGPUVirtualAddress();
-//	vertexBufferView.SizeInBytes = static_cast<UINT>(sizeof(VertexData) * modelData.vertices.size());
-//	vertexBufferView.StrideInBytes = sizeof(VertexData);
-//
-//	
-//	VertexData* vertexData = nullptr;
-//	vertexResource.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-//	memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
-//	vertexResource.Get()->Unmap(0, nullptr);
-//
-//}
-//
-//void Object3d::InitializeMaterial()
-//{
-//
-//	auto device = object3dCommon->GetDxCommon()->GetDevice();
-//
-//	
-//	materialResource = CreateBufferResource(device.Get(), sizeof(Material));
-//
-//	
-//	materialResource.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-//
-//	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f }; 
-//	materialData->enableLighting = false;          
-//	materialData->uvTransform = myMath->MakeIdentity4x4(); 
-//
-//}
 
 void Object3d::InitializeTransformationMatrix()
 {

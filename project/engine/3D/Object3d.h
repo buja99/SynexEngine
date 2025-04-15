@@ -29,7 +29,7 @@ using Microsoft::WRL::ComPtr;
 class Object3d
 {
 	public:
-
+		~Object3d();
 
 	void Initialize(Object3dCommon* object3dCommon, WorldTransform* worldTransform);
 	
@@ -72,14 +72,6 @@ private:
 
 	Object3dCommon* object3dCommon_ = nullptr;
 
-	//ModelData modelData;
-
-	//ComPtr<ID3D12Resource> vertexResource;
-	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	//
-	//ComPtr<ID3D12Resource> materialResource;
-	//Material* materialData = nullptr;
-
 	ComPtr<ID3D12Resource> transformationMatrixResource;
 	TransformationMatrix* transformationMatrixData = nullptr;
 
@@ -103,7 +95,7 @@ private:
 	Camera* camera = nullptr;
 	Camera* defaultCamera = nullptr;
 
-	WorldTransform* worldTransform_ = nullptr;
+	std::unique_ptr<WorldTransform> worldTransform_;
 
 	ComPtr<ID3D12Resource> materialResource_;
 	Material* materialData_ = nullptr;

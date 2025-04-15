@@ -47,6 +47,10 @@ void SceneManager::Draw() {
 
 void SceneManager::ChangeScene(const std::string& sceneName) {
 	assert(sceneFactory_);
+	if (scene_) {
+		scene_->Finalize(); // ⭐ 이전 씬의 리소스 정리
+		scene_.reset();
+	}
 	if (nextScene_) {  // 기존 씬이 있으면 해제
 		nextScene_.reset();
 	}

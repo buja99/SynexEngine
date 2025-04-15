@@ -97,6 +97,11 @@ void TextureManager::LoadTexture(const std::string& filePath)
 void TextureManager::Finalize()
 {
 	
+	for (auto& pair : textureDatas) {
+		pair.second.resource.Reset();  // ComPtr<ID3D12Resource> 해제
+	}
+	textureDatas.clear();
+
 	instance.reset();
 	
 }

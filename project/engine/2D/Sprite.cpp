@@ -162,11 +162,11 @@ void Sprite::Draw()
 void Sprite::Cleanup()
 {
 
-
-	if (spriteCommon_) {
-		spriteCommon_ = nullptr;
-	}
-
+	vertexResourceSprite.Reset();
+	indexResourceSprite.Reset();
+	materialResourceSprite.Reset();
+	transformationMatrixResourceSprite.Reset();
+	spriteCommon_ = nullptr;
 	
 	
 

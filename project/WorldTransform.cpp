@@ -8,11 +8,12 @@ using namespace DirectX;
 WorldTransform::WorldTransform() = default;
 
 WorldTransform::~WorldTransform() {
-   if (constBuffer_) {
+   /*if (constBuffer_) {
         constBuffer_->Release();
         constBuffer_ = nullptr;
-    }
+    }*/
     // ComPtr이 자동으로 constBuffer_를 Release()함
+
 }
 
 void WorldTransform::Initialize() {
@@ -51,7 +52,13 @@ void WorldTransform::SetParent(WorldTransform* parent) {
     parent_ = parent;
 }
 
+void WorldTransform::Cleanup() {
+    if (constBuffer_) {
+        constBuffer_.Reset();  // Release() 자동 호출
+    }
+}
+
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t size) {
     DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-    return dxCommon->CreateBufferResource(dxCommon->GetDevice(), size).Detach();
+    return dxCommon->CreateBufferResource(dxCommon->GetDevice(), size);
 }

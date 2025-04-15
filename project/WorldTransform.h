@@ -4,6 +4,8 @@
 #include <wrl.h>
 #include <d3d12.h>
 
+using Microsoft::WRL::ComPtr;
+
 /// <summary>
 /// ワールド変換データ
 /// </summary>
@@ -24,7 +26,7 @@ public:
     WorldTransform* parent_ = nullptr;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D12Resource> constBuffer_;
+    ComPtr<ID3D12Resource> constBuffer_;
     ConstBufferDataWorldTransform* constMap = nullptr;
 
 public:
@@ -44,8 +46,10 @@ public:
     const Matrix4x4& GetWorldMatrix() const { return matWorld_; }
 
     // 定数バッファ取得（描画などで使う場合）
-    ID3D12Resource* GetConstBuffer() const { return constBuffer_.Get(); }
+    ComPtr<ID3D12Resource> GetConstBuffer() const { return constBuffer_.Get(); }
+
+    void Cleanup();
 };
 
 // 定数バッファ生成関数の宣言（実装은 보통別ファイル에서 따로 작성함）
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t size);
+ComPtr<ID3D12Resource> CreateBufferResource(size_t size);

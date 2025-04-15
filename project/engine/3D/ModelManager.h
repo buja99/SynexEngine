@@ -25,12 +25,12 @@ public:
 
     Model* FindModel(const std::string& filePath);
 
-    static void Finalize();
+    void Finalize();
 
 private:
     static ModelManager* instance;
 
-    std::map<std::string, std::unique_ptr<Model>> models;
+    std::map<std::string, std::unique_ptr<Model>> models_;
 
     std::unique_ptr<ModelCommon> modelCommon;
     Object3dCommon* object3dCommon;
