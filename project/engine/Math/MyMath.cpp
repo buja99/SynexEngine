@@ -281,4 +281,8 @@ namespace MyMath {
 		return result;
 	}
 
+	float ToRadian(float degree) {
+		return degree * (3.141592f / 180.0f);
+	}
+
 }

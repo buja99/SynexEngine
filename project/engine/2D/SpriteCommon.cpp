@@ -22,7 +22,7 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 	directionLightData->direction = { 0.0f, -1.0f, 0.0f };      // 아래 방향으로 빛
 	directionLightData->intensity = 1.0f;                     // 빛 강도 1.0
 
-	directionLightBuffer_->Unmap(0, nullptr); // 필수!
+	
 
 	CreateGraphicsPipeline();
 }

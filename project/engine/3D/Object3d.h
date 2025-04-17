@@ -45,11 +45,7 @@ class Object3d
 
 	void SetModel(const std::string& filePath);
 
-	void SetReflectModel(int model) {
-		if (materialData_) {
-			materialData_->reflectModel = model;
-		}
-	}
+	
 
 	// setter
 	void SetScale(const Vector3& scale) { transform.scale = scale; }
@@ -58,13 +54,29 @@ class Object3d
 	void SetCamera(Camera* camera) { this->camera = camera; }
 	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
 	void SetPointLight(const Vector3& position, float intensity, float radius, float decay);
+	void SetSpotLight(const Vector3& position, const Vector3& direction, float intensity, float cutoff, float outerCutoff, float decay, float radius);
 	// getter
-
 	const Vector3& GetScale() const { return transform.scale; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
 	Camera* GetDefaultCamera() const { return defaultCamera; }
 	Model* GetModel() const { return model_; }
+
+	// Lighting setter/getter
+    void SetEnableLighting(bool enable);
+    bool GetEnableLighting() const;
+
+    void SetIsBlinnPhong(bool isBlinn);
+    bool GetIsBlinnPhong() const;
+
+    void SetUsePointLight(bool use);
+    bool GetUsePointLight() const;
+
+    void SetUseDirectionalLight(bool use);
+    bool GetUseDirectionalLight() const;
+
+	void SetUseSpotLight(bool use);
+	bool GetUseSpotLight() const;
 
 private:
 
@@ -80,6 +92,9 @@ private:
 
 	ComPtr<ID3D12Resource> pointLightResource_;
 	PointLight* pointLightData_ = nullptr;
+
+	ComPtr<ID3D12Resource> spotLightResource_;
+	SpotLight* spotLightData_ = nullptr;
 
 	ComPtr<ID3D12Resource> cameraResource_;
 	CameraForGPU* cameraData_ = nullptr;

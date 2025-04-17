@@ -85,18 +85,14 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
-	if (model_) {
-		if (materialData_) {
-			*materialData_ = model_->GetMaterialData();  // ← 이걸 추가!
-		}
-	}
+
 	//obj3d
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource.Get()->GetGPUVirtualAddress());	
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource_->GetGPUVirtualAddress());
-
+	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource_->GetGPUVirtualAddress());
 	if (model_) {
 
 		model_->Draw();
@@ -120,6 +116,10 @@ void Object3d::Cleanup()
 	if (pointLightResource_) {
 		pointLightResource_.Reset();
 		pointLightData_ = nullptr;
+	}
+	if (spotLightResource_) {
+		spotLightResource_.Reset();
+		spotLightData_ = nullptr;
 	}
 	if (cameraResource_) {
 		cameraResource_.Reset();         
@@ -151,10 +151,13 @@ void Object3d::InitializeMaterial() {
 
 	// 조명 및 머티리얼 초기 설정
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->enableLighting = true;
+	materialData_->enableLighting = false;
 	materialData_->uvTransform = MyMath::MakeIdentity4x4();
 	materialData_->shininess = 32.0f;
-	materialData_->reflectModel = 2; // 2 이상이면 포인트 라이트 사용
+	materialData_->isBlinnPhong = 0;
+	materialData_->usePointLight = 0;
+	materialData_->useDirectionalLight = 1;
+	materialData_->useSpotLight = 0;
 }
 
 
@@ -189,13 +192,6 @@ void Object3d::SetModel(const std::string& filePath)
 {
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
-	//if (model) {
-	//	this->model = model; 
-	//} else {
-	//	
-	//	ModelManager::GetInstance()->LoadModel(filePath);
-	//	this->model = ModelManager::GetInstance()->FindModel(filePath);
-	//}
 }
 
 void Object3d::SetPointLight(const Vector3& position, float intensity, float radius, float decay) {
@@ -205,6 +201,58 @@ void Object3d::SetPointLight(const Vector3& position, float intensity, float rad
 		pointLightData_->radius = radius;
 		pointLightData_->decay = decay;
 	}
+}
+
+void Object3d::SetSpotLight(const Vector3& position, const Vector3& direction, float intensity, float cutoff, float outerCutoff, float decay, float radius) {
+	if (spotLightData_) {
+		spotLightData_->position = position;
+		spotLightData_->direction = direction;
+		spotLightData_->intensity = intensity;
+		spotLightData_->cutoff = cutoff;
+		spotLightData_->outerCutoff = outerCutoff;
+		spotLightData_->decay = decay;
+		spotLightData_->radius = radius;
+	}
+}
+
+void Object3d::SetEnableLighting(bool enable) {
+	if (materialData_) materialData_->enableLighting = enable;
+}
+
+bool Object3d::GetEnableLighting() const {
+	return materialData_ ? materialData_->enableLighting != 0 : false;
+}
+
+void Object3d::SetIsBlinnPhong(bool isBlinn) {
+	if (materialData_) materialData_->isBlinnPhong = isBlinn;
+}
+
+bool Object3d::GetIsBlinnPhong() const {
+	return materialData_ ? materialData_->isBlinnPhong != 0 : false;
+}
+
+void Object3d::SetUsePointLight(bool use) {
+	if (materialData_) materialData_->usePointLight = use;
+}
+
+bool Object3d::GetUsePointLight() const {
+	return materialData_ ? materialData_->usePointLight != 0 : false;
+}
+
+void Object3d::SetUseDirectionalLight(bool use) {
+	if (materialData_) materialData_->useDirectionalLight = use;
+}
+
+bool Object3d::GetUseDirectionalLight() const {
+	return materialData_ ? materialData_->useDirectionalLight != 0 : false;
+}
+
+void Object3d::SetUseSpotLight(bool use) {
+	if (materialData_) materialData_->useSpotLight = use;
+}
+
+bool Object3d::GetUseSpotLight() const {
+	return materialData_ ? materialData_->useSpotLight != 0 : false;
 }
 
 
@@ -240,5 +288,17 @@ void Object3d::InitializeLights()
 	pointLightData_->intensity = 1.0f;
 	pointLightData_->radius = 10.0f;
 	pointLightData_->decay = 1.0f;
+
+	// ✅ Spot
+	spotLightResource_ = CreateBufferResource(device, sizeof(SpotLight));
+	spotLightResource_->Map(0, nullptr, (void**)&spotLightData_);
+	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	spotLightData_->position = { 0.0f, 5.0f, 5.0f };     // 빛 위치
+	spotLightData_->direction = { 0.0f, -1.0f, -1.0f };  // 빛 방향
+	spotLightData_->intensity = 1.0f;
+	spotLightData_->cutoff = cosf(MyMath::ToRadian(15.0f));        // 내부 각도 (15도)
+	spotLightData_->outerCutoff = cosf(MyMath::ToRadian(30.0f));   // 외부 각도 (30도)
+	spotLightData_->radius = 15.0f;
+	spotLightData_->decay = 1.0f;
 
 }

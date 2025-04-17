@@ -34,5 +34,6 @@ namespace  MyMath
 	Vector3 normalize(Vector3 distance);
 	Matrix4x4 CreateLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up);
 	Matrix4x4 Transpose(const Matrix4x4& m);
+	float ToRadian(float degree);
 };
 

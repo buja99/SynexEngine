@@ -22,8 +22,11 @@ void TitleScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("resources", "terrain.obj");
 	model_->SetModel("terrain.obj");
 
-	model_->SetReflectModel(3);
-
+	model_->SetEnableLighting(true);
+	model_->SetIsBlinnPhong(true);         // Phong
+	model_->SetUsePointLight(false);        // Point Light 
+	model_->SetUseDirectionalLight(false);   // Directional Light 
+	model_->SetUseSpotLight(true);	  // Spot Light
 	// 카메라 생성
 	camera_ = std::make_unique<Camera>();
 	camera_->SetEye({ 0.0f, 4.0f, -10.0f });
@@ -71,21 +74,34 @@ void TitleScene::Update() {
 	auto obj = model_.get();
 	if (obj) {
 		ImGui::Separator();
-		static Vector3 lightPos = { 0, 0, 10 };
-		static float intensity = 2.0f;
-		static float radius = 30.0f;
-		static float decay = 0.5f;
+		static Vector3 spotPos = { 0.0f, 5.0f, 5.0f };
+		static Vector3 spotDir = { 0.0f, -1.0f, -1.0f };
+		static float spotIntensity = 1.0f;
+		static float cutoffDeg = 15.0f;
+		static float outerCutoffDeg = 30.0f;
+		static float spotDecay = 1.0f;
+		static float spotRadius = 15.0f;
 
-		ImGui::DragFloat3("Point Light Position", &lightPos.x, 0.1f);
-		ImGui::DragFloat("Light Intensity", &intensity, 0.1f, 0.0f, 10.0f);
-		ImGui::DragFloat("Light Radius", &radius, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Light Decay", &decay, 0.1f, 0.0f, 10.0f);
+		ImGui::Text("Spot Light");
+		ImGui::DragFloat3("Position", &spotPos.x, 0.1f);
+		ImGui::DragFloat3("Direction", &spotDir.x, 0.1f);
+		ImGui::DragFloat("Intensity", &spotIntensity, 0.1f, 0.0f, 10.0f);
+		ImGui::DragFloat("Inner Cutoff (deg)", &cutoffDeg, 1.0f, 1.0f, 89.0f);
+		ImGui::DragFloat("Outer Cutoff (deg)", &outerCutoffDeg, 1.0f, 1.0f, 89.0f);
+		ImGui::DragFloat("Decay", &spotDecay, 0.1f, 0.0f, 10.0f);
+		ImGui::DragFloat("Radius", &spotRadius, 0.1f, 0.0f, 100.0f);
 
-		obj->SetPointLight(lightPos, intensity, radius, decay);
-		if (auto m = model_->GetModel(); m) {
-			int reflectModel = m->GetMaterialData().reflectModel;
-			ImGui::Text("Reflect Model: %d", reflectModel);
-		}
+		// 값 적용
+		obj->SetSpotLight(
+			spotPos,
+			MyMath::normalize(spotDir),
+			spotIntensity,
+			cosf(MyMath::ToRadian(cutoffDeg)),
+			cosf(MyMath::ToRadian(outerCutoffDeg)),
+			spotDecay,
+			spotRadius
+		);
+		
 	}
 
 	ImGui::End();

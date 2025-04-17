@@ -211,16 +211,16 @@ void Model::InitializeMaterial()
 {
 	auto device = modelCommon_->GetDxCommon()->GetDevice();
 
-
 	materialResource_ = CreateBufferResource(device.Get(), sizeof(Material));
-
 
 	materialResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->enableLighting = true;               // ✅ 조명 ON
+	materialData_->enableLighting = false;               // ✅ 조명 ON
 	materialData_->uvTransform = MyMath::MakeIdentity4x4();
 	materialData_->shininess = 32.0f;                   // ✅ 스페큘러 적용
-	materialData_->reflectModel = 2;
-
+	materialData_->isBlinnPhong = 0;
+	materialData_->usePointLight = 0;
+	materialData_->useDirectionalLight = 1;
+	materialData_->useSpotLight = 0;
 }

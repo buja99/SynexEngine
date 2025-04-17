@@ -17,3 +17,17 @@ struct PointLight {
 	float decay;
 	float padding[2];
 };
+struct SpotLight {
+	Vector4 color;      // 16B
+
+	Vector3 position;   // 12B
+	float intensity;    // 4B
+
+	Vector3 direction;  // 12B
+	float cutoff;       // 4B
+
+	float outerCutoff;  // 4B
+	float decay;        // 4B
+	float radius;       // 4B
+	float padding;      // 4B → 정렬용
+};
