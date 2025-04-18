@@ -23,10 +23,12 @@ void TitleScene::Initialize() {
 	model_->SetModel("terrain.obj");
 
 	model_->SetEnableLighting(true);
-	model_->SetIsBlinnPhong(true);         // Phong
+	model_->SetIsBlinnPhong(true);          // Phong
 	model_->SetUsePointLight(false);        // Point Light 
-	model_->SetUseDirectionalLight(false);   // Directional Light 
-	model_->SetUseSpotLight(true);	  // Spot Light
+	model_->SetUseDirectionalLight(false);  // Directional Light 
+	model_->SetUseSpotLight(false);	        // Spot Light
+	model_->SetUseAmbientLight(false);      // Ambient Light
+	model_->SetUseAreaLight(true);          // Area Light
 	// 카메라 생성
 	camera_ = std::make_unique<Camera>();
 	camera_->SetEye({ 0.0f, 4.0f, -10.0f });
@@ -73,34 +75,33 @@ void TitleScene::Update() {
 	model_->SetTranslate(translate);
 	auto obj = model_.get();
 	if (obj) {
+		static Vector3 areaPos = { 0.0f, 5.0f, 0.0f };
+		static Vector3 areaRight = { 1.0f, 0.0f, 0.0f };
+		static float areaHalfWidth = 2.0f;
+
+		static Vector3 areaUp = { 0.0f, 1.0f, 0.0f };
+		static float areaHalfHeight = 2.0f;
+
+		static Vector4 areaColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+		static float areaIntensity = 1.0f;
+
+
 		ImGui::Separator();
-		static Vector3 spotPos = { 0.0f, 5.0f, 5.0f };
-		static Vector3 spotDir = { 0.0f, -1.0f, -1.0f };
-		static float spotIntensity = 1.0f;
-		static float cutoffDeg = 15.0f;
-		static float outerCutoffDeg = 30.0f;
-		static float spotDecay = 1.0f;
-		static float spotRadius = 15.0f;
+		ImGui::Text("Area Light");
 
-		ImGui::Text("Spot Light");
-		ImGui::DragFloat3("Position", &spotPos.x, 0.1f);
-		ImGui::DragFloat3("Direction", &spotDir.x, 0.1f);
-		ImGui::DragFloat("Intensity", &spotIntensity, 0.1f, 0.0f, 10.0f);
-		ImGui::DragFloat("Inner Cutoff (deg)", &cutoffDeg, 1.0f, 1.0f, 89.0f);
-		ImGui::DragFloat("Outer Cutoff (deg)", &outerCutoffDeg, 1.0f, 1.0f, 89.0f);
-		ImGui::DragFloat("Decay", &spotDecay, 0.1f, 0.0f, 10.0f);
-		ImGui::DragFloat("Radius", &spotRadius, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat3("Position", &areaPos.x, 0.1f);
+		ImGui::DragFloat3("Right Vector", &areaRight.x, 0.1f);
+		ImGui::DragFloat("Half Width", &areaHalfWidth, 0.1f, 0.0f, 10.0f);
 
-		// 값 적용
-		obj->SetSpotLight(
-			spotPos,
-			MyMath::normalize(spotDir),
-			spotIntensity,
-			cosf(MyMath::ToRadian(cutoffDeg)),
-			cosf(MyMath::ToRadian(outerCutoffDeg)),
-			spotDecay,
-			spotRadius
-		);
+		ImGui::DragFloat3("Up Vector", &areaUp.x, 0.1f);
+		ImGui::DragFloat("Half Height", &areaHalfHeight, 0.1f, 0.0f, 10.0f);
+
+		ImGui::ColorEdit4("Color", &areaColor.x);
+		ImGui::DragFloat("Intensity", &areaIntensity, 0.1f, 0.0f, 10.0f);
+
+		obj->SetAreaLight(areaPos, areaRight, areaHalfWidth, areaUp, areaHalfHeight, areaColor, areaIntensity);
+
+	
 		
 	}
 

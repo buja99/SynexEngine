@@ -13,6 +13,8 @@ struct Material
     int useDirectionalLight; // 방향광 사용 여부
     int usePointLight; // 포인트광 사용 여부
     int useSpotLight; // 스팟광 사용 여부
+    int useAmbientLight; // 앰비언트광 사용 여부
+    int useAreaLight; // 면광원 사용 여부
 };
 
 
@@ -48,11 +50,31 @@ struct SpotLight
     float radius;
 };
 
+struct AmbientLight
+{
+    float4 color; // ambient 색상 (보통 약간 어두운 색)
+};
+
+struct AreaLight
+{
+    float4 color; // 조명 색상
+    float3 position; // 중심 위치
+    float intensity;
+
+    float3 right; // 면의 가로 방향 벡터
+    float halfWidth; // 반 가로 길이
+
+    float3 up; // 면의 세로 방향 벡터
+    float halfHeight; // 반 세로 길이
+};
+
 ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 ConstantBuffer<Camera> gCamera : register(b2);
 ConstantBuffer<PointLight> gPointLight : register(b3);
 ConstantBuffer<SpotLight> gSpotLight : register(b4);
+ConstantBuffer<AmbientLight> gAmbientLight : register(b5);
+ConstantBuffer<AreaLight> gAreaLight : register(b6);
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 struct PixelShaderOutput
@@ -71,7 +93,8 @@ PixelShaderOutput main(VertexShaderOutput input)
 
     float3 totalDiffuse = float3(0, 0, 0);
     float3 totalSpecular = float3(0, 0, 0);
-
+    float3 ambient = float3(0, 0, 0);
+    
     if (gMaterial.enableLighting != 0)
     {
         float3 normal = normalize(input.normal);
@@ -175,8 +198,33 @@ PixelShaderOutput main(VertexShaderOutput input)
             totalDiffuse += diffuse;
             totalSpecular += specular;
         }
+        // Ambient Light
+        if (gMaterial.useAmbientLight != 0)
+        {
+            ambient = gAmbientLight.color.rgb * gMaterial.color.rgb * textureColor.rgb;
+        }
+        if (gMaterial.useAreaLight != 0)
+        {
+             // 조명 면 중심에서 픽셀까지 벡터
+            float3 toPixel = input.worldPosition - gAreaLight.position;
 
-        output.color.rgb = totalDiffuse + totalSpecular;
+            // 면 정규 방향 계산 (가로 x 세로)
+            float3 normal = normalize(cross(gAreaLight.right, gAreaLight.up));
+
+            // 조명이 뒤돌아있으면 조명 없음 처리
+            if (dot(normal, toPixel) > 0)
+            {
+                float3 lightDir = -normalize(normal);
+                float3 lightColor = gAreaLight.color.rgb * gAreaLight.intensity;
+
+                float NdotL = dot(normalize(input.normal), lightDir);
+                float diffuseFactor = pow(NdotL * 0.5f + 0.5f, 2.0f);
+
+                float3 diffuse = gMaterial.color.rgb * textureColor.rgb * lightColor * diffuseFactor;
+                totalDiffuse += diffuse;
+            }
+        }
+        output.color.rgb = totalDiffuse + totalSpecular + ambient;
         output.color.a = gMaterial.color.a * textureColor.a;
     }
     else

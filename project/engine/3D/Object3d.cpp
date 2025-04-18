@@ -93,6 +93,8 @@ void Object3d::Draw()
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource_->GetGPUVirtualAddress());
+	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, ambientLightResource_->GetGPUVirtualAddress());
+	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, areaLightResource_->GetGPUVirtualAddress());
 	if (model_) {
 
 		model_->Draw();
@@ -120,6 +122,14 @@ void Object3d::Cleanup()
 	if (spotLightResource_) {
 		spotLightResource_.Reset();
 		spotLightData_ = nullptr;
+	}
+	if (ambientLightResource_) {
+		ambientLightResource_.Reset();
+		ambientLightData_ = nullptr;
+	}
+	if (areaLightResource_) {
+		areaLightResource_.Reset();
+		areaLightData_ = nullptr;
 	}
 	if (cameraResource_) {
 		cameraResource_.Reset();         
@@ -158,6 +168,8 @@ void Object3d::InitializeMaterial() {
 	materialData_->usePointLight = 0;
 	materialData_->useDirectionalLight = 1;
 	materialData_->useSpotLight = 0;
+	materialData_->useAmbientLight = 0;
+	materialData_->useAreaLight = 0;
 }
 
 
@@ -215,6 +227,18 @@ void Object3d::SetSpotLight(const Vector3& position, const Vector3& direction, f
 	}
 }
 
+void Object3d::SetAreaLight(const Vector3& position, const Vector3& right, float halfWidth, const Vector3& up, float halfHeight, const Vector4& color, float intensity) {
+	if (areaLightData_) {
+		areaLightData_->position = position;
+		areaLightData_->right = right;
+		areaLightData_->halfWidth = halfWidth;
+		areaLightData_->up = up;
+		areaLightData_->halfHeight = halfHeight;
+		areaLightData_->color = color;
+		areaLightData_->intensity = intensity;
+	}
+}
+
 void Object3d::SetEnableLighting(bool enable) {
 	if (materialData_) materialData_->enableLighting = enable;
 }
@@ -255,6 +279,22 @@ bool Object3d::GetUseSpotLight() const {
 	return materialData_ ? materialData_->useSpotLight != 0 : false;
 }
 
+void Object3d::SetUseAmbientLight(bool use) {
+	if (materialData_) materialData_->useAmbientLight = use;
+}
+
+bool Object3d::GetUseAmbientLight() const {
+	return materialData_ ? materialData_->useAmbientLight != 0 : false;
+}
+
+void Object3d::SetUseAreaLight(bool use) {
+	if (materialData_) materialData_->useAreaLight = use;
+}
+
+bool Object3d::GetUseAreaLight() const {
+	return materialData_ ? materialData_->useAreaLight != 0 : false;
+}
+
 
 void Object3d::InitializeTransformationMatrix()
 {
@@ -289,7 +329,7 @@ void Object3d::InitializeLights()
 	pointLightData_->radius = 10.0f;
 	pointLightData_->decay = 1.0f;
 
-	// ✅ Spot
+	// Spot
 	spotLightResource_ = CreateBufferResource(device, sizeof(SpotLight));
 	spotLightResource_->Map(0, nullptr, (void**)&spotLightData_);
 	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -301,4 +341,26 @@ void Object3d::InitializeLights()
 	spotLightData_->radius = 15.0f;
 	spotLightData_->decay = 1.0f;
 
+	// Ambient
+	ambientLightResource_ = CreateBufferResource(device, sizeof(AmbientLight));
+	ambientLightResource_->Map(0, nullptr, (void**)&ambientLightData_);
+	ambientLightData_->color = { 0.1f, 0.1f, 0.1f, 1.0f }; // Ambient Light Color
+
+	//Area
+	areaLightResource_ = CreateBufferResource(device, sizeof(AreaLight));
+	areaLightResource_->Map(0, nullptr, (void**)&areaLightData_);
+	areaLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	// 중심 위치
+	areaLightData_->position = { 0.0f, 5.0f, 0.0f };
+
+	// 가로 방향 벡터 (x축 기준)
+	areaLightData_->right = { 1.0f, 0.0f, 0.0f };
+	areaLightData_->halfWidth = 2.0f;
+
+	// 세로 방향 벡터 (y축 기준)
+	areaLightData_->up = { 0.0f, 1.0f, 0.0f };
+	areaLightData_->halfHeight = 2.0f;
+
+	areaLightData_->intensity = 1.0f;
+	
 }

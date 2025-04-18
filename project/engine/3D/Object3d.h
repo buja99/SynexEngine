@@ -55,6 +55,7 @@ class Object3d
 	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
 	void SetPointLight(const Vector3& position, float intensity, float radius, float decay);
 	void SetSpotLight(const Vector3& position, const Vector3& direction, float intensity, float cutoff, float outerCutoff, float decay, float radius);
+	void SetAreaLight(const Vector3& position, const Vector3& right, float halfWidth, const Vector3& up, float halfHeight, const Vector4& color, float intensity);
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }
 	const Vector3& GetRotate() const { return transform.rotate; }
@@ -78,6 +79,12 @@ class Object3d
 	void SetUseSpotLight(bool use);
 	bool GetUseSpotLight() const;
 
+	void SetUseAmbientLight(bool use);
+	bool GetUseAmbientLight() const;
+
+	void SetUseAreaLight(bool use);
+	bool GetUseAreaLight() const;
+
 private:
 
 	Model* model_ = nullptr;
@@ -95,6 +102,12 @@ private:
 
 	ComPtr<ID3D12Resource> spotLightResource_;
 	SpotLight* spotLightData_ = nullptr;
+
+	ComPtr<ID3D12Resource> ambientLightResource_;
+	AmbientLight* ambientLightData_ = nullptr;
+
+	ComPtr<ID3D12Resource> areaLightResource_;
+	AreaLight* areaLightData_ = nullptr;
 
 	ComPtr<ID3D12Resource> cameraResource_;
 	CameraForGPU* cameraData_ = nullptr;

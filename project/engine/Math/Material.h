@@ -14,7 +14,9 @@ struct  Material
 	int32_t isBlinnPhong;        // 4B
 	int32_t useDirectionalLight; // 4B
 	int32_t usePointLight;       // 4B
-	int32_t useSpotLight;       // 4B
+	int32_t useSpotLight;        // 4B
+	int32_t useAmbientLight;     // 4B
+	int32_t useAreaLight;     // 4B
 };
 
 struct MaterialData

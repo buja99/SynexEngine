@@ -223,4 +223,6 @@ void Model::InitializeMaterial()
 	materialData_->usePointLight = 0;
 	materialData_->useDirectionalLight = 1;
 	materialData_->useSpotLight = 0;
+	materialData_->useAmbientLight = 0;
+	materialData_->useAreaLight = 0;
 }

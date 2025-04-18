@@ -31,3 +31,20 @@ struct SpotLight {
 	float radius;       // 4B
 	float padding;      // 4B → 정렬용
 };
+
+struct AmbientLight {
+	Vector4 color;
+};
+
+struct AreaLight {
+	Vector4 color;           // 16B
+
+	Vector3 position;        // 12B
+	float intensity;         // 4B
+
+	Vector3 right;           // 12B
+	float halfWidth;         // 4B
+
+	Vector3 up;              // 12B
+	float halfHeight;        // 4B
+};
