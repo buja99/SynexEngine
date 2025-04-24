@@ -16,18 +16,13 @@
 #include "MyMath.h"
 
 
-//struct ModelData
-//{
-//	std::vector<VertexData> vertices;
-//	MaterialData material;
-//};
-
 
 struct ParticleVertex {
     Vector4 position;  // 3D 위치
     Vector2 texcoord;
 };
-struct Particle {
+struct Particle //파티클 1개의 상태 (위치, 속도, 색상, 생존시간 등)
+{         
     Transform transform;
     Vector3 velocity;
     Vector4 color;
@@ -35,20 +30,20 @@ struct Particle {
     float currentTime;
 
 };
-struct  ParticleForGPU
+struct  ParticleForGPU    //GPU에 넘길 인스턴싱용 데이터 (WVP, 색상 등)
 {
     Matrix4x4 WVP;
     Matrix4x4 World;
     Vector4 color;
 };
-struct Emitter
+struct Emitter          //파티클을 방출하는 발사기(Emitter) 상태 (위치, 속도, 색상, 생존시간 등)
 {
     Transform transform;
     uint32_t count;
     float frequency;
     float frequencyTime;
 };
-struct ParticleGroup {
+struct ParticleGroup {         //파티클들의 묶음. 텍스처별로 나눔
     std::string textureFilePath;    
     uint32_t textureIndex; 
     std::list<Particle> particles;         // 파티클 리스트(particle list)

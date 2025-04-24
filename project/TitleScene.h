@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "Sound.h"
 #include "WorldTransform.h"
+#include "ParticleManager.h"
 
 class TitleScene : public BaseScene {
 
@@ -43,6 +44,9 @@ private:
 
 	std::unique_ptr<Object3d> testModel_ = nullptr;
 	std::unique_ptr<WorldTransform> testWorldTransform_ = nullptr;
+
+	std::unique_ptr<ParticleManager> particleManager_;
+	std::mt19937 randomEngine_;
 
 };
 

@@ -59,6 +59,14 @@ void TitleScene::Initialize() {
 	title->SetSize(Vector2(1280.0f, 720.0f));
 	title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
 	title->SetTextureSize(Vector2(1280.0f, 720.0f));*/
+
+
+	//
+	particleManager_ = std::make_unique<ParticleManager>();
+	particleManager_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
+	particleManager_->SetCamera(camera_.get());
+	particleManager_->CreateParticleGroup("star", "resources/circle.png");
+
 }
 
 void TitleScene::Update() {
@@ -125,6 +133,18 @@ void TitleScene::Update() {
 
 		return;
 	}
+	Emitter emitter{};
+	emitter.transform.translate = { 0.0f, 1.0f, 0.0f }; // 발사 위치
+	emitter.count = 10;
+	emitter.frequency = 0.2f;
+	emitter.frequencyTime += 1.0f / 60.0f;
+
+	if (emitter.frequencyTime >= emitter.frequency) {
+		emitter.frequencyTime = 0.0f;
+		particleManager_->Emit(emitter, randomEngine_);
+	}
+
+	particleManager_->Update();
 
 }
 
@@ -136,8 +156,11 @@ void TitleScene::Draw() {
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	//model_->Draw();
-	testModel_->Draw();
+	model_->Draw();
+	//testModel_->Draw();
+
+	particleManager_->Draw();
+
 }
 
 void TitleScene::Finalize() {
