@@ -62,10 +62,10 @@ void TitleScene::Initialize() {
 
 
 	//
-	particleManager_ = std::make_unique<ParticleManager>();
+	/*particleManager_ = std::make_unique<ParticleManager>();
 	particleManager_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
 	particleManager_->SetCamera(camera_.get());
-	particleManager_->CreateParticleGroup("star", "resources/circle.png");
+	particleManager_->CreateParticleGroup("star", "resources/circle.png");*/
 
 }
 
@@ -133,18 +133,18 @@ void TitleScene::Update() {
 
 		return;
 	}
-	Emitter emitter{};
-	emitter.transform.translate = { 0.0f, 1.0f, 0.0f }; // 발사 위치
-	emitter.count = 10;
-	emitter.frequency = 0.2f;
-	emitter.frequencyTime += 1.0f / 60.0f;
+	//Emitter emitter{};
+	//emitter.transform.translate = { 0.0f, 1.0f, 0.0f }; // 발사 위치
+	//emitter.count = 10;
+	//emitter.frequency = 0.2f;
+	//emitter.frequencyTime += 1.0f / 60.0f;
 
-	if (emitter.frequencyTime >= emitter.frequency) {
-		emitter.frequencyTime = 0.0f;
-		particleManager_->Emit(emitter, randomEngine_);
-	}
+	//if (emitter.frequencyTime >= emitter.frequency) {
+	//	emitter.frequencyTime = 0.0f;
+	//	particleManager_->Emit(emitter, randomEngine_);
+	//}
 
-	particleManager_->Update();
+	//particleManager_->Update();
 
 }
 
@@ -159,7 +159,7 @@ void TitleScene::Draw() {
 	model_->Draw();
 	//testModel_->Draw();
 
-	particleManager_->Draw();
+	//particleManager_->Draw();
 
 }
 
