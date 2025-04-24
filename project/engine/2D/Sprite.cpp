@@ -8,52 +8,24 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	this->spriteCommon_ = spriteCommon;
 
+
 	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
 
 	const DirectX::TexMetadata& metadata =
 			TextureManager::GetInstance()->GetMetaData(textureFilePath);
-	
-	textureOriSize = { static_cast<float>(metadata.width),static_cast<float>(metadata.height) };
-
-	vertexResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(VertexData) * 6);
-	vertexBufferViewSprite.BufferLocation = vertexResourceSprite.Get()->GetGPUVirtualAddress();
-	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
-	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
-	
-	
-	vertexResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
-	vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
-	vertexDataSprite[0].texCoord = { 0.0f, 1.0f };
-	vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexDataSprite[1].texCoord = { 0.0f, 0.0f };
-	vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
-	vertexDataSprite[2].texCoord = { 1.0f, 1.0f };
-	vertexDataSprite[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };
-	vertexDataSprite[3].texCoord = { 1.0f, 0.0f };
-	
-	indexResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(uint32_t) * 6);
-	indexBufferViewSprite.BufferLocation = indexResourceSprite.Get()->GetGPUVirtualAddress();
-	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
-	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
-	
-	
-	indexResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
-	indexDataSprite[0] = 0; indexDataSprite[1] = 1; indexDataSprite[2] = 2;
-	indexDataSprite[3] = 1; indexDataSprite[4] = 3; indexDataSprite[5] = 2;
-	
-	materialResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(Material));
-	materialResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-	materialDataSprite->color = { 1.0f,1.0f,1.0f,1.0f };
-	materialDataSprite->enableLighting = false;
-	
-	transformationMatrixResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(TransformationMatrix));
-	transformationMatrixResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
-	transformationMatrixDataSprite->World = MyMath::MakeIdentity4x4();
-	transformationMatrixDataSprite->WVP = MyMath::MakeIdentity4x4();
-
-	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	GPUHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath);
+
+	textureOriSize.x = static_cast<float>(metadata.width);
+	textureOriSize.y = static_cast<float>(metadata.height);
+
+	CreateVertexData();
+
+	CreateIndexData();
+
+	CreateMaterialData();
+
+	CreateTransformationMatrixData();
 
 	AdjustTextureSize();
 
@@ -96,6 +68,9 @@ void Sprite::Update()
 	vertexDataSprite[3].position = { right,top,0.0f,1.0f };//upper left
 	vertexDataSprite[3].texCoord = { tex_right,tex_top };
 	vertexDataSprite[3].normal = { 0.0f,0.0f, 1.0f };
+
+	indexData[0] = 0; indexData[1] = 1; indexData[2] = 2;
+	indexData[3] = 1; indexData[4] = 3; indexData[5] = 2;
 
 	transformSprite.translate = { position.x,position.y,0.0f };
 	transformSprite.rotate = { 0.0f,0.0f,rotation };
@@ -171,6 +146,64 @@ void Sprite::Cleanup()
 	
 
 }
+
+//void Sprite::CreateVertexData() {
+//	vertexResourceSprite = spriteCommon_->GetDxCommon()->CreateBufferResource(device,sizeof(VertexData) * 4);
+//
+//	// リソースの先頭アドレスから使う
+//	vertexBufferViewSprite.BufferLocation = vertexResourceSprite.Get()->GetGPUVirtualAddress();
+//
+//	// 使用するリソースのサイズは頂点6つ分のサイズ
+//	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 4;
+//
+//	// 1頂点当たりのサイズ
+//	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
+//
+//	vertexDataSprite = nullptr;
+//
+//	vertexResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+//}
+//
+//void Sprite::CreateIndexData() {
+//	indexResourceSprite = this->spriteCommon_->CreateBufferResource(sizeof(uint32_t) * 6);
+//
+//	// リソースの先頭アドレスから使う
+//	indexBufferViewSprite.BufferLocation = indexResourceSprite.Get()->GetGPUVirtualAddress();
+//
+//	// 使用するリソースのサイズはインデックス6つ分のサイズ
+//	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+//
+//	// インデックスはuint32_tとする
+//	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+//
+//	// インデックスリソースにデータを書き込む
+//	indexData = nullptr;
+//
+//	indexResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+//}
+//
+//void Sprite::CreateMaterialData() {
+//	materialResourceSprite = this->spriteCommon_->CreateBufferResource(sizeof(Material));
+//
+//	materialResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
+//
+//	materialDataSprite->color = { 1.0f,1.0f,1.0f,1.0f };
+//
+//	materialDataSprite->enableLighting = false;
+//
+//	materialDataSprite->uvTransform = MyMath::MakeIdentity4x4();
+//}
+//
+//void Sprite::CreateTransformationMatrixData() {
+//	transformationMatrixResourceSprite = this->spriteCommon_->CreateBufferResource(sizeof(TransformationMatrix));
+//
+//	// データを書き込むためのアドレスを取得
+//	transformationMatrixResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
+//
+//	//　単位行列を書き込んでおく
+//	transformationMatrixDataSprite->WVP = MyMath::MakeIdentity4x4();
+//	transformationMatrixDataSprite->World = MyMath::MakeIdentity4x4();
+//}
 
 void Sprite::AdjustTextureSize()
 {

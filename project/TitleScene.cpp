@@ -13,6 +13,23 @@ void TitleScene::Initialize() {
 
 	ModelManager::GetInstance()->Initialize(DirectXCommon::GetInstance());
 
+	TextureManager::GetInstance()->LoadTexture("resources/title.png");
+
+	//title = std::make_unique<Sprite>();
+	//title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
+	//title->SetPosition(Vector2(0.0f, 0.0f));
+	//title->SetSize(Vector2(1280.0f, 720.0f));
+	//title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
+	//title->SetTextureSize(Vector2(1280.0f, 720.0f));
+
+	////
+	//TextureManager::GetInstance()->LoadTexture("resources/circle.png");
+	//particleManager_ = std::make_unique<ParticleManager>();
+	//particleManager_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
+	//particleManager_->CreateParticleGroup("star", "resources/circle.png");
+	//particleManager_->SetCamera(camera_.get());
+
+
 	worldTransform_ = std::make_unique<WorldTransform>();
 	worldTransform_->Initialize();
 
@@ -51,21 +68,10 @@ void TitleScene::Initialize() {
 	// 씬 공통 렌더 설정 (이것도 보통 필요함)
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
-	/*TextureManager::GetInstance()->LoadTexture("resources/title.png");
-
-	title = std::make_unique<Sprite>();
-	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");*/
-	/*title->SetPosition(Vector2(0.0f, 0.0f));
-	title->SetSize(Vector2(1280.0f, 720.0f));
-	title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
-	title->SetTextureSize(Vector2(1280.0f, 720.0f));*/
+	
 
 
-	//
-	particleManager_ = std::make_unique<ParticleManager>();
-	particleManager_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
-	particleManager_->SetCamera(camera_.get());
-	particleManager_->CreateParticleGroup("star", "resources/circle.png");
+	
 
 }
 
@@ -133,18 +139,19 @@ void TitleScene::Update() {
 
 		return;
 	}
-	Emitter emitter{};
-	emitter.transform.translate = { 0.0f, 1.0f, 0.0f }; // 발사 위치
-	emitter.count = 10;
-	emitter.frequency = 0.2f;
-	emitter.frequencyTime += 1.0f / 60.0f;
 
-	if (emitter.frequencyTime >= emitter.frequency) {
-		emitter.frequencyTime = 0.0f;
-		particleManager_->Emit(emitter, randomEngine_);
-	}
+	//Emitter emitter{};
+	//emitter.transform.translate = { 0.0f, 5.0f, 4.0f }; // 발사 위치
+	//emitter.count = 100;
+	//emitter.frequency = 0.2f;
+	//emitter.frequencyTime += 1.0f / 60.0f;
 
-	particleManager_->Update();
+	//if (emitter.frequencyTime >= emitter.frequency) {
+	//	emitter.frequencyTime = 0.0f;
+	//	particleManager_->Emit(emitter, randomEngine_);
+	//}
+
+	//particleManager_->Update();
 
 }
 
@@ -152,14 +159,16 @@ void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->CommonDrawSettings();
 	//title->Draw();	
-	//DirectXCommon::GetInstance()->PreDraw();
+	//particleManager_->Draw();
+	
+
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	model_->Draw();
 	//testModel_->Draw();
 
-	particleManager_->Draw();
+	
 
 }
 

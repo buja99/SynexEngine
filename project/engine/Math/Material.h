@@ -3,6 +3,14 @@
 #include "Matrix4x4.h"
 #include <string>
 
+struct  spriteMaterial {
+	Vector4 color;               // 16B
+	int32_t enableLighting;		 // 4B	
+	float padding[3];            // 12B
+	Matrix4x4 uvTransform;       // 64B
+	
+};
+
 struct  Material
 {
 	Vector4 color;               // 16B

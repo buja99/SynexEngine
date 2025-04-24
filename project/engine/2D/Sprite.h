@@ -27,7 +27,13 @@ public:
 	void Draw();
 	void Cleanup();
 
+	void CreateVertexData();
 
+	void CreateIndexData();
+
+	void CreateMaterialData();
+
+	void CreateTransformationMatrixData();
 
 	//position getter
 	const Vector2& GetPosition() const { return position; }
@@ -111,6 +117,8 @@ private:
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 
+	uint32_t* indexData;
 	
+
 };
 
