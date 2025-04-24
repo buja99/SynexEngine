@@ -11,7 +11,7 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 	//modelData = LoadobjFile("resources", "plane.obj");
 	
-	modelData = LoadobjFile(directorypath, filename);
+	modelData = LoadModelFile(directorypath, filename);
 
 	InitializeVertexBuffer();
 
@@ -52,73 +52,49 @@ void Model::Cleanup()
 	
 }
 
-ModelData Model::LoadobjFile(const std::string& directoryPath, const std::string& filename)
+ModelData Model::LoadModelFile(const std::string& directoryPath, const std::string& filename)
 {
-	//Declaring variables
+	Assimp::Importer importer;
+
+	std::string filePath = directoryPath + "/" + filename;
+	const aiScene* scene = importer.ReadFile(filePath,
+		aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_FlipWindingOrder);
+
+	assert(scene && scene->HasMeshes());
+
 	ModelData modelData;
-	std::vector<Vector4> positions;
-	std::vector<Vector3> normals;
-	std::vector<Vector2> texCoords;
-	std::string line;
-	//Open the file
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-	//Read the file and build ModelData
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-		if (identifier == "v") {
-			Vector4 position;
-			s >> position.x >> position.y >> position.z;
-			position.w = 1.0f;
-			position.x *= -1.0f;
-			//position.z *= -1.0f;
-			positions.push_back(position);
-		} else if (identifier == "vt") {
-			Vector2 texCoord;
-			s >> texCoord.x >> texCoord.y;
-			texCoord.y = -1.0f - texCoord.y;
-			texCoords.push_back(texCoord);
-		} else if (identifier == "vn") {
-			Vector3 normal;
-			s >> normal.x >> normal.y >> normal.z;
-			normal.x *= -1.0f;
-			//normal.z *= -1.0f;
-			normals.push_back(normal);
-		} else if (identifier == "f") {
-			VertexData triangle[3];
-			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
-				std::string vertexDefinition;
-				s >> vertexDefinition;
 
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
-				for (int32_t element = 0; element < 3; ++element)
-				{
-					std::string index;
-					std::getline(v, index, '/');
-					elementIndices[element] = std::stoi(index);
-				}
-				Vector4 position = positions[elementIndices[0] - 1];
-				Vector2 texCoord = texCoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
-				//VertexData vertex = { position,texCoord,normal };
-				//modelDate.vertices.push_back(vertex);
-				triangle[faceVertex] = { position, texCoord, normal };
-			}
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-			modelData.vertices.push_back(triangle[0]);
-		} else if (identifier == "mtllib") {
-			std::string materialFilename;
-			s >> materialFilename;
+	aiMesh* mesh = scene->mMeshes[0]; // 첫 번째 메시만 로딩
+	for (uint32_t i = 0; i < mesh->mNumFaces; ++i) {
+		aiFace face = mesh->mFaces[i];
+		assert(face.mNumIndices == 3);
 
-			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+		for (uint32_t j = 0; j < 3; ++j) {
+			uint32_t index = face.mIndices[j];
+			aiVector3D pos = mesh->mVertices[index];
+			aiVector3D norm = mesh->mNormals[index];
+			aiVector3D tex = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][index] : aiVector3D();
+
+			VertexData vtx;
+			vtx.position = { -pos.x, pos.y, pos.z, 1.0f }; // 좌우반전
+			vtx.normal = { -norm.x, norm.y, norm.z };     // 좌우반전
+			vtx.texCoord = { tex.x, tex.y };
+
+			modelData.vertices.push_back(vtx);
 		}
 	}
 
-	//Return ModelData
+	// 머티리얼 처리
+	if (scene->HasMaterials()) {
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			aiString path;
+			material->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+			modelData.material.textureFilePath = directoryPath + "/" + std::string(path.C_Str());
+		}
+	}
+
+	modelData.rootNode = ReadNode(scene->mRootNode);
 
 	return modelData;
 }
@@ -177,6 +153,41 @@ ComPtr<ID3D12Resource> Model::CreateBufferResource(ComPtr<ID3D12Device> device, 
 	return vertexResource;
 }
 
+Node Model::ReadNode(aiNode* ainode) {
+	Node result;
+
+	// Assimp의 행렬은 row-major → DirectX에 맞게 전치
+	aiMatrix4x4 aiLocal = ainode->mTransformation;
+	aiLocal.Transpose();
+
+	result.localMatrix = MyMath::ConvertMatrix(aiLocal);
+	result.name = ainode->mName.C_Str();
+
+	result.children.resize(ainode->mNumChildren);
+	for (uint32_t i = 0; i < ainode->mNumChildren; ++i) {
+		result.children[i] = ReadNode(ainode->mChildren[i]);
+	}
+
+	return result;
+}
+
+void Model::DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const Matrix4x4& viewProj, TransformationMatrix* transformData) {
+	Matrix4x4 currentMatrix = MyMath::Multiply(node.localMatrix, parentMatrix);
+
+	transformData->World = currentMatrix;
+	transformData->WVP = MyMath::Multiply(currentMatrix, viewProj);
+	transformData->WorldInverseTranspose = MyMath::Transpose(MyMath::Inverse(currentMatrix));
+
+	object3dCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	auto textureDescriptorHandle = TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath);
+	object3dCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureDescriptorHandle);
+	object3dCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+	for (const Node& child : node.children) {
+		DrawRecursive(child, currentMatrix, viewProj, transformData); // 재귀 호출 시 transformData도 그대로 전달
+	}
+}
+
 
 void Model::InitializeVertexBuffer()
 {
@@ -216,9 +227,9 @@ void Model::InitializeMaterial()
 	materialResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->enableLighting = false;               // ✅ 조명 ON
+	materialData_->enableLighting = false;               
 	materialData_->uvTransform = MyMath::MakeIdentity4x4();
-	materialData_->shininess = 32.0f;                   // ✅ 스페큘러 적용
+	materialData_->shininess = 32.0f;                   
 	materialData_->isBlinnPhong = 0;
 	materialData_->usePointLight = 0;
 	materialData_->useDirectionalLight = 1;

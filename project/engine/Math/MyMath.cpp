@@ -1,5 +1,6 @@
 #include "MyMath.h"
-
+#include <algorithm>
+#include <assert.h>
 namespace MyMath {
 
 	Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2) {
@@ -11,13 +12,50 @@ namespace MyMath {
 
 		return result;
 	}
+	Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+		Vector3 result;
 
+		result.x = v1.x - v2.x;
+		result.y = v1.y - v2.y;
+		result.z = v1.z - v2.z;
+
+		return result;
+	}
+	Vector3 divide(const Vector3& v, float s) {
+		Vector3 result;
+
+		result.x = v.x / s;
+		result.y = v.y / s;
+		result.z = v.z / s;
+
+		return result;
+	}
 	Vector3 MyMath::AddVector2AndVector3(const Vector2& vec2, const Vector3& vec3) {
 		return Vector3{ vec2.x + vec3.x, vec2.y + vec3.y, vec3.z };
 	}
 
 	Vector3 MyMath::Multiply(const Vector3& vec, float scalar) {
 		return { vec.x * scalar, vec.y * scalar, vec.z * scalar };
+	}
+
+	float length(Vector3 distance) {
+		return sqrtf(powf(distance.x, 2.0f) + powf(distance.y, 2.0f) + powf(distance.z, 2.0f));
+	}
+
+	Vector3 normalize(Vector3 distance) {
+		return { distance.x / length(distance),distance.y / length(distance),distance.z / length(distance) };
+	}
+
+	float Dot(Vector3 c, Vector3 d) {
+		return c.x * d.x + c.y * d.y + c.z * d.z;
+	}
+
+	Vector3 cross(const Vector3& u, const Vector3& v) {
+		return Vector3(
+			u.y * v.z - u.z * v.y,
+			u.z * v.x - u.x * v.z,
+			u.x * v.y - u.y * v.x
+		);
 	}
 
 	Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale) {
@@ -226,36 +264,6 @@ namespace MyMath {
 		return result;
 	}
 
-	Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
-		Vector3 result;
-
-		result.x = v1.x - v2.x;
-		result.y = v1.y - v2.y;
-		result.z = v1.z - v2.z;
-
-		return result;
-	}
-
-	float Dot(Vector3 c, Vector3 d) {
-		return c.x * d.x + c.y * d.y + c.z * d.z;
-	}
-
-	Vector3 cross(const Vector3& u, const Vector3& v) {
-		return Vector3(
-			u.y * v.z - u.z * v.y,
-			u.z * v.x - u.x * v.z,
-			u.x * v.y - u.y * v.x
-		);
-	}
-
-	float length(Vector3 distance) {
-		return sqrtf(powf(distance.x, 2.0f) + powf(distance.y, 2.0f) + powf(distance.z, 2.0f));
-	}
-
-	Vector3 normalize(Vector3 distance) {
-		return { distance.x / length(distance),distance.y / length(distance),distance.z / length(distance) };
-	}
-
 	Matrix4x4 CreateLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
 		Vector3 zaxis = normalize(Subtract(target, eye));    // Forward
 		Vector3 xaxis = normalize(cross(up, zaxis));         // Right
@@ -284,5 +292,77 @@ namespace MyMath {
 	float ToRadian(float degree) {
 		return degree * (3.141592f / 180.0f);
 	}
+
+	Vector3 SphericalToCartesian(float radius, float theta, float phi) {
+		Vector3 cartesian;
+		cartesian.x = radius * sinf(theta) * cosf(phi);
+		cartesian.y = radius * sinf(theta) * sinf(phi);
+		cartesian.z = radius * cosf(theta);
+		return cartesian;
+	}
+
+	Vector3 Project(const Vector3& v1, const Vector3& v2) {
+		Vector3 result;
+		float a = ((v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z));
+		float b = ((v2.x * v2.x) + (v2.y * v2.y) + (v2.z * v2.z));
+		result.x = a / b * v2.x;
+		result.y = a / b * v2.y;
+		result.z = a / b * v2.z;
+
+		return result;
+	}
+
+	Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
+		Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
+
+		project = Add(project, segment.origin);
+
+		return project;
+	}
+
+	Vector3 Perpendicular(const Vector3& vector) {
+		if (vector.x != 0.0f || vector.y != 0.0f) {
+			return { -vector.y,vector.x,0.0f };
+		}
+		return { 0.0f,-vector.z,vector.y };
+	}
+
+	void EnsureAABB(AABB& aabb) {
+		aabb.min.x = (std::min)(aabb.min.x, aabb.max.x);
+		aabb.max.x = (std::max)(aabb.min.x, aabb.max.x);
+		aabb.min.y = (std::min)(aabb.min.y, aabb.max.y);
+		aabb.max.y = (std::max)(aabb.min.y, aabb.max.y);
+		aabb.min.z = (std::min)(aabb.min.z, aabb.max.z);
+		aabb.max.z = (std::max)(aabb.min.z, aabb.max.z);
+	}
+
+	Vector3 ClosestPointOnAABB(const Vector3& point, const AABB& aabb) {
+		Vector3 closestPoint;
+		closestPoint.x = std::clamp(point.x, aabb.min.x, aabb.max.x);
+		closestPoint.y = std::clamp(point.y, aabb.min.y, aabb.max.y);
+		closestPoint.z = std::clamp(point.z, aabb.min.z, aabb.max.z);
+		return closestPoint;
+	}
+
+	Vector3 Lerp(const Vector3& a, const Vector3& b, float t) {
+		Vector3 result;
+		result.x = t * a.x + (1.0f - t) * b.x;
+		result.y = t * a.y + (1.0f - t) * b.y;
+		result.z = t * a.z + (1.0f - t) * b.z;
+		return result;
+	}
+
+	Matrix4x4 ConvertMatrix( aiMatrix4x4& aiMat) {
+		Matrix4x4 result;
+
+		result.m[0][0] = aiMat.a1; result.m[0][1] = aiMat.a2; result.m[0][2] = aiMat.a3; result.m[0][3] = aiMat.a4;
+		result.m[1][0] = aiMat.b1; result.m[1][1] = aiMat.b2; result.m[1][2] = aiMat.b3; result.m[1][3] = aiMat.b4;
+		result.m[2][0] = aiMat.c1; result.m[2][1] = aiMat.c2; result.m[2][2] = aiMat.c3; result.m[2][3] = aiMat.c4;
+		result.m[3][0] = aiMat.d1; result.m[3][1] = aiMat.d2; result.m[3][2] = aiMat.d3; result.m[3][3] = aiMat.d4;
+
+		return result;
+	}
+
+	
 
 }

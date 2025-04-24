@@ -6,13 +6,23 @@
 #include "TextureManager.h"
 #include "MyMath.h"
 #include "Object3dCommon.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 class Object3dCommon;
+
+struct Node {
+	Matrix4x4 localMatrix;
+	std::string name;
+	std::vector<Node> children;
+};
 
 struct ModelData
 {
 	std::vector<VertexData> vertices;
 	MaterialData material;
+	Node rootNode;
 };
 
 class Model
@@ -25,13 +35,19 @@ public:
 
 	void Cleanup();
 
-	static ModelData LoadobjFile(const std::string& directoryPath, const std::string& filename);
+	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
 
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
 
 	Material GetMaterialData() const { return *materialData_; }
+
+	static Node ReadNode(aiNode* ainode);
+
+	const ModelData& GetModelData() const { return modelData; }
+
+	void DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const Matrix4x4& viewProj, TransformationMatrix* transformData);
 
 private:
 	ModelCommon* modelCommon_ = nullptr;

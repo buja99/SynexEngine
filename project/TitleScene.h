@@ -41,5 +41,8 @@ private:
 
 	std::unique_ptr<Camera> camera_ = nullptr;
 
+	std::unique_ptr<Object3d> testModel_ = nullptr;
+	std::unique_ptr<WorldTransform> testWorldTransform_ = nullptr;
+
 };
 

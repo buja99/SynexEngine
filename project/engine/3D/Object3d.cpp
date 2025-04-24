@@ -57,13 +57,20 @@ void Object3d::Update()
 	// WVP 계산
 	if (camera) {
 		const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
-		transformationMatrixData->WVP = MyMath::Multiply(worldTransform_->matWorld_, viewProj);
-	} else {
-		transformationMatrixData->WVP = worldTransform_->matWorld_;
+
+		if (model_) {
+			//  glTF 계층 구조 반영한 최종 모델 행렬
+			Matrix4x4 modelMatrix = MyMath::Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform_->matWorld_);
+			transformationMatrixData->WVP = MyMath::Multiply(modelMatrix, viewProj);
+			transformationMatrixData->World = modelMatrix;
+			transformationMatrixData->WorldInverseTranspose = MyMath::Transpose(MyMath::Inverse(modelMatrix));
+		} else {
+			// fallback
+			transformationMatrixData->WVP = MyMath::Multiply(worldTransform_->matWorld_, viewProj);
+			transformationMatrixData->World = worldTransform_->matWorld_;
+			transformationMatrixData->WorldInverseTranspose = MyMath::Transpose(MyMath::Inverse(worldTransform_->matWorld_));
+		}
 	}
-	transformationMatrixData->World = worldTransform_->matWorld_;
-	transformationMatrixData->WorldInverseTranspose =
-		MyMath::Transpose(MyMath::Inverse(worldTransform_->matWorld_));
 
 	if (camera && cameraData_) {
 		cameraData_->worldPosition = camera->GetEye();
@@ -85,6 +92,7 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
+	if (!model_ || !object3dCommon_ || !camera || !worldTransform_) return;
 
 	//obj3d
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
@@ -95,11 +103,9 @@ void Object3d::Draw()
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, ambientLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, areaLightResource_->GetGPUVirtualAddress());
-	if (model_) {
-
-		model_->Draw();
-	}
-
+	
+	const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
+	model_->DrawRecursive(model_->GetModelData().rootNode, worldTransform_->matWorld_, viewProj, transformationMatrixData);
 }
 
 void Object3d::Cleanup()

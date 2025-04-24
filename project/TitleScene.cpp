@@ -16,11 +16,20 @@ void TitleScene::Initialize() {
 	worldTransform_ = std::make_unique<WorldTransform>();
 	worldTransform_->Initialize();
 
+	testWorldTransform_ = std::make_unique<WorldTransform>();
+	testWorldTransform_->Initialize();
+
 	model_ = std::make_unique<Object3d>();
 	model_->Initialize(Object3dCommon::GetInstance(), worldTransform_.get());
 
 	ModelManager::GetInstance()->LoadModel("resources", "terrain.obj");
 	model_->SetModel("terrain.obj");
+
+	testModel_ = std::make_unique<Object3d>();
+	testModel_->Initialize(Object3dCommon::GetInstance(), testWorldTransform_.get());
+
+	ModelManager::GetInstance()->LoadModel("resources/test", "terrain.gltf");
+	testModel_->SetModel("terrain.gltf");
 
 	model_->SetEnableLighting(true);
 	model_->SetIsBlinnPhong(true);          // Phong
@@ -37,6 +46,7 @@ void TitleScene::Initialize() {
 
 	// 모델에 카메라 설정
 	model_->SetCamera(camera_.get());
+	testModel_->SetCamera(camera_.get());
 
 	// 씬 공통 렌더 설정 (이것도 보통 필요함)
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
@@ -56,23 +66,25 @@ void TitleScene::Update() {
 	//title->Update();
 
 	model_->Update();
+	testModel_->Update();
 	worldTransform_->UpdateMatrix();
+	testWorldTransform_->UpdateMatrix();
 	camera_->Update();
 #ifdef _DEBUG
 	ImGui::Begin("Model Transform");
 
-	Vector3 scale = model_->GetScale();
-	Vector3 rotate = model_->GetRotate();
-	Vector3 translate = model_->GetTranslate();
+	Vector3 scale = testModel_->GetScale();
+	Vector3 rotate = testModel_->GetRotate();
+	Vector3 translate = testModel_->GetTranslate();
 
 	// 슬라이더로 값 수정
 	ImGui::DragFloat3("Scale", &scale.x, 0.1f);
 	ImGui::DragFloat3("Rotate", &rotate.x, 0.1f);
 	ImGui::DragFloat3("Translate", &translate.x, 0.1f);
 
-	model_->SetScale(scale);
-	model_->SetRotate(rotate);
-	model_->SetTranslate(translate);
+	testModel_->SetScale(scale);
+	testModel_->SetRotate(rotate);
+	testModel_->SetTranslate(translate);
 	auto obj = model_.get();
 	if (obj) {
 		static Vector3 areaPos = { 0.0f, 5.0f, 0.0f };
@@ -124,7 +136,8 @@ void TitleScene::Draw() {
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	model_->Draw();
+	//model_->Draw();
+	testModel_->Draw();
 }
 
 void TitleScene::Finalize() {
