@@ -14,7 +14,7 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "MyMath.h"
-
+#include "Model.h"
 
 
 struct ParticleVertex {
@@ -98,5 +98,7 @@ private:
    
     const uint32_t kNumMaxInstance = 100;
     
+
+
 };
 

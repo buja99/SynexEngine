@@ -15,13 +15,14 @@ void TitleScene::Initialize() {
 
 	TextureManager::GetInstance()->LoadTexture("resources/title.png");
 
-	//title = std::make_unique<Sprite>();
-	//title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
-	//title->SetPosition(Vector2(0.0f, 0.0f));
-	//title->SetSize(Vector2(1280.0f, 720.0f));
-	//title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
-	//title->SetTextureSize(Vector2(1280.0f, 720.0f));
-
+	title = std::make_unique<Sprite>();
+	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
+	title->SetAnchorPoint(Vector2(0.5f, 0.5f));       // 중심 기준
+	title->SetPosition(Vector2(640.0f, 360.0f));      // 화면 중심 위치
+	title->SetSize(Vector2(1280.0f, 720.0f));         // 전체 화면 크기
+	title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
+	title->SetTextureSize(Vector2(1280.0f, 720.0f));
+	//title->SetPosition(Vector2(640.0f, 360.0f));    // 화면 중심에 위치
 	////
 	//TextureManager::GetInstance()->LoadTexture("resources/circle.png");
 	//particleManager_ = std::make_unique<ParticleManager>();
@@ -77,7 +78,7 @@ void TitleScene::Initialize() {
 
 void TitleScene::Update() {
 
-	//title->Update();
+	title->Update();
 
 	model_->Update();
 	testModel_->Update();
@@ -158,7 +159,7 @@ void TitleScene::Update() {
 void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->CommonDrawSettings();
-	//title->Draw();	
+	title->Draw();	
 	//particleManager_->Draw();
 	
 

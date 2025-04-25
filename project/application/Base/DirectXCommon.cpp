@@ -294,6 +294,11 @@ ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(ComPtr<ID3D12De
 	return descriptorHeap;
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetRtvHandle() const {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	return rtvHandles[backBufferIndex];
+}
+
 void DirectXCommon::InitializeRTV()
 {
 	HRESULT hr;

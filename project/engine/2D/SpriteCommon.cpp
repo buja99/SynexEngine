@@ -55,7 +55,8 @@ void SpriteCommon::CommonDrawSettings()
 
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	
+
+
 }
 
 

@@ -37,6 +37,7 @@ public:
 	ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ComPtr <ID3D12Device> device, int32_t width, int32_t height);
 	ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(ComPtr <ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle() const;
 
 	void InitializeRTV();
 	void InitializeDSV();

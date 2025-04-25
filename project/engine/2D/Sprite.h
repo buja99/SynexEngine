@@ -117,8 +117,5 @@ private:
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 
-	uint32_t* indexData;
-	
-
 };
 
