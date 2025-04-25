@@ -93,39 +93,96 @@ void TitleScene::Update() {
 	testModel_->SetScale(scale);
 	testModel_->SetRotate(rotate);
 	testModel_->SetTranslate(translate);
-	auto obj = model_.get();
-	if (obj) {
-		static Vector3 areaPos = { 0.0f, 5.0f, 0.0f };
-		static Vector3 areaRight = { 1.0f, 0.0f, 0.0f };
-		static float areaHalfWidth = 2.0f;
-
-		static Vector3 areaUp = { 0.0f, 1.0f, 0.0f };
-		static float areaHalfHeight = 2.0f;
-
-		static Vector4 areaColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-		static float areaIntensity = 1.0f;
-
-
-		ImGui::Separator();
-		ImGui::Text("Area Light");
-
-		ImGui::DragFloat3("Position", &areaPos.x, 0.1f);
-		ImGui::DragFloat3("Right Vector", &areaRight.x, 0.1f);
-		ImGui::DragFloat("Half Width", &areaHalfWidth, 0.1f, 0.0f, 10.0f);
-
-		ImGui::DragFloat3("Up Vector", &areaUp.x, 0.1f);
-		ImGui::DragFloat("Half Height", &areaHalfHeight, 0.1f, 0.0f, 10.0f);
-
-		ImGui::ColorEdit4("Color", &areaColor.x);
-		ImGui::DragFloat("Intensity", &areaIntensity, 0.1f, 0.0f, 10.0f);
-
-		obj->SetAreaLight(areaPos, areaRight, areaHalfWidth, areaUp, areaHalfHeight, areaColor, areaIntensity);
-
 	
-		
+	ImGui::End();
+
+	ImGui::Begin("Light Settings");
+
+	bool useDir = model_->GetUseDirectionalLight();
+	bool usePoint = model_->GetUsePointLight();
+	bool useSpot = model_->GetUseSpotLight();
+	bool useAmbient = model_->GetUseAmbientLight();
+	bool useArea = model_->GetUseAreaLight();
+
+	// Light ON/OFF
+	if (ImGui::Checkbox("Use Directional Light", &useDir)) {
+		model_->SetUseDirectionalLight(useDir);
+	}
+	if (ImGui::Checkbox("Use Point Light", &usePoint)) {
+		model_->SetUsePointLight(usePoint);
+	}
+	if (ImGui::Checkbox("Use Spot Light", &useSpot)) {
+		model_->SetUseSpotLight(useSpot);
+	}
+	if (ImGui::Checkbox("Use Ambient Light", &useAmbient)) {
+		model_->SetUseAmbientLight(useAmbient);
+	}
+	if (ImGui::Checkbox("Use Area Light", &useArea)) {
+		model_->SetUseAreaLight(useArea);
+	}
+
+	// Point Light 상세 조정
+	if (usePoint) {
+		static Vector3 position = { 0.0f, 5.0f, 0.0f };
+		static float intensity = 1.0f;
+		static float radius = 10.0f;
+		static float decay = 1.0f;
+
+		ImGui::Text("Point Light Settings");
+		ImGui::DragFloat3("Position##Point", &position.x, 0.1f);
+		ImGui::DragFloat("Intensity##Point", &intensity, 0.1f);
+		ImGui::DragFloat("Radius##Point", &radius, 0.1f);
+		ImGui::DragFloat("Decay##Point", &decay, 0.1f);
+		model_->SetPointLight(position, intensity, radius, decay);
+	}
+
+	// Spot Light 상세 조정
+	if (useSpot) {
+		static Vector3 position = { 0.0f, 5.0f, 5.0f };
+		static Vector3 direction = { 0.0f, -1.0f, -1.0f };
+		static float intensity = 1.0f;
+		static float cutoff = 15.0f;
+		static float outerCutoff = 30.0f;
+		static float decay = 1.0f;
+		static float radius = 15.0f;
+
+		ImGui::Text("Spot Light Settings");
+		ImGui::DragFloat3("Position##Spot", &position.x, 0.1f);
+		ImGui::DragFloat3("Direction##Spot", &direction.x, 0.1f);
+		ImGui::DragFloat("Intensity##Spot", &intensity, 0.1f);
+		ImGui::DragFloat("Cutoff##Spot", &cutoff, 1.0f, 0.0f, 90.0f);
+		ImGui::DragFloat("OuterCutoff##Spot", &outerCutoff, 1.0f, 0.0f, 90.0f);
+		ImGui::DragFloat("Decay##Spot", &decay, 0.1f);
+		ImGui::DragFloat("Radius##Spot", &radius, 0.1f);
+		model_->SetSpotLight(position, direction, intensity,
+			cosf(MyMath::ToRadian(cutoff)),
+			cosf(MyMath::ToRadian(outerCutoff)),
+			decay, radius);
+	}
+
+	// Area Light 상세 조정
+	if (useArea) {
+		static Vector3 position = { 0.0f, 5.0f, 0.0f };
+		static Vector3 right = { 1.0f, 0.0f, 0.0f };
+		static float halfWidth = 2.0f;
+		static Vector3 up = { 0.0f, 1.0f, 0.0f };
+		static float halfHeight = 2.0f;
+		static Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		static float intensity = 1.0f;
+
+		ImGui::Text("Area Light Settings");
+		ImGui::DragFloat3("Position##Area", &position.x, 0.1f);
+		ImGui::DragFloat3("Right##Area", &right.x, 0.1f);
+		ImGui::DragFloat("Half Width##Area", &halfWidth, 0.1f);
+		ImGui::DragFloat3("Up##Area", &up.x, 0.1f);
+		ImGui::DragFloat("Half Height##Area", &halfHeight, 0.1f);
+		ImGui::ColorEdit4("Color##Area", &color.x);
+		ImGui::DragFloat("Intensity##Area", &intensity, 0.1f);
+		model_->SetAreaLight(position, right, halfWidth, up, halfHeight, color, intensity);
 	}
 
 	ImGui::End();
+
 #endif
 
 	if (input_->TriggerKey(DIK_SPACE)) {

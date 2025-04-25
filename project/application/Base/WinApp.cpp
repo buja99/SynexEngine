@@ -53,7 +53,7 @@ void WinApp::Initialize()
 		//利用するクラス名
 		wc.lpszClassName,
 		//タイトルバーの文字列
-		L"CG2",
+		L"Engine",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
