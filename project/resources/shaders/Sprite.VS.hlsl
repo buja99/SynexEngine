@@ -1,8 +1,13 @@
-cbuffer TransformationMatrix : register(b0)
-{
-    float4x4 WVP;
-};
 
+cbuffer WorldMatrix : register(b0)
+{
+    matrix matWorld;
+};
+cbuffer MatrixBuffer : register(b2)
+{
+    matrix view;
+    matrix projection;
+};
 struct VertexShaderInput
 {
     float4 position : POSITION0;
@@ -17,13 +22,18 @@ struct VertexShaderOutput
     float3 normal : NORMAL0;
 };
 
+
+
 VertexShaderOutput main(VertexShaderInput input)
 {
     VertexShaderOutput output;
 
-    output.position = mul(input.position, WVP);
+    float4 worldPos = mul(input.position, matWorld);
+    float4 viewPos = mul(worldPos, view);
+    output.position = mul(viewPos, projection);
+
     output.texcoord = input.texcoord;
-    output.normal = normalize(mul(input.normal, (float3x3) WVP)); // normal 변환
+    output.normal = normalize(mul(input.normal, (float3x3) matWorld));
 
     return output;
 }

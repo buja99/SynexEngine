@@ -58,6 +58,15 @@ namespace MyMath {
 		);
 	}
 
+	Matrix4x4 MyMath::Identity() {
+		return {
+	   1.0f, 0.0f, 0.0f, 0.0f,
+	   0.0f, 1.0f, 0.0f, 0.0f,
+	   0.0f, 0.0f, 1.0f, 0.0f,
+	   0.0f, 0.0f, 0.0f, 1.0f
+		};
+	}
+
 	Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale) {
 		Matrix4x4 result;
 

@@ -76,16 +76,7 @@ void Object3d::Update()
 		cameraData_->worldPosition = camera->GetEye();
 	}
 #ifdef _DEBUG
-	ImGui::Begin("plane");
-	ImGui::DragFloat3("translate", &transform.translate.x, 0.1f);
-	ImGui::DragFloat3("scale", &transform.scale.x, 0.1f);
-	ImGui::DragFloat3("rotate", &transform.rotate.x, 0.1f);
-	ImGui::End();
-
-	ImGui::Begin("camera");
-	ImGui::DragFloat3("translate", &cameraTransform.translate.x, 0.1f);
-	ImGui::DragFloat3("rotate", &cameraTransform.rotate.x, 0.1f);
-	ImGui::End();
+	
 #endif // _DEBUG
 
 }

@@ -4,184 +4,95 @@
 #include "imgui.h"
 #endif // _DEBUG
 #include "SrvManager.h"
-void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
-{
-	this->spriteCommon_ = spriteCommon;
+#include "ResourceUtils.h"
 
-	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
+using namespace ResourceUtils;
 
-	const DirectX::TexMetadata& metadata =
-			TextureManager::GetInstance()->GetMetaData(textureFilePath);
-	
-	textureOriSize = { static_cast<float>(metadata.width),static_cast<float>(metadata.height) };
+void Sprite::Initialize(SpriteCommon* common, const std::string& texturePath) {
+    spriteCommon_ = common;
+    texturePath_ = texturePath;
 
-	vertexResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(VertexData) * 6);
-	vertexBufferViewSprite.BufferLocation = vertexResourceSprite.Get()->GetGPUVirtualAddress();
-	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
-	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
-	
-	
-	vertexResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
-	vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
-	vertexDataSprite[0].texCoord = { 0.0f, 1.0f };
-	vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexDataSprite[1].texCoord = { 0.0f, 0.0f };
-	vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
-	vertexDataSprite[2].texCoord = { 1.0f, 1.0f };
-	vertexDataSprite[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };
-	vertexDataSprite[3].texCoord = { 1.0f, 0.0f };
-	
-	indexResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(uint32_t) * 6);
-	indexBufferViewSprite.BufferLocation = indexResourceSprite.Get()->GetGPUVirtualAddress();
-	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
-	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
-	
-	
-	indexResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
-	indexDataSprite[0] = 0; indexDataSprite[1] = 1; indexDataSprite[2] = 2;
-	indexDataSprite[3] = 1; indexDataSprite[4] = 3; indexDataSprite[5] = 2;
-	
-	materialResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(Material));
-	materialResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-	materialDataSprite->color = { 1.0f,1.0f,1.0f,1.0f };
-	materialDataSprite->enableLighting = false;
-	
-	transformationMatrixResourceSprite = spriteCommon->CreateBufferResource(spriteCommon->GetDevice(), sizeof(TransformationMatrix));
-	transformationMatrixResourceSprite.Get()->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
-	transformationMatrixDataSprite->World = MyMath::MakeIdentity4x4();
-	transformationMatrixDataSprite->WVP = MyMath::MakeIdentity4x4();
+    CreateVertexBuffer();
+    CreateIndexBuffer();
+    CreateMaterialBuffer();
+    CreateMatrixBuffer();
 
-	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-
-	GPUHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath);
-
-	AdjustTextureSize();
-
+    SetColor({ 1, 1, 1, 1 });
 }
 
-void Sprite::Update()
-{
-	float left = 0.0f - anchorPoint.x;
-	float right = 1.0f - anchorPoint.x;
-	float top = 0.0f - anchorPoint.y;
-	float bottom = 1.0f - anchorPoint.y;
+void Sprite::Update() {
+    UpdateVertices();
+    UpdateMatrix();
+}
 
-	if (isFlipX_) {
-		left = -left;
-		right = -right;
-	}
-	if (isFlipY_) {
-		top = -top;
-		bottom = -bottom;
-	}
-
-	
-	float tex_left = uvTransformSprite.translate.x / textureOriSize.x;
-	float tex_right = (uvTransformSprite.translate.x+ textureSize.x) / textureOriSize.x;
-	float tex_top = uvTransformSprite.translate.y / textureOriSize.y;
-	float tex_bottom = (uvTransformSprite.translate.y+ textureSize.y) / textureOriSize.y;
-
-	vertexDataSprite[0].position = { left,bottom,0.0f,1.0f };//lower left
-	vertexDataSprite[0].texCoord = { tex_left,tex_bottom };
-	vertexDataSprite[0].normal = { 0.0f,0.0f, 1.0f };
-	
-	vertexDataSprite[1].position = { left,top,0.0f,1.0f };//upper left
-	vertexDataSprite[1].texCoord = { tex_left,tex_top };
-	vertexDataSprite[1].normal = { 0.0f,0.0f, 1.0f };
-	
-	vertexDataSprite[2].position = { right,bottom,0.0f,1.0f };//lower right
-	vertexDataSprite[2].texCoord = { tex_right,tex_bottom };
-	vertexDataSprite[2].normal = { 0.0f,0.0f, 1.0f };
-	
-	vertexDataSprite[3].position = { right,top,0.0f,1.0f };//upper left
-	vertexDataSprite[3].texCoord = { tex_right,tex_top };
-	vertexDataSprite[3].normal = { 0.0f,0.0f, 1.0f };
-
-	transformSprite.translate = { position.x,position.y,0.0f };
-	transformSprite.rotate = { 0.0f,0.0f,rotation };
-	transformSprite.scale = { size.x,size.y,1.0f };
-
-
-	Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale);
-	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate.z));
-	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate));
-	materialDataSprite->uvTransform = uvTransformMatrix;
-
-
-	Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-	Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
-	Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth), float(WinApp::kClientHeight), 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrixSprite = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite));
-	transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
-	transformationMatrixDataSprite->World = worldViewProjectionMatrixSprite;
-
-#ifdef _DEBUG
-	ImGui::Begin("Sprite");
-	ImGui::DragFloat("rotate", &rotation, 0.1f);
-	ImGui::DragFloat2("position", &position.x, 1.0f);
-	ImGui::DragFloat2("anchorPoint", &anchorPoint.x, 0.1f);
-	ImGui::DragFloat3("scl", &transformSprite.scale.x, 0.1f);
-	ImGui::DragFloat2("size", &size.x, 1.0f);
-	ImGui::Checkbox("isFlipX", &isFlipX_);
-	ImGui::Checkbox("isFlipY", &isFlipY_);
-	ImGui::End();
-#endif // _DEBUG
-
-
+void Sprite::Draw() {
+    auto cmd = spriteCommon_->GetDxCommon()->GetCommandList();
+    cmd->IASetVertexBuffers(0, 1, &vbView_);
+    cmd->IASetIndexBuffer(&ibView_);
+    cmd->SetGraphicsRootConstantBufferView(0, materialBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootConstantBufferView(1, matrixBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(texturePath_));
+    cmd->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
 
-void Sprite::ChangeTexture(std::string textureFilePath)
-{
-
-	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilepath(textureFilePath);
-
+void Sprite::CreateVertexBuffer() {
+    vertexBuffer_ = CreateBufferResource(sizeof(VertexData) * 4);
+    vbView_ = { vertexBuffer_->GetGPUVirtualAddress(), sizeof(VertexData) * 4, sizeof(VertexData) };
+    vertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vertex_));
 }
 
-void Sprite::Draw()
-{
-	
-
-	//ID3D12DescriptorHeap* descriptorHeaps[] = { spriteCommon->GetSrvDescriptorHeap().Get() };
-	//spriteCommon->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-	spriteCommon_->GetCommandList()->SetPipelineState(spriteCommon_->GetGraphicsPipelineState().Get());
-
-	spriteCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	spriteCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-	spriteCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
-	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress()); // Material (b0)
-	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, spriteCommon_->GetDirectionLightBuffer()->GetGPUVirtualAddress()); // DirectionLight (b1) 추가!
-	spriteCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(2, transformationMatrixResourceSprite->GetGPUVirtualAddress()); // TransformMatrix (b2)
-	spriteCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(3, GPUHandle);
-	
-	//commandList->DrawInstanced(6, 1, 0, 0);
-	spriteCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
+void Sprite::CreateIndexBuffer() {
+    indexBuffer_ = CreateBufferResource(sizeof(uint32_t) * 6);
+    ibView_ = { indexBuffer_->GetGPUVirtualAddress(), sizeof(uint32_t) * 6, DXGI_FORMAT_R32_UINT };
+    indexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&index_));
+    uint32_t indices[] = { 0, 1, 2, 1, 3, 2 };
+    memcpy(index_, indices, sizeof(indices));
 }
 
-void Sprite::Cleanup()
-{
-
-	vertexResourceSprite.Reset();
-	indexResourceSprite.Reset();
-	materialResourceSprite.Reset();
-	transformationMatrixResourceSprite.Reset();
-	spriteCommon_ = nullptr;
-	
-	
-
+void Sprite::CreateMaterialBuffer() {
+    materialBuffer_ = CreateBufferResource(sizeof(Material));
+    materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&material_));
+    material_->enableLighting = 0;
+    material_->uvTransform = MyMath::MakeIdentity4x4();
 }
 
-void Sprite::AdjustTextureSize()
-{
-	//const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureOriSize);
-	textureSize.x = (textureOriSize.x);
-	textureSize.y = (textureOriSize.y);
-
-	size = textureSize;
-
+void Sprite::CreateMatrixBuffer() {
+    matrixBuffer_ = CreateBufferResource(sizeof(TransformationMatrix));
+    matrixBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&matrix_));
+    matrix_->WVP = MyMath::MakeIdentity4x4();
+    matrix_->World = MyMath::MakeIdentity4x4();
 }
 
+void Sprite::UpdateVertices() {
+    float left = (-anchor_.x) * size_.x;
+    float right = (1.0f - anchor_.x) * size_.x;
+    float top = (-anchor_.y) * size_.y;
+    float bottom = (1.0f - anchor_.y) * size_.y;
 
+    vertex_[0].position = { left,  bottom, 0.0f, 1.0f };
+    vertex_[1].position = { left,  top,    0.0f, 1.0f };
+    vertex_[2].position = { right, bottom, 0.0f, 1.0f };
+    vertex_[3].position = { right, top,    0.0f, 1.0f };
 
+    vertex_[0].texcoord = { 0, 1 };
+    vertex_[1].texcoord = { 0, 0 };
+    vertex_[2].texcoord = { 1, 1 };
+    vertex_[3].texcoord = { 1, 0 };
 
+    for (int i = 0; i < 4; ++i)
+        vertex_[i].normal = { 0, 0, -1 };
+}
+
+void Sprite::UpdateMatrix() {
+    Matrix4x4 scale = MyMath::MakeScaleMatrix({ size_.x, size_.y, 1.0f });
+    Matrix4x4 rot = MyMath::MakeRotateZMatrix(rotation_);
+    Matrix4x4 trans = MyMath::MakeTranslateMatrix({ position_.x, position_.y, z_ });
+    Matrix4x4 world = MyMath::Multiply(scale, MyMath::Multiply(rot, trans));
+
+    const Matrix4x4& view = spriteCommon_->GetViewMatrix();
+    const Matrix4x4& proj = spriteCommon_->GetProjectionMatrix();
+
+    matrix_->World = world;
+    matrix_->WVP = MyMath::Multiply(world, MyMath::Multiply(view, proj));
+}

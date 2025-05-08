@@ -14,102 +14,75 @@ class SpriteCommon;
 
 using Microsoft::WRL::ComPtr;
 
-
 class Sprite
 {
 
 public:
 
-	void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
-
+	void Initialize(SpriteCommon* common, const std::string& texturePath);
 	void Update();
-	void ChangeTexture(std::string textureFilePath);
 	void Draw();
-	void Cleanup();
+
+    void SetPosition(const Vector2& pos) { position_ = pos; }
+    void SetSize(const Vector2& size) { size_ = size; }
+    void SetRotation(float rot) { rotation_ = rot; }
+    void SetAnchorPoint(const Vector2& anchor) { anchor_ = anchor; }
+    void SetColor(const Vector4& color) { material_->color = color_; color_ = color; }
+    void SetZ(float z) { z_ = z; }
 
 
-
-	//position getter
-	const Vector2& GetPosition() const { return position; }
-	//position setter
-	void SetPosition(const Vector2& position) { this->position = position; }
-	//rotation getter
-	float GetRotation() const { return rotation; }
-	//rotation setter
-	void SetRotation(float rotation) { this->rotation = rotation; }
-	//color getter
-	const Vector4& GetColor() const { return materialDataSprite->color; }
-	//color setter
-	void SetColor(const Vector4& color) { materialDataSprite->color = color; }
-	//size getter
-	const Vector2& GetSize() const { return size; }
-	//size setter
-	void SetSize(const Vector2& size) { this->size = size; }
-
-	const Vector2& GetAncHorPoint() const { return anchorPoint; }
-	void SetAnchorPoint(const Vector2& anchorPont) { this->anchorPoint = anchorPont; }
-
-	bool GetIsFlipX() const { return isFlipX_; }
-	void SetIsFlipX(bool isFlipX) { isFlipX_ = isFlipX; }
-
-	bool GetIsFlipY() const { return isFlipY_; }
-	void SetIsFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
-
-	const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
-	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
-
-	const Vector2& GetTextureSize() const { return textureSize; }
-	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
-
-	//std::unordered_map<uint32_t, std::string> textureIndexToFilePathMap;
 private:
 
+	void CreateVertexBuffer();
+	void CreateIndexBuffer();
+	void CreateMaterialBuffer();
+	void CreateMatrixBuffer();
+	void UpdateVertices();
+	void UpdateMatrix();
 
-	uint32_t textureIndex = 0;
-	ComPtr<ID3D12Resource> vertexResourceSprite;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
-	ComPtr<ID3D12Resource> transformationMatrixResourceSprite;
-	TransformationMatrix* transformationMatrixDataSprite = nullptr;
-	Transform transformSprite;
-	VertexData* vertexDataSprite;
-	ComPtr<ID3D12Resource> indexResourceSprite;
-	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
-	ComPtr<ID3D12Resource> materialResourceSprite;
-	Material* materialDataSprite;
-	uint32_t* indexDataSprite;
+    struct VertexData {
+        Vector4 position;
+        Vector2 texcoord;
+        Vector3 normal;
+    };
 
-	DirectX::ScratchImage mipImages;
-	//DirectX::ScratchImage mipImages2;
+    struct Material {
+        Vector4 color;
+        int enableLighting;
+        float padding[3];
+        Matrix4x4 uvTransform;
+    };
 
-	Transform uvTransformSprite
-	{
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
+    struct TransformationMatrix {
+        Matrix4x4 WVP;
+        Matrix4x4 World;
+    };
 
-	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f} };
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
+    // 상태 값
+    Vector2 position_ = {};
+    Vector2 size_ = { 100, 100 };
+    Vector2 anchor_ = { 0.5f, 0.5f };
+    float rotation_ = 0.0f;
+    float z_ = 0.0f;
+    Vector4 color_ = { 1, 1, 1, 1 };
 
-	Vector2 position = { 0.0f,0.0f };
-	float rotation = 0.0f;
-	Vector2 size = { 100.0f,100.0f };
+    // 렌더링 리소스
+    ComPtr<ID3D12Resource> vertexBuffer_;
+    ComPtr<ID3D12Resource> indexBuffer_;
+    ComPtr<ID3D12Resource> materialBuffer_;
+    ComPtr<ID3D12Resource> matrixBuffer_;
 
-	bool isFlipX_ = false;
-	bool isFlipY_ = false;
+    VertexData* vertex_ = nullptr;
+    uint32_t* index_ = nullptr;
+    Material* material_ = nullptr;
+    TransformationMatrix* matrix_ = nullptr;
 
-	Vector2 anchorPoint = { 0.0f,0.0f };
+    D3D12_VERTEX_BUFFER_VIEW vbView_{};
+    D3D12_INDEX_BUFFER_VIEW ibView_{};
 
-	Vector2 textureLeftTop = { 0.0f,0.0f };
-	Vector2 textureSize = { 65.0f,65.0f };
-
-	Vector2 textureOriSize = { 100.0f,100.0f };
-
-	void AdjustTextureSize();
-
-	SpriteCommon* spriteCommon_ = nullptr;
+    std::string texturePath_;
+    SpriteCommon* spriteCommon_ = nullptr;
 	
-	D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 
 	
 };

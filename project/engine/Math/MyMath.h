@@ -21,6 +21,7 @@ namespace  MyMath
 	Vector3 normalize(Vector3 distance);
 	float Dot(Vector3 c, Vector3 d);
 	Vector3 cross(const Vector3& u, const Vector3& v);
+	Matrix4x4 Identity();
 	Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 	Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
 	Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);

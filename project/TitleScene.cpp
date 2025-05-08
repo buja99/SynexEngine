@@ -37,13 +37,19 @@ void TitleScene::Initialize() {
 	model_->SetUseDirectionalLight(false);  // Directional Light 
 	model_->SetUseSpotLight(false);	        // Spot Light
 	model_->SetUseAmbientLight(false);      // Ambient Light
-	model_->SetUseAreaLight(true);          // Area Light
+	model_->SetUseAreaLight(true);         
+	
+	testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
+	
+	
+	
+	
+	// Area Light
 	// 카메라 생성
 	camera_ = std::make_unique<Camera>();
 	camera_->SetEye({ 0.0f, 4.0f, -10.0f });
 	camera_->SetTarget({ 0.0f, 0.0f, 0.0f });
-	camera_->UpdateMatrix();
-
+	
 	// 모델에 카메라 설정
 	model_->SetCamera(camera_.get());
 	testModel_->SetCamera(camera_.get());
@@ -51,14 +57,15 @@ void TitleScene::Initialize() {
 	// 씬 공통 렌더 설정 (이것도 보통 필요함)
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
-	/*TextureManager::GetInstance()->LoadTexture("resources/title.png");
+	TextureManager::GetInstance()->LoadTexture("resources/title.png");
 
 	title = std::make_unique<Sprite>();
-	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");*/
-	/*title->SetPosition(Vector2(0.0f, 0.0f));
+	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
+	title->SetAnchorPoint(Vector2(0.5f, 0.5f));
+	title->SetPosition(Vector2(0.0f, 0.0f));
 	title->SetSize(Vector2(1280.0f, 720.0f));
 	title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
-	title->SetTextureSize(Vector2(1280.0f, 720.0f));*/
+	title->SetTextureSize(Vector2(1280.0f, 720.0f));
 
 
 	//
@@ -71,12 +78,13 @@ void TitleScene::Initialize() {
 
 void TitleScene::Update() {
 
-	//title->Update();
+	title->Update();
 
 	model_->Update();
 	testModel_->Update();
 	worldTransform_->UpdateMatrix();
 	testWorldTransform_->UpdateMatrix();
+	camera_->UpdateMatrix();
 	camera_->Update();
 #ifdef _DEBUG
 	ImGui::Begin("Model Transform");
@@ -183,6 +191,10 @@ void TitleScene::Update() {
 
 	ImGui::End();
 
+	ImGui::Begin("sprite");
+	//ImGui::DragFloat3();
+	ImGui::End();
+
 #endif
 
 	if (input_->TriggerKey(DIK_SPACE)) {
@@ -208,13 +220,13 @@ void TitleScene::Update() {
 void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->CommonDrawSettings();
-	//title->Draw();	
+	title->Draw();	
 	//DirectXCommon::GetInstance()->PreDraw();
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	model_->Draw();
-	//testModel_->Draw();
+	//model_->Draw();
+	testModel_->Draw();
 
 	//particleManager_->Draw();
 

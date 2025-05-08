@@ -3,8 +3,9 @@
 #include <cassert>
 #include <DirectXMath.h>
 #include "DirectXCommon.h"
+#include "ResourceUtils.h"
 using namespace DirectX;
-
+using namespace ResourceUtils;
 WorldTransform::WorldTransform() = default;
 
 WorldTransform::~WorldTransform() {
@@ -17,8 +18,9 @@ WorldTransform::~WorldTransform() {
 }
 
 void WorldTransform::Initialize() {
+    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
     // 定数バッファの生成
-    constBuffer_ = CreateBufferResource(sizeof(ConstBufferDataWorldTransform));
+    constBuffer_ = CreateBufferResource(dxCommon->GetDevice(),sizeof(ConstBufferDataWorldTransform));
     constBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&constMap));
 }
 
@@ -58,7 +60,4 @@ void WorldTransform::Cleanup() {
     }
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t size) {
-    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-    return dxCommon->CreateBufferResource(dxCommon->GetDevice(), size);
-}
+

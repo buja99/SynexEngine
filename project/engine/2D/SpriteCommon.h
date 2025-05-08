@@ -5,12 +5,17 @@
 #include <wrl.h>
 #include "Matrix4x4.h"
 #include "Lighting.h"
+
+
 using Microsoft::WRL::ComPtr;
 
 struct ConstBufferData {
 	Matrix4x4 mat;
 };
-
+struct SpriteMatrix {
+	Matrix4x4 view;
+	Matrix4x4 projection;
+};
 class SpriteCommon
 {
 
@@ -23,39 +28,13 @@ public:
 	}
 
 	void Initialize(DirectXCommon* dxCommon);
-
-	void Finalize();
-
-	void CommonDrawSettings();
+	void SetBackgroundView();
+	void SetForegroundView();
 
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
+	const Matrix4x4& GetViewMatrix() const { return viewMatrix_; }
+	const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix_; }
 
-	IDxcBlob* CompileShader(
-
-		const std::wstring& filePath,
-
-		const wchar_t* profile,
-
-		IDxcUtils* dxcUtils,
-		IDxcCompiler3* dxcCompiler,
-		IDxcIncludeHandler* includeHandler);
-
-	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
-	ComPtr<ID3D12Resource> CreateTextureResource(ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata);
-	void UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
-	ComPtr<ID3D12Device> GetDevice() const { return device; }
-
-	ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(
-		ComPtr <ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
-
-
-	ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
-	ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() const { return graphicsPipelineState; }
-	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
-	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
-	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
-
-	ComPtr<ID3D12Resource> GetDirectionLightBuffer() const { return directionLightBuffer_; }
 
 private:
 
@@ -65,18 +44,13 @@ private:
 	SpriteCommon& operator=(const SpriteCommon&) = delete;
 
 	void CreateRootSignature();
-	void CreateGraphicsPipeline();
-
-	ComPtr<ID3D12Device> device;
-
-	ComPtr<ID3D12RootSignature> rootSignature;
-	ComPtr<ID3D12PipelineState> graphicsPipelineState;
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+	void CreateGraphicsPipeline(bool background);
 
 	DirectXCommon* dxCommon_ = nullptr;
-	
-	ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
-	
-	ComPtr<ID3D12Resource> directionLightBuffer_;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> psoBackground_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> psoForeground_;
+	Matrix4x4 viewMatrix_ = MyMath::MakeIdentity4x4();
+	Matrix4x4 projectionMatrix_ = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, WinApp::kClientWidth, WinApp::kClientHeight, -100.0f, 100.0f);
 };
 
