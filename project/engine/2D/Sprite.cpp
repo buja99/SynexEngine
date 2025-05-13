@@ -18,6 +18,7 @@ void Sprite::Initialize(SpriteCommon* common, const std::string& texturePath) {
     CreateMatrixBuffer();
 
     SetColor({ 1, 1, 1, 1 });
+    SetTextureSize();
 }
 
 void Sprite::Update() {
@@ -36,14 +37,24 @@ void Sprite::Draw() {
 }
 
 
+void Sprite::SetAnchorPoint(const Vector2& anchor) {
+    anchor_ = anchor;
+    anchorManuallySet_ = true;
+}
+
+void Sprite::SetTextureSize() {
+    const auto& meta = TextureManager::GetInstance()->GetMetaData(texturePath_);
+    SetSize({ static_cast<float>(meta.width), static_cast<float>(meta.height) });
+}
+
 void Sprite::CreateVertexBuffer() {
-    vertexBuffer_ = CreateBufferResource(sizeof(VertexData) * 4);
-    vbView_ = { vertexBuffer_->GetGPUVirtualAddress(), sizeof(VertexData) * 4, sizeof(VertexData) };
+    vertexBuffer_ = CreateBufferResource(spriteCommon_->GetDevice(), sizeof(SpriteVertexData) * 4);
+    vbView_ = { vertexBuffer_->GetGPUVirtualAddress(), sizeof(SpriteVertexData) * 4, sizeof(SpriteVertexData) };
     vertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vertex_));
 }
 
 void Sprite::CreateIndexBuffer() {
-    indexBuffer_ = CreateBufferResource(sizeof(uint32_t) * 6);
+    indexBuffer_ = CreateBufferResource(spriteCommon_->GetDevice(), sizeof(uint32_t) * 6);
     ibView_ = { indexBuffer_->GetGPUVirtualAddress(), sizeof(uint32_t) * 6, DXGI_FORMAT_R32_UINT };
     indexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&index_));
     uint32_t indices[] = { 0, 1, 2, 1, 3, 2 };
@@ -51,17 +62,16 @@ void Sprite::CreateIndexBuffer() {
 }
 
 void Sprite::CreateMaterialBuffer() {
-    materialBuffer_ = CreateBufferResource(sizeof(Material));
+    materialBuffer_ = CreateBufferResource(spriteCommon_->GetDevice(), sizeof(SpriteMaterial));
     materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&material_));
-    material_->enableLighting = 0;
     material_->uvTransform = MyMath::MakeIdentity4x4();
 }
 
 void Sprite::CreateMatrixBuffer() {
-    matrixBuffer_ = CreateBufferResource(sizeof(TransformationMatrix));
+    matrixBuffer_ = CreateBufferResource(spriteCommon_->GetDevice(), sizeof(SpriteMatrix));
     matrixBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&matrix_));
     matrix_->WVP = MyMath::MakeIdentity4x4();
-    matrix_->World = MyMath::MakeIdentity4x4();
+    
 }
 
 void Sprite::UpdateVertices() {
@@ -75,24 +85,23 @@ void Sprite::UpdateVertices() {
     vertex_[2].position = { right, bottom, 0.0f, 1.0f };
     vertex_[3].position = { right, top,    0.0f, 1.0f };
 
-    vertex_[0].texcoord = { 0, 1 };
-    vertex_[1].texcoord = { 0, 0 };
-    vertex_[2].texcoord = { 1, 1 };
-    vertex_[3].texcoord = { 1, 0 };
+    vertex_[0].texcoord = { isFlipX_ ? 1.0f : 0.0f, isFlipY_ ? 0.0f : 1.0f };
+    vertex_[1].texcoord = { isFlipX_ ? 1.0f : 0.0f, isFlipY_ ? 1.0f : 0.0f };
+    vertex_[2].texcoord = { isFlipX_ ? 0.0f : 1.0f, isFlipY_ ? 0.0f : 1.0f };
+    vertex_[3].texcoord = { isFlipX_ ? 0.0f : 1.0f, isFlipY_ ? 1.0f : 0.0f };
 
-    for (int i = 0; i < 4; ++i)
-        vertex_[i].normal = { 0, 0, -1 };
+
 }
 
 void Sprite::UpdateMatrix() {
     Matrix4x4 scale = MyMath::MakeScaleMatrix({ size_.x, size_.y, 1.0f });
     Matrix4x4 rot = MyMath::MakeRotateZMatrix(rotation_);
+    float z = spriteCommon_->IsBackground() ? -100.0f : 0.0f;
     Matrix4x4 trans = MyMath::MakeTranslateMatrix({ position_.x, position_.y, z_ });
-    Matrix4x4 world = MyMath::Multiply(scale, MyMath::Multiply(rot, trans));
+    Matrix4x4 world = MyMath::Multiply(rot, trans);
 
     const Matrix4x4& view = spriteCommon_->GetViewMatrix();
     const Matrix4x4& proj = spriteCommon_->GetProjectionMatrix();
 
-    matrix_->World = world;
-    matrix_->WVP = MyMath::Multiply(world, MyMath::Multiply(view, proj));
+    matrix_->WVP = MyMath::Multiply(MyMath::Multiply(world, view), proj);
 }

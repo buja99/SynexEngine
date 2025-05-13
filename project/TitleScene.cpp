@@ -61,14 +61,9 @@ void TitleScene::Initialize() {
 
 	title = std::make_unique<Sprite>();
 	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
-	title->SetAnchorPoint(Vector2(0.5f, 0.5f));
-	title->SetPosition(Vector2(0.0f, 0.0f));
-	title->SetSize(Vector2(1280.0f, 720.0f));
-	title->SetTextureLeftTop(Vector2(0.0f, 0.0f));
-	title->SetTextureSize(Vector2(1280.0f, 720.0f));
+	title->SetPosition({ 0.0f, 0.0f });
+	
 
-
-	//
 	/*particleManager_ = std::make_unique<ParticleManager>();
 	particleManager_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
 	particleManager_->SetCamera(camera_.get());
@@ -219,15 +214,14 @@ void TitleScene::Update() {
 
 void TitleScene::Draw() {
 
-	SpriteCommon::GetInstance()->CommonDrawSettings();
-	title->Draw();	
-	//DirectXCommon::GetInstance()->PreDraw();
+	SpriteCommon::GetInstance()->SetUIPipeline();
+	title->Draw();
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	//model_->Draw();
 	testModel_->Draw();
-
+	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	//particleManager_->Draw();
 
 }

@@ -24,3 +24,8 @@ struct MaterialData
 	std::string textureFilePath;
 	uint32_t textureIndex = 0;
 };
+
+struct SpriteMaterial {
+	Vector4 color;
+	Matrix4x4 uvTransform;
+};

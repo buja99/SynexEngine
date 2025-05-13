@@ -26,11 +26,13 @@ public:
     void SetPosition(const Vector2& pos) { position_ = pos; }
     void SetSize(const Vector2& size) { size_ = size; }
     void SetRotation(float rot) { rotation_ = rot; }
-    void SetAnchorPoint(const Vector2& anchor) { anchor_ = anchor; }
+    void SetAnchorPoint(const Vector2& anchor);
     void SetColor(const Vector4& color) { material_->color = color_; color_ = color; }
     void SetZ(float z) { z_ = z; }
+    void SetTextureSize();
 
-
+    void SetFlipX(bool flag) { isFlipX_ = flag; }
+    void SetFlipY(bool flag) { isFlipY_ = flag; }
 private:
 
 	void CreateVertexBuffer();
@@ -40,18 +42,6 @@ private:
 	void UpdateVertices();
 	void UpdateMatrix();
 
-    struct VertexData {
-        Vector4 position;
-        Vector2 texcoord;
-        Vector3 normal;
-    };
-
-    struct Material {
-        Vector4 color;
-        int enableLighting;
-        float padding[3];
-        Matrix4x4 uvTransform;
-    };
 
     struct TransformationMatrix {
         Matrix4x4 WVP;
@@ -61,10 +51,14 @@ private:
     // 상태 값
     Vector2 position_ = {};
     Vector2 size_ = { 100, 100 };
-    Vector2 anchor_ = { 0.5f, 0.5f };
+    Vector2 anchor_ = { 0.0f, 0.0f };
     float rotation_ = 0.0f;
     float z_ = 0.0f;
     Vector4 color_ = { 1, 1, 1, 1 };
+
+    bool anchorManuallySet_ = false;
+    bool isFlipX_ = false;
+    bool isFlipY_ = false;
 
     // 렌더링 리소스
     ComPtr<ID3D12Resource> vertexBuffer_;
@@ -72,10 +66,10 @@ private:
     ComPtr<ID3D12Resource> materialBuffer_;
     ComPtr<ID3D12Resource> matrixBuffer_;
 
-    VertexData* vertex_ = nullptr;
+    SpriteVertexData* vertex_ = nullptr;
     uint32_t* index_ = nullptr;
-    Material* material_ = nullptr;
-    TransformationMatrix* matrix_ = nullptr;
+    SpriteMaterial* material_ = nullptr;
+    SpriteMatrix* matrix_ = nullptr;
 
     D3D12_VERTEX_BUFFER_VIEW vbView_{};
     D3D12_INDEX_BUFFER_VIEW ibView_{};

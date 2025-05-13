@@ -10,3 +10,8 @@ struct  VertexData
 	Vector2 texCoord;
 	Vector3 normal;
 };
+
+struct SpriteVertexData {
+	Vector4 position;
+	Vector2 texcoord;
+};

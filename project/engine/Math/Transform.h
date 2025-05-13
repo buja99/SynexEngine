@@ -18,3 +18,6 @@ struct TransformationMatrix
 	Matrix4x4 WorldInverseTranspose;
 };
 
+struct SpriteMatrix {
+	Matrix4x4 WVP;
+};
