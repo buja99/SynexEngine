@@ -80,6 +80,14 @@ namespace MyMath {
 		return result;
 	}
 
+	Matrix4x4 MakeRotateMatrix(const Vector3& rotate) {
+		Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+		Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+		Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+
+		return Multiply(rotateYMatrix, Multiply(rotateXMatrix, rotateZMatrix));
+	}
+
 	Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate) {
 		Matrix4x4 result;
 

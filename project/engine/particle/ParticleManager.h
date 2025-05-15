@@ -60,8 +60,10 @@ public:
     void Initialize(DirectXCommon* directXCommon, SrvManager* srvManager);
     void Update();
     void Draw();
+    void calculationBillboardMatrix();
+
     Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate);
-    std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine);
+    std::list<Particle> Emit(const std::string& groupName, const Emitter& emitter, std::mt19937& randomEngine);
 
     void CreateParticleGroup(const std::string& name, const std::string& textureFilePath);
 
@@ -70,7 +72,7 @@ public:
     
 
 private:
-    Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
+    
 
     ComPtr<ID3D12Resource> CreateBufferResource(ComPtr <ID3D12Device> device, size_t sizeInBytes);
     IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);
@@ -90,13 +92,13 @@ private:
     std::vector<ParticleVertex> vertices_;
     ComPtr<ID3D12Resource> vertexBufferResource_;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
-    uint32_t numInstance = 0;
+    //uint32_t numInstance = 0;
  
 
     std::unordered_map<std::string, ParticleGroup> particleGroups;
 
    
     const uint32_t kNumMaxInstance = 100;
-    
+    Matrix4x4 billboardMatrix;
 };
 

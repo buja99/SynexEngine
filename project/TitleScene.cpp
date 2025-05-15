@@ -39,7 +39,7 @@ void TitleScene::Initialize() {
 	model_->SetUseAmbientLight(false);      // Ambient Light
 	model_->SetUseAreaLight(true);         
 	
-	testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
+	//testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
 	
 	
 	
@@ -63,11 +63,16 @@ void TitleScene::Initialize() {
 	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
 	title->SetPosition({ 0.0f, 0.0f });
 	
+	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
+	primitive_ = std::make_unique<ParticleManager>();
+	primitive_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
+	primitive_->SetCamera(camera_.get());
+	primitive_->CreateParticleGroup("star", "resources/circle.png");
 
-	/*particleManager_ = std::make_unique<ParticleManager>();
-	particleManager_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
-	particleManager_->SetCamera(camera_.get());
-	particleManager_->CreateParticleGroup("star", "resources/circle.png");*/
+	
+	emitter_.count = 100;
+	emitter_.frequency = 0.2f;
+	emitter_.frequencyTime = 0.0f;
 
 }
 
@@ -197,32 +202,30 @@ void TitleScene::Update() {
 
 		return;
 	}
-	//Emitter emitter{};
-	//emitter.transform.translate = { 0.0f, 1.0f, 0.0f }; // 발사 위치
-	//emitter.count = 10;
-	//emitter.frequency = 0.2f;
-	//emitter.frequencyTime += 1.0f / 60.0f;
+	
 
-	//if (emitter.frequencyTime >= emitter.frequency) {
-	//	emitter.frequencyTime = 0.0f;
-	//	particleManager_->Emit(emitter, randomEngine_);
-	//}
+	emitter_.frequencyTime += 1.0f / 60.0f;
 
-	//particleManager_->Update();
+	if (emitter_.frequencyTime >= emitter_.frequency) {
+		emitter_.frequencyTime = 0.0f;
+		primitive_->Emit("star", emitter_, randomEngine_);
+	}
+
+	primitive_->Update();
 
 }
 
 void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->SetUIPipeline();
-	title->Draw();
+	//title->Draw();
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	//model_->Draw();
-	testModel_->Draw();
+	//testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
-	//particleManager_->Draw();
+	primitive_->Draw();
 
 }
 

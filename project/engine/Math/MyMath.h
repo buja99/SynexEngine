@@ -23,6 +23,7 @@ namespace  MyMath
 	Vector3 cross(const Vector3& u, const Vector3& v);
 	Matrix4x4 Identity();
 	Matrix4x4 MakeScaleMatrix(const Vector3& scale);
+	Matrix4x4 MakeRotateMatrix(const Vector3& rotate);
 	Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
 	Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
 	Matrix4x4 MakeRotateXMatrix(float radian);

@@ -35,47 +35,52 @@ void ParticleManager::Update()
 {
 	if (!camera_) return;
 
+	// ✅ 반드시 호출!
+	calculationBillboardMatrix();
+
 	Matrix4x4 cameraMatrix = camera_->GetWorldMatrix();
-	Matrix4x4 viewMatrix = camera_->GetViewMatrix();
+	Matrix4x4 viewMatrix = MyMath::Inverse(cameraMatrix);
 	Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
-	Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, cameraMatrix);
-	billboardMatrix.m[3][0] = 1.0f;
-	billboardMatrix.m[3][1] = 1.0f;
-	billboardMatrix.m[3][2] = 1.0f;
 	Matrix4x4 viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
-	numInstance = 0;
-	constexpr float deltaTime = 1.0f / 60.0f; // 프레임 속도 일정화
 
-	for (auto& [name, group] : particleGroups)
-	{
-		// 🔹 파티클 개수 업데이트
-		group.instanceCount = static_cast<int>(group.particles.size());
+	constexpr float deltaTime = 1.0f / 60.0f;
 
-		// 🔹 파티클 생존 여부 체크 후 리스트에서 제거
+	// 파티클 그룹 순회
+	for (auto& [name, group] : particleGroups) {
+		// 수명 갱신 및 제거
 		group.particles.remove_if([deltaTime](Particle& p) {
 			p.currentTime += deltaTime;
 			return p.currentTime >= p.lifeTime;
 			});
 
 		int i = 0;
-		for (auto& p : group.particles)
-		{
-			// 🔹 위치 업데이트
+		for (auto& p : group.particles) {
 			p.transform.translate = MyMath::Add(p.transform.translate, p.velocity);
 
-			// 🔹 GPU 메모리 업데이트
-			if (group.mappedInstanceData)
-			{
-				Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(p.transform.scale, p.transform.rotate, p.transform.translate);
-				group.mappedInstanceData[i].WVP = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
+			if (group.mappedInstanceData && i < initialInstanceCount) {
+				// scale → billboard → 위치
+				Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix(p.transform.scale);
+				Matrix4x4 rotateZMatrix = MyMath::MakeRotateZMatrix(p.transform.rotate.z);
+				Matrix4x4 scaleRotate = MyMath::Multiply(scaleMatrix, rotateZMatrix);
+
+				Matrix4x4 worldMatrix = MyMath::Multiply(scaleRotate, billboardMatrix);
+				worldMatrix.m[3][0] = p.transform.translate.x;
+				worldMatrix.m[3][1] = p.transform.translate.y;
+				worldMatrix.m[3][2] = p.transform.translate.z;
+
+				Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
+				group.mappedInstanceData[i].WVP = worldViewProjectionMatrix;
 				group.mappedInstanceData[i].World = worldMatrix;
+
+				// 알파 감소
+				float alpha = 1.0f - (p.currentTime / p.lifeTime);
 				group.mappedInstanceData[i].color = p.color;
+				group.mappedInstanceData[i].color.w = alpha;
 			}
 			++i;
 		}
+		group.instanceCount = i;
 	}
-	
-
 }
 
 void ParticleManager::Draw()
@@ -89,53 +94,85 @@ void ParticleManager::Draw()
 	for (auto& [name, group] : particleGroups)
 	{
 
-		for (auto& [name, group] : particleGroups)
-		{
-			if (group.instanceCount > 0) {
+		if (group.instanceCount > 0) {
 
-				// 🔹 GPU에 올바른 데이터가 전달되었는지 확인
-				if (!group.mappedInstanceData) continue;
-
-				D3D12_GPU_DESCRIPTOR_HANDLE instanceHandle = srvManager_->GetGPUDescriptorHandle(group.instanceSRVIndex);
-				commandList->SetGraphicsRootDescriptorTable(0, instanceHandle);
-
-				srvManager_->SetGraphicsRootDesciptorTable(1, group.textureIndex);
-
-				commandList->DrawInstanced(6, group.instanceCount, 0, 0);
+			// 🔹 GPU에 올바른 데이터가 전달되었는지 확인
+			if (group.instanceCount <= 0 || !group.mappedInstanceData) {
+				continue; // 그릴 필요 없음
 			}
+			D3D12_GPU_DESCRIPTOR_HANDLE instanceHandle = srvManager_->GetGPUDescriptorHandle(group.instanceSRVIndex);
+			commandList->SetGraphicsRootDescriptorTable(0, instanceHandle);
+
+			srvManager_->SetGraphicsRootDesciptorTable(1, group.textureIndex);
+
+			commandList->DrawInstanced(6, group.instanceCount, 0, 0);
 		}
 	}
+}
+
+void ParticleManager::calculationBillboardMatrix() {
+	// 1. Z+ → Z- 보정 (뒤 → 앞 전환용 Y축 180도 회전 행렬)
+	Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
+
+	// 2. 카메라의 회전값만 가져오기
+	Vector3 cameraRotation = camera_->GetRotate();
+
+	// 3. 회전 행렬 생성 (Y→X→Z 순)
+	Matrix4x4 rotateX = MyMath::MakeRotateXMatrix(cameraRotation.x);
+	Matrix4x4 rotateY = MyMath::MakeRotateYMatrix(cameraRotation.y);
+	Matrix4x4 rotateZ = MyMath::MakeRotateZMatrix(cameraRotation.z);
+
+	Matrix4x4 cameraRotationOnly = MyMath::Multiply(rotateY, MyMath::Multiply(rotateX, rotateZ));
+
+	// 4. billboard = backToFront * cameraRotationOnly
+	billboardMatrix = MyMath::Multiply(backToFrontMatrix, cameraRotationOnly);
+
+	// 5. 위치 성분 제거
+	billboardMatrix.m[3][0] = 0.0f;
+	billboardMatrix.m[3][1] = 0.0f;
+	billboardMatrix.m[3][2] = 0.0f;
 }
 
 Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
+	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
 	Particle particle;
-	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-	particle.transform.rotate = { 0.0f, 3.14f, 0.0f };
+	particle.transform.scale = { 0.05f, distScale(randomEngine), 1.0f };
+	particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine)};
+	//Vector3 spread = {
+	//	distribution(randomEngine) * 0.5f, // X
+	//	distribution(randomEngine) * 0.5f, // Y
+	//	distribution(randomEngine) * 0.5f  // Z
+	//};
 
+	//particle.transform.translate = MyMath::Add(translate, spread);
+	particle.transform.translate = translate;
+	particle.velocity = { 0.0f,0.0f,0.0f };
 
-	Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	particle.transform.translate = MyMath::Add(translate, randomTranslate);
+	//Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	//particle.transform.translate = MyMath::Add(translate, randomTranslate);
 
-	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	//particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-	particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	particle.lifeTime = distTime(randomEngine);
+	//particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+	particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	//particle.lifeTime = distTime(randomEngine);
+	particle.lifeTime = 1.0f;
 	particle.currentTime = 0.0f;
 	return particle;
 }
 
-std::list<Particle> ParticleManager::Emit(const Emitter& emitter, std::mt19937& randomEngine)
-{
+std::list<Particle> ParticleManager::Emit(const std::string& groupName, const Emitter& emitter, std::mt19937& randomEngine) {
 	std::list<Particle> particles;
 	for (uint32_t count = 0; count < emitter.count; ++count) {
 		particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	}
-	if (particleGroups.find("fire") != particleGroups.end()) {
-		particleGroups["fire"].particles.insert(
-			particleGroups["fire"].particles.end(),
+	if (particleGroups.contains(groupName)) {
+		particleGroups[groupName].particles.insert(
+			particleGroups[groupName].particles.end(),
 			particles.begin(),
 			particles.end()
 		);
@@ -171,12 +208,12 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	// 리소스 매핑
 	HRESULT hr = newGroup.instanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.mappedInstanceData));
 	assert(SUCCEEDED(hr));
-	for (int i = 0; i < initialInstanceCount; i++)
+	/*for (int i = 0; i < initialInstanceCount; i++)
 	{
 		newGroup.mappedInstanceData[i].WVP = MyMath::MakeIdentity4x4();
 		newGroup.mappedInstanceData[i].World = MyMath::MakeIdentity4x4();
 		newGroup.mappedInstanceData[i].color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
-	}
+	}*/
 
 
 	// SRV 생성 (Structured Buffer )
@@ -385,8 +422,15 @@ void ParticleManager::CreateGraphicsPipeline()
 
 	//BlendState
 	D3D12_BLEND_DESC blendDesc{};
-	blendDesc.RenderTarget[0].RenderTargetWriteMask =
-		D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 	//RasterizerState
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -431,13 +475,17 @@ void ParticleManager::CreateGraphicsPipeline()
 
 void ParticleManager::InitializeVertices()
 {
-	//first triangle
-	vertices_.push_back({ { 1.0f,1.0f,0.0f,1.0f}, { 0.0f, 1.0f } }); // lower left
-	vertices_.push_back({ { -1.0f,1.0f,0.0f,1.0f}, { 0.0f, 0.0f } });   // upper left
-	vertices_.push_back({ {1.0f,-1.0f,0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
-	//second triangle
-	vertices_.push_back({ { 1.0f, -1.0f, 0.0f,1.0f }, { 0.0f, 0.0f } });   // lower left
-	vertices_.push_back({ { -1.0f, 1.0f, 0.0f ,1.0f}, { 1.0f, 0.0f } }); // upper right
+	vertices_.clear();
+
+	// 삼각형 1: 좌상, 좌하, 우상
+	vertices_.push_back({ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }); // 좌상
+	vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
+	vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+
+	// 삼각형 2: 우상, 좌하, 우하
+	vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+	vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
+	vertices_.push_back({ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } }); // 우하
 	vertices_.push_back({ { -1.0f, -1.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 }
 

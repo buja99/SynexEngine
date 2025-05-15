@@ -46,8 +46,10 @@ private:
 	std::unique_ptr<Object3d> testModel_ = nullptr;
 	std::unique_ptr<WorldTransform> testWorldTransform_ = nullptr;
 
-	std::unique_ptr<ParticleManager> particleManager_;
+	std::unique_ptr<ParticleManager> primitive_;
 	std::mt19937 randomEngine_;
+
+	Emitter emitter_{};
 
 };
 
