@@ -45,6 +45,8 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 
+	void RenderTexturePreDraw();
+	void RenderTexturePostDraw();
 	void PreDraw();
 	void PostDraw();
 
@@ -81,6 +83,8 @@ public:
 	ComPtr<ID3D12Resource> CreateRenderTextureResource
 	(ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
 	void InitializeOffscreenRenderTarget();
+	void InitializeCopyPipeline();
+	void CopyRenderTextureToSwapChain();
 private:
 
 	DirectXCommon() = default;
@@ -131,7 +135,9 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTVHandle_;
 	ComPtr<ID3D12DescriptorHeap> offscreenSRVHeap_;
 	D3D12_GPU_DESCRIPTOR_HANDLE offscreenSRVHandle_;
+	ComPtr<ID3D12RootSignature> copyRootSignature_;
+	ComPtr<ID3D12PipelineState> copyPipelineState_;
 	
-
+	
 };
 
