@@ -63,11 +63,11 @@ void TitleScene::Initialize() {
 	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
 	title->SetPosition({ 0.0f, 0.0f });
 	
-	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
+	TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 	primitive_ = std::make_unique<ParticleManager>();
 	primitive_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
 	primitive_->SetCamera(camera_.get());
-	primitive_->CreateParticleGroup("star", "resources/circle.png");
+	primitive_->CreateParticleGroup("star", "resources/gradationLine.png");
 
 	
 	emitter_.count = 100;

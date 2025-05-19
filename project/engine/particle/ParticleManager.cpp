@@ -105,7 +105,7 @@ void ParticleManager::Draw()
 
 			srvManager_->SetGraphicsRootDesciptorTable(1, group.textureIndex);
 
-			commandList->DrawInstanced(6, group.instanceCount, 0, 0);
+			commandList->DrawInstanced(static_cast<UINT>(vertices_.size()), group.instanceCount, 0, 0);
 		}
 	}
 }
@@ -139,12 +139,13 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
 	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
 
-	//const uint32_t kRingD
+	
+
 
 	Particle particle;
 	float randomScale = distScale(randomEngine);
-	particle.transform.scale = { randomScale, randomScale, 1.0f };
-	particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine)};
+	//particle.transform.scale = { randomScale, randomScale, 1.0f };
+	//particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine)};
 	//Vector3 spread = {
 	//	distribution(randomEngine) * 0.5f, // X
 	//	distribution(randomEngine) * 0.5f, // Y
@@ -152,6 +153,7 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 	//};
 
 	//particle.transform.translate = MyMath::Add(translate, spread);
+	particle.transform.scale = { 3.0f, 3.0f, 3.0f };
 	particle.transform.translate = translate;
 	particle.velocity = { 0.0f,0.0f,0.0f };
 
@@ -356,7 +358,7 @@ void ParticleManager::CreateRootSignature()
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
@@ -480,17 +482,39 @@ void ParticleManager::CreateGraphicsPipeline()
 void ParticleManager::InitializeVertices()
 {
 	vertices_.clear();
+	const uint32_t kRingDivide = 32;
+	const float kOuterRadius = 1.0f;
+	const float kInnerRadius = 0.2f;
+	const float radianPrDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
 
-	// 삼각형 1: 좌상, 좌하, 우상
-	vertices_.push_back({ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }); // 좌상
-	vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
-	vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+	for (uint32_t index = 0; index < kRingDivide; ++index) {
+		float sin = std::sin(index * radianPrDivide);
+		float cos = std::cos(index * radianPrDivide);
+		float sinNext = std::sin((index + 1) * radianPrDivide);
+		float cosNext = std::cos((index + 1) * radianPrDivide);
+		float u = float(index) / float(kRingDivide);
+		float uNext = float(index + 1) / float(kRingDivide);
 
-	// 삼각형 2: 우상, 좌하, 우하
-	vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
-	vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
-	vertices_.push_back({ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } }); // 우하
-	vertices_.push_back({ { -1.0f, -1.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
+		// 삼각형 1
+		vertices_.push_back({ { -sin * kOuterRadius, cos * kOuterRadius, 0.0f, 1.0f }, { u, 0.0f } });
+		vertices_.push_back({ { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f }, { uNext, 0.0f } });
+		vertices_.push_back({ { -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f }, { u, 1.0f } });
+
+		// 삼각형 2
+		vertices_.push_back({ { -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f }, { u, 1.0f } });
+		vertices_.push_back({ { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f }, { uNext, 0.0f } });
+		vertices_.push_back({ { -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f }, { uNext, 1.0f } });
+	}
+	//// 삼각형 1: 좌상, 좌하, 우상
+	//vertices_.push_back({ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }); // 좌상
+	//vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
+	//vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+
+	//// 삼각형 2: 우상, 좌하, 우하
+	//vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+	//vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
+	//vertices_.push_back({ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } }); // 우하
+	//vertices_.push_back({ { -1.0f, -1.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 }
 
 void ParticleManager::CreateVertexBuffer()
@@ -499,10 +523,10 @@ void ParticleManager::CreateVertexBuffer()
 	auto device = dxCommon_->GetDevice();
 
 	// GPU 메모리에 버퍼 생성(Create a buffer in GPU memory)
-	vertexBufferResource_ = CreateBufferResource(device, sizeof(ParticleVertex) * 6);
+	vertexBufferResource_ = CreateBufferResource(device, sizeof(ParticleVertex) * vertices_.size());
 	// 버퍼 뷰 설정(Setting the buffer view)
 	vertexBufferView_.BufferLocation = vertexBufferResource_->GetGPUVirtualAddress();
-	vertexBufferView_.SizeInBytes = sizeof(ParticleVertex) * 6;
+	vertexBufferView_.SizeInBytes = static_cast<UINT>(sizeof(ParticleVertex) * vertices_.size());
 	vertexBufferView_.StrideInBytes = sizeof(ParticleVertex);
 	// GPU 메모리 매핑(GPU Memory Mapping)
 	ParticleVertex* vertexDataParticle = nullptr;
