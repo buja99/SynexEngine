@@ -138,8 +138,12 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
 	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+
+	//const uint32_t kRingD
+
 	Particle particle;
-	particle.transform.scale = { 0.05f, distScale(randomEngine), 1.0f };
+	float randomScale = distScale(randomEngine);
+	particle.transform.scale = { randomScale, randomScale, 1.0f };
 	particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine)};
 	//Vector3 spread = {
 	//	distribution(randomEngine) * 0.5f, // X
