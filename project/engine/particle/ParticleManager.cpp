@@ -151,9 +151,10 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 
 	Particle particle;
 	float randomScale = distScale(randomEngine);
-	particle.transform.rotate = { distRotate(randomEngine), distRotate(randomEngine), distRotate(randomEngine)};
-	
+	//particle.transform.rotate = { distRotate(randomEngine), distRotate(randomEngine), distRotate(randomEngine)};
+	//particle.transform.rotate = {0.0f,0.0f ,0.0f };
 	//particle.transform.translate = MyMath::Add(translate, spread);
+	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
 	particle.transform.scale = { 3.0f, 3.0f, 3.0f };
 	particle.transform.translate = { 0.0f,5.0f,0.0f };
 	particle.velocity = { 0.0f,0.0f,0.0f };
@@ -163,8 +164,8 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 
 	//particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-	//particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-	particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+	//particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	//std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
 	//particle.lifeTime = distTime(randomEngine);
 	particle.lifeTime = 1.0f;
@@ -468,7 +469,7 @@ void ParticleManager::CreateGraphicsPipeline()
 
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
 	depthStencilDesc.DepthEnable = true;
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
@@ -483,28 +484,31 @@ void ParticleManager::CreateGraphicsPipeline()
 void ParticleManager::InitializeVertices()
 {
 	vertices_.clear();
-	const uint32_t kRingDivide = 32;
-	const float kOuterRadius = 1.0f;
-	const float kInnerRadius = 0.2f;
-	const float radianPrDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
+	const uint32_t kCylinderDivide = 32;
+	const float kTopRadius = 1.0f;
+	const float kBottomRadius = 1.0f;
+	const float kHeight = 3.0f;
 
-	for (uint32_t index = 0; index < kRingDivide; ++index) {
-		float sin = std::sin(index * radianPrDivide);
-		float cos = std::cos(index * radianPrDivide);
-		float sinNext = std::sin((index + 1) * radianPrDivide);
-		float cosNext = std::cos((index + 1) * radianPrDivide);
-		float u = float(index) / float(kRingDivide);
-		float uNext = float(index + 1) / float(kRingDivide);
+	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kCylinderDivide);
+
+	for (uint32_t index = 0; index < kCylinderDivide; ++index) {
+		float sin = std::sin(index * radianPerDivide);
+		float cos = std::cos(index * radianPerDivide);
+		float sinNext = std::sin((index + 1) * radianPerDivide);
+		float cosNext = std::cos((index + 1) * radianPerDivide);
+		float u = float(index) / float(kCylinderDivide);
+		float uNext = float(index + 1) / float(kCylinderDivide);
 
 		// 삼각형 1
-		vertices_.push_back({ { -sin * kOuterRadius, cos * kOuterRadius, 0.0f, 1.0f }, { u, 0.0f } });
-		vertices_.push_back({ { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f }, { uNext, 0.0f } });
-		vertices_.push_back({ { -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f }, { u, 1.0f } });
+		vertices_.push_back({ { sin * kTopRadius, kHeight, cos * kTopRadius, 1.0f }, { u, 0.0f } });
+		vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
+		vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
 
 		// 삼각형 2
-		vertices_.push_back({ { -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f }, { u, 1.0f } });
-		vertices_.push_back({ { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f }, { uNext, 0.0f } });
-		vertices_.push_back({ { -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f }, { uNext, 1.0f } });
+		vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
+		vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
+		vertices_.push_back({ { sinNext * kBottomRadius, 0.0f, cosNext * kBottomRadius, 1.0f }, { uNext, 1.0f } });
+	
 	}
 	//// 삼각형 1: 좌상, 좌하, 우상
 	//vertices_.push_back({ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }); // 좌상
