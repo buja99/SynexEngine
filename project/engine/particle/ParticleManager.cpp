@@ -60,10 +60,17 @@ void ParticleManager::Update()
 			if (group.mappedInstanceData && i < initialInstanceCount) {
 				// scale → billboard → 위치
 				Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix(p.transform.scale);
+				Matrix4x4 rotateXMatrix = MyMath::MakeRotateXMatrix(p.transform.rotate.x);
+				Matrix4x4 rotateYMatrix = MyMath::MakeRotateYMatrix(p.transform.rotate.y);
 				Matrix4x4 rotateZMatrix = MyMath::MakeRotateZMatrix(p.transform.rotate.z);
-				Matrix4x4 scaleRotate = MyMath::Multiply(scaleMatrix, rotateZMatrix);
+				//Matrix4x4 scaleRotate = MyMath::Multiply(scaleMatrix, rotateZMatrix);
+				
+				Matrix4x4 rotationMatrix = MyMath::Multiply(rotateZMatrix, MyMath::Multiply(rotateYMatrix, rotateXMatrix));
+				Matrix4x4 scaleRotate = MyMath::Multiply(scaleMatrix, rotationMatrix);
 
-				Matrix4x4 worldMatrix = MyMath::Multiply(scaleRotate, billboardMatrix);
+				//billboard
+				//Matrix4x4 worldMatrix = MyMath::Multiply(scaleRotate, billboardMatrix);
+				Matrix4x4 worldMatrix = scaleRotate;
 				worldMatrix.m[3][0] = p.transform.translate.x;
 				worldMatrix.m[3][1] = p.transform.translate.y;
 				worldMatrix.m[3][2] = p.transform.translate.z;
@@ -144,14 +151,8 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 
 	Particle particle;
 	float randomScale = distScale(randomEngine);
-	//particle.transform.scale = { randomScale, randomScale, 1.0f };
-	//particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine)};
-	//Vector3 spread = {
-	//	distribution(randomEngine) * 0.5f, // X
-	//	distribution(randomEngine) * 0.5f, // Y
-	//	distribution(randomEngine) * 0.5f  // Z
-	//};
-
+	particle.transform.rotate = { distRotate(randomEngine), distRotate(randomEngine), distRotate(randomEngine)};
+	
 	//particle.transform.translate = MyMath::Add(translate, spread);
 	particle.transform.scale = { 3.0f, 3.0f, 3.0f };
 	particle.transform.translate = { 0.0f,5.0f,0.0f };
