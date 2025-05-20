@@ -70,8 +70,8 @@ void TitleScene::Initialize() {
 	primitive_->CreateParticleGroup("star", "resources/gradationLine.png");
 
 	
-	emitter_.count = 100;
-	emitter_.frequency = 0.2f;
+	emitter_.count = 1;
+	emitter_.frequency = 0.7f;
 	emitter_.frequencyTime = 0.0f;
 
 }
