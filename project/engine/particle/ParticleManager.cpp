@@ -154,7 +154,7 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 
 	//particle.transform.translate = MyMath::Add(translate, spread);
 	particle.transform.scale = { 3.0f, 3.0f, 3.0f };
-	particle.transform.translate = translate;
+	particle.transform.translate = { 0.0f,5.0f,0.0f };
 	particle.velocity = { 0.0f,0.0f,0.0f };
 
 	//Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
