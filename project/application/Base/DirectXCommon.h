@@ -100,7 +100,6 @@ private:
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 
 	ComPtr<ID3D12Resource> depthStencilBuffer;
-	ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	UINT rtvDescriptorSize;
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
@@ -133,11 +132,11 @@ private:
 	ComPtr<ID3D12Resource> offscreenRenderTarget_;
 	ComPtr<ID3D12DescriptorHeap> offscreenRTVHeap_;
 	D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTVHandle_;
-	ComPtr<ID3D12DescriptorHeap> offscreenSRVHeap_;
-	D3D12_GPU_DESCRIPTOR_HANDLE offscreenSRVHandle_;
+	//ComPtr<ID3D12DescriptorHeap> offscreenSRVHeap_;
+	//D3D12_GPU_DESCRIPTOR_HANDLE offscreenSRVHandle_;
 	ComPtr<ID3D12RootSignature> copyRootSignature_;
 	ComPtr<ID3D12PipelineState> copyPipelineState_;
-	
+	uint32_t offscreenSRVIndex_ = 0;
 	
 };
 

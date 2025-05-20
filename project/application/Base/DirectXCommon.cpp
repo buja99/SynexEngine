@@ -7,7 +7,7 @@
 #include <dxgidebug.h>
 #include <iostream>
 #include <d3dx12.h>
-
+#include "SrvManager.h"
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -52,7 +52,7 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissor();
-	InitializeOffscreenRenderTarget();
+	//InitializeOffscreenRenderTarget();
 	InitializeCopyPipeline();
 
 }
@@ -351,18 +351,18 @@ void DirectXCommon::RenderTexturePreDraw() {
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrier.Transition.pResource = offscreenRenderTarget_.Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 	commandList->ResourceBarrier(1, &barrier);
-
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	// RTV만 설정 (Depth는 사용 안 함)
-	commandList->OMSetRenderTargets(1, &offscreenRTVHandle_, FALSE, nullptr);
+	commandList->OMSetRenderTargets(1, &offscreenRTVHandle_, FALSE, &dsvHandle);
 
 	// Clear
 	float clearColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	commandList->ClearRenderTargetView(offscreenRTVHandle_, clearColor, 0, nullptr);
-
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	// 뷰포트 / 시저
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
@@ -537,11 +537,9 @@ void DirectXCommon::Cleanup() {
 	fpsLimiter.reset();
 	if (graphicsPipelineState) { graphicsPipelineState.Reset(); }
 	if (rootSignature) { rootSignature.Reset(); }
-	if (rtvHeap) { rtvHeap.Reset(); }
 	if (rtvDescriptorHeap) { rtvDescriptorHeap.Reset(); }
 	if (dsvDescriptorHeap) { dsvDescriptorHeap.Reset(); }
 	if (offscreenRTVHeap_) { offscreenRTVHeap_.Reset(); }
-	if (offscreenSRVHeap_) { offscreenSRVHeap_.Reset(); }
 	if (offscreenRenderTarget_) { offscreenRenderTarget_.Reset(); }
 	if (depthStencilBuffer) { depthStencilBuffer.Reset(); }
 	for (auto& buffer : swapChainResources) {
@@ -636,7 +634,9 @@ void DirectXCommon::InitializeOffscreenRenderTarget() {
 	const Vector4 clearColor = { 1.0f, 0.0f, 0.0f, 1.0f };
 	DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	offscreenRenderTarget_ = CreateRenderTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight, format, clearColor);
+	offscreenRenderTarget_ = CreateRenderTextureResource(
+		device, WinApp::kClientWidth, WinApp::kClientHeight, format, clearColor);
+	offscreenRenderTarget_->SetName(L"OffscreenRenderTarget");
 
 	// RTV Heap 생성 및 RTV
 	offscreenRTVHeap_ = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1, false);
@@ -648,17 +648,16 @@ void DirectXCommon::InitializeOffscreenRenderTarget() {
 
 	device->CreateRenderTargetView(offscreenRenderTarget_.Get(), &rtvDesc, offscreenRTVHandle_);
 
-	// SRV Heap 생성 및 SRV
-	offscreenSRVHeap_ = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, true);
-	offscreenSRVHandle_ = GetGPUDescriptorHandle(offscreenSRVHeap_, descriptorSizeSRV, 0);
+	// 🔽 SRVManager를 통해 SRV 등록
 
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
+	if (!SrvManager::GetInstance()->CanAllocate()) {
+		OutputDebugStringA("ERROR: SRVManager ran out of descriptors!\n");
+		return;
+	}
 
-	device->CreateShaderResourceView(offscreenRenderTarget_.Get(), &srvDesc, offscreenSRVHeap_->GetCPUDescriptorHandleForHeapStart());
+	offscreenSRVIndex_ = SrvManager::GetInstance()->Allocate();
+	SrvManager::GetInstance()->CreatSRVforTexture2D(
+		offscreenSRVIndex_, offscreenRenderTarget_.Get(), format, 1);
 }
 
 void DirectXCommon::InitializeCopyPipeline() {
@@ -729,16 +728,24 @@ void DirectXCommon::CopyRenderTextureToSwapChain() {
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 
+	if (!copyRootSignature_) {
+		OutputDebugStringA("copyRootSignature_ is null\n");
+		return;
+	}
+
 	// 루트시그니처, 파이프라인 설정
 	commandList->SetGraphicsRootSignature(copyRootSignature_.Get());
 	commandList->SetPipelineState(copyPipelineState_.Get());
 
-	// 디스크립터 힙 설정 - SRV 힙만 사용
-	ID3D12DescriptorHeap* ppHeaps[] = { offscreenSRVHeap_.Get() };
-	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+	//// 디스크립터 힙 설정 - SRV 힙만 사용
+	//ID3D12DescriptorHeap* ppHeaps[] = { offscreenSRVHeap_.Get() };
+	//commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-	// SRV 설정
-	commandList->SetGraphicsRootDescriptorTable(0, offscreenSRVHandle_);
+	//// SRV 설정
+	//commandList->SetGraphicsRootDescriptorTable(0, offscreenSRVHandle_);
+
+	SrvManager::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_);
 
 	// 삼각형 1개 (3개 정점)
 	commandList->DrawInstanced(3, 1, 0, 0);

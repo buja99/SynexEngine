@@ -34,7 +34,7 @@ void MyGame::Draw() {
 	srvManager_->PreDraw();
 	sceneManager_->Draw();
 	dxCommon_->RenderTexturePostDraw();
-
+	//dxCommon_->PreDraw();
 	// 2. 스왑체인으로 복사
 	dxCommon_->CopyRenderTextureToSwapChain();
 
