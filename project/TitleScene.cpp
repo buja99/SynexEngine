@@ -223,9 +223,9 @@ void TitleScene::Draw() {
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	//model_->Draw();
-	//testModel_->Draw();
+	testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
-	primitive_->Draw();
+	//primitive_->Draw();
 
 }
 
