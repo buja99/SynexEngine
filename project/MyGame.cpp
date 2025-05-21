@@ -36,8 +36,8 @@ void MyGame::Draw() {
 	dxCommon_->RenderTexturePostDraw();
 	//dxCommon_->PreDraw();
 	// 2. 스왑체인으로 복사
-	dxCommon_->CopyRenderTextureToSwapChain();
-
+	//dxCommon_->CopyRenderTextureToSwapChain();
+	dxCommon_->DrawGrayscaleToSwapChain();
 #ifdef _DEBUG
 	imGuiManager_->Draw();
 #endif // _DEBUG

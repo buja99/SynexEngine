@@ -10,3 +10,7 @@ struct VSOutput
     float2 texcoord : TEXCOORD;
 };
 
+cbuffer GrayscaleSettings : register(b0)
+{
+    float grayscaleStrength; // 0.0 ~ 1.0
+};

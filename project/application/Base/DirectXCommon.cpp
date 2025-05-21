@@ -52,9 +52,8 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissor();
-	//InitializeOffscreenRenderTarget();
 	InitializeCopyPipeline();
-
+	InitializeGrayscalePipeline();
 }
 
 void DirectXCommon::Device() {
@@ -751,6 +750,130 @@ void DirectXCommon::CopyRenderTextureToSwapChain() {
 	commandList->DrawInstanced(3, 1, 0, 0);
 
 	
+}
+
+void DirectXCommon::InitializeGrayscalePipeline() {
+	HRESULT hr;
+
+	// ───────────── DXC 초기화 ─────────────
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	// ───────────── 셰이더 컴파일 ─────────────
+	auto vs = CompileShader(L"Resources/shaders/Grayscale.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"Resources/shaders/Grayscale.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	// ───────────── 루트 시그니처 생성 ─────────────
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0
+
+	CD3DX12_ROOT_PARAMETER params[2];
+	params[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL); // t0 (텍스처)
+	params[1].InitAsConstantBufferView(0); // b0 (강도 조절용 상수 버퍼)
+
+	CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(_countof(params), params, 1, &sampler,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ComPtr<ID3DBlob> sigBlob;
+	ComPtr<ID3DBlob> errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	assert(SUCCEEDED(hr));
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&grayscaleRootSignature_));
+	assert(SUCCEEDED(hr));
+
+	// ───────────── 파이프라인 생성 ─────────────
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = grayscaleRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 }; // SV_VertexID 기반이므로 입력 없음
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&grayscalePipelineState_));
+	assert(SUCCEEDED(hr));
+
+	// ───────────── 상수 버퍼 초기화 ─────────────
+	grayscaleSettings_.strength = 1.0f;
+
+	D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(GrayscaleSettings) + 255) & ~255); // 256바이트 정렬
+
+	hr = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&grayscaleConstBuffer_)
+	);
+	assert(SUCCEEDED(hr));
+	grayscaleConstBuffer_->SetName(L"GrayscaleConstBuffer");
+
+	// 초기값 업로드
+	void* mapped = nullptr;
+	grayscaleConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &grayscaleSettings_, sizeof(GrayscaleSettings));
+	grayscaleConstBuffer_->Unmap(0, nullptr);
+}
+
+void DirectXCommon::DrawGrayscaleToSwapChain() {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// ───────────── 리소스 상태 전환: Present → RenderTarget ─────────────
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// ───────────── 렌더 타겟 설정 ─────────────
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
+	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	// ───────────── 루트 시그니처 / 파이프라인 설정 ─────────────
+	commandList->SetGraphicsRootSignature(grayscaleRootSignature_.Get());
+	commandList->SetPipelineState(grayscalePipelineState_.Get());
+
+	// ───────────── 디스크립터 힙 및 리소스 바인딩 ─────────────
+	SrvManager::GetInstance()->PreDraw(); // 디스크립터 힙 설정
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_); // t0
+
+	// b0 (GrayscaleSettings)
+	commandList->SetGraphicsRootConstantBufferView(1, grayscaleConstBuffer_->GetGPUVirtualAddress());
+
+	// ───────────── Fullscreen Triangle 렌더링 ─────────────
+	commandList->DrawInstanced(3, 1, 0, 0);
+}
+
+void DirectXCommon::SetGrayscaleStrength(float strength) {
+	grayscaleSettings_.strength = strength;
+
+	void* mapped = nullptr;
+	grayscaleConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &grayscaleSettings_, sizeof(GrayscaleSettings));
+	grayscaleConstBuffer_->Unmap(0, nullptr);
 }
 
 

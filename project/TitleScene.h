@@ -51,5 +51,9 @@ private:
 
 	Emitter emitter_{};
 
+	//postEffect
+	bool useGrayscale_ = true;
+	float grayscaleStrength_ = 1.0f;
+
 };
 

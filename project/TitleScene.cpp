@@ -191,11 +191,20 @@ void TitleScene::Update() {
 
 	ImGui::End();
 
-	ImGui::Begin("sprite");
-	//ImGui::DragFloat3();
+	ImGui::Begin("Post Process");
+
+	ImGui::Checkbox("Use Grayscale", &useGrayscale_);
+	ImGui::SliderFloat("Grayscale Strength", &grayscaleStrength_, 0.0f, 1.0f);
+
 	ImGui::End();
 
 #endif
+
+	if (useGrayscale_) {
+		DirectXCommon::GetInstance()->SetGrayscaleStrength(grayscaleStrength_);
+	} else {
+		DirectXCommon::GetInstance()->SetGrayscaleStrength(0.0f); // off
+	}
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
