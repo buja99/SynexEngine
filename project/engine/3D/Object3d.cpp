@@ -55,6 +55,7 @@ void Object3d::Update()
 	worldTransform_->UpdateMatrix();
 
 	// WVP 계산
+	
 	if (camera) {
 		const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 
@@ -200,7 +201,9 @@ ComPtr<ID3D12Resource> Object3d::CreateBufferResource(ComPtr<ID3D12Device> devic
 void Object3d::SetModel(const std::string& filePath)
 {
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
-
+	if (!model_) {
+		OutputDebugStringA(("Model not found: " + filePath + "\n").c_str());
+	}
 }
 
 void Object3d::SetPointLight(const Vector3& position, float intensity, float radius, float decay) {

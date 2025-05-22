@@ -22,8 +22,8 @@ void TitleScene::Initialize() {
 	model_ = std::make_unique<Object3d>();
 	model_->Initialize(Object3dCommon::GetInstance(), worldTransform_.get());
 
-	ModelManager::GetInstance()->LoadModel("resources", "terrain.obj");
-	model_->SetModel("terrain.obj");
+	ModelManager::GetInstance()->LoadModel("resources/test1", "head.obj");
+	model_->SetModel("head.obj");
 
 	testModel_ = std::make_unique<Object3d>();
 	testModel_->Initialize(Object3dCommon::GetInstance(), testWorldTransform_.get());
@@ -31,13 +31,13 @@ void TitleScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("resources/test", "terrain.gltf");
 	testModel_->SetModel("terrain.gltf");
 
-	model_->SetEnableLighting(true);
-	model_->SetIsBlinnPhong(true);          // Phong
-	model_->SetUsePointLight(false);        // Point Light 
-	model_->SetUseDirectionalLight(false);  // Directional Light 
-	model_->SetUseSpotLight(false);	        // Spot Light
-	model_->SetUseAmbientLight(false);      // Ambient Light
-	model_->SetUseAreaLight(true);         
+	//model_->SetEnableLighting(true);
+	//model_->SetIsBlinnPhong(true);          // Phong
+	//model_->SetUsePointLight(false);        // Point Light 
+	//model_->SetUseDirectionalLight(false);  // Directional Light 
+	//model_->SetUseSpotLight(false);	        // Spot Light
+	//model_->SetUseAmbientLight(false);      // Ambient Light
+	//model_->SetUseAreaLight(true);         
 	
 	//testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
 	
@@ -89,18 +89,18 @@ void TitleScene::Update() {
 #ifdef _DEBUG
 	ImGui::Begin("Model Transform");
 
-	Vector3 scale = testModel_->GetScale();
-	Vector3 rotate = testModel_->GetRotate();
-	Vector3 translate = testModel_->GetTranslate();
+	Vector3 scale = model_->GetScale();
+	Vector3 rotate = model_->GetRotate();
+	Vector3 translate = model_->GetTranslate();
 
 	// 슬라이더로 값 수정
 	ImGui::DragFloat3("Scale", &scale.x, 0.1f);
 	ImGui::DragFloat3("Rotate", &rotate.x, 0.1f);
 	ImGui::DragFloat3("Translate", &translate.x, 0.1f);
 
-	testModel_->SetScale(scale);
-	testModel_->SetRotate(rotate);
-	testModel_->SetTranslate(translate);
+	model_->SetScale(scale);
+	model_->SetRotate(rotate);
+	model_->SetTranslate(translate);
 	
 	ImGui::End();
 
@@ -222,7 +222,7 @@ void TitleScene::Draw() {
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	//model_->Draw();
+	model_->Draw();
 	//testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	primitive_->Draw();

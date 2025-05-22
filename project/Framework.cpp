@@ -122,6 +122,8 @@ void Framework::Update() {
 		isEndReqest_ = true;
 	}
 
+	input_->Update();
+
 #ifdef _DEBUG
 
 	imGuiManager_->BeginFrame();
@@ -129,8 +131,6 @@ void Framework::Update() {
 #endif // _DEBUG
 
 	
-
-	input_->Update();
 	
 	sceneManager_->Update();
 

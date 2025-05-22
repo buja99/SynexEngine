@@ -10,7 +10,7 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "Sound.h"
-//#include "WorldTransform.h"
+#include "WorldTransform.h"
 
 class GameScene : public BaseScene {
 public:
@@ -30,10 +30,21 @@ private:
 	Sound* audio_;
 	Input* input_;
 
-	std::unique_ptr<Object3d> model_ = nullptr;
-	//std::unique_ptr<WorldTransform> worldTransform_ = nullptr;
 
+	std::unique_ptr<Camera> camera_ = nullptr;
 
+	//model
+	std::unique_ptr<Object3d> ground_ = nullptr;
+	std::unique_ptr<WorldTransform> groundWorldTransform_ = nullptr;
 
+	//player model
+	static constexpr int kPlayerPartCount = 6; // head, body, armR, armL, legR, legL
+	std::array<std::unique_ptr<Object3d>, kPlayerPartCount> playerParts_;
+	std::array<std::unique_ptr<WorldTransform>, kPlayerPartCount> playerTransforms_;
+
+	enum PlayerPartIndex {
+		ARM_R, ARM_L, LEG_R, LEG_L, BODY, HEAD
+
+	};
 };
 
