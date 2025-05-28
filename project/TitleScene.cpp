@@ -23,7 +23,7 @@ void TitleScene::Initialize() {
 	model_->Initialize(Object3dCommon::GetInstance(), worldTransform_.get());
 
 	ModelManager::GetInstance()->LoadModel("resources/test1", "head.obj");
-	model_->SetModel("head.obj");
+	model_->SetModel("terrain.gltf");
 
 	testModel_ = std::make_unique<Object3d>();
 	testModel_->Initialize(Object3dCommon::GetInstance(), testWorldTransform_.get());
@@ -31,13 +31,13 @@ void TitleScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("resources/test", "terrain.gltf");
 	testModel_->SetModel("terrain.gltf");
 
-	//model_->SetEnableLighting(true);
-	//model_->SetIsBlinnPhong(true);          // Phong
-	//model_->SetUsePointLight(false);        // Point Light 
-	//model_->SetUseDirectionalLight(false);  // Directional Light 
-	//model_->SetUseSpotLight(false);	        // Spot Light
-	//model_->SetUseAmbientLight(false);      // Ambient Light
-	//model_->SetUseAreaLight(true);         
+	testModel_->SetEnableLighting(true);
+	testModel_->SetIsBlinnPhong(true);          // Phong
+	testModel_->SetUsePointLight(false);        // Point Light 
+	testModel_->SetUseDirectionalLight(false);  // Directional Light 
+	testModel_->SetUseSpotLight(false);	        // Spot Light
+	testModel_->SetUseAmbientLight(false);      // Ambient Light
+	testModel_->SetUseAreaLight(true);         
 	
 	//testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
 	
@@ -106,27 +106,27 @@ void TitleScene::Update() {
 
 	ImGui::Begin("Light Settings");
 
-	bool useDir = model_->GetUseDirectionalLight();
-	bool usePoint = model_->GetUsePointLight();
-	bool useSpot = model_->GetUseSpotLight();
-	bool useAmbient = model_->GetUseAmbientLight();
-	bool useArea = model_->GetUseAreaLight();
+	bool useDir = testModel_->GetUseDirectionalLight();
+	bool usePoint = testModel_->GetUsePointLight();
+	bool useSpot = testModel_->GetUseSpotLight();
+	bool useAmbient = testModel_->GetUseAmbientLight();
+	bool useArea = testModel_->GetUseAreaLight();
 
 	// Light ON/OFF
 	if (ImGui::Checkbox("Use Directional Light", &useDir)) {
-		model_->SetUseDirectionalLight(useDir);
+		testModel_->SetUseDirectionalLight(useDir);
 	}
 	if (ImGui::Checkbox("Use Point Light", &usePoint)) {
-		model_->SetUsePointLight(usePoint);
+		testModel_->SetUsePointLight(usePoint);
 	}
 	if (ImGui::Checkbox("Use Spot Light", &useSpot)) {
-		model_->SetUseSpotLight(useSpot);
+		testModel_->SetUseSpotLight(useSpot);
 	}
 	if (ImGui::Checkbox("Use Ambient Light", &useAmbient)) {
-		model_->SetUseAmbientLight(useAmbient);
+		testModel_->SetUseAmbientLight(useAmbient);
 	}
 	if (ImGui::Checkbox("Use Area Light", &useArea)) {
-		model_->SetUseAreaLight(useArea);
+		testModel_->SetUseAreaLight(useArea);
 	}
 
 	// Point Light 상세 조정
@@ -141,7 +141,7 @@ void TitleScene::Update() {
 		ImGui::DragFloat("Intensity##Point", &intensity, 0.1f);
 		ImGui::DragFloat("Radius##Point", &radius, 0.1f);
 		ImGui::DragFloat("Decay##Point", &decay, 0.1f);
-		model_->SetPointLight(position, intensity, radius, decay);
+		testModel_->SetPointLight(position, intensity, radius, decay);
 	}
 
 	// Spot Light 상세 조정
@@ -162,7 +162,7 @@ void TitleScene::Update() {
 		ImGui::DragFloat("OuterCutoff##Spot", &outerCutoff, 1.0f, 0.0f, 90.0f);
 		ImGui::DragFloat("Decay##Spot", &decay, 0.1f);
 		ImGui::DragFloat("Radius##Spot", &radius, 0.1f);
-		model_->SetSpotLight(position, direction, intensity,
+		testModel_->SetSpotLight(position, direction, intensity,
 			cosf(MyMath::ToRadian(cutoff)),
 			cosf(MyMath::ToRadian(outerCutoff)),
 			decay, radius);
@@ -186,7 +186,7 @@ void TitleScene::Update() {
 		ImGui::DragFloat("Half Height##Area", &halfHeight, 0.1f);
 		ImGui::ColorEdit4("Color##Area", &color.x);
 		ImGui::DragFloat("Intensity##Area", &intensity, 0.1f);
-		model_->SetAreaLight(position, right, halfWidth, up, halfHeight, color, intensity);
+		testModel_->SetAreaLight(position, right, halfWidth, up, halfHeight, color, intensity);
 	}
 
 	ImGui::End();
@@ -223,7 +223,7 @@ void TitleScene::Draw() {
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	model_->Draw();
-	//testModel_->Draw();
+	testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	primitive_->Draw();
 
