@@ -94,7 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
