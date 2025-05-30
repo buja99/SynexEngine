@@ -12,16 +12,17 @@ void ParticleScene::Initialize() {
 
 	TextureManager::GetInstance()->LoadTexture("resources/part.png");
 	TextureManager::GetInstance()->LoadTexture("resources/back.png");
+	TextureManager::GetInstance()->LoadTexture("resources/back1.png");
 
 	background = std::make_unique<Sprite>();
-	background->Initialize(SpriteCommon::GetInstance(), "resources/back.png");
+	background->Initialize(SpriteCommon::GetInstance(), "resources/back1.png");
 	background->SetPosition({ 0.0f, 0.0f });
 
 
 	camera_ = std::make_unique<Camera>();
 	camera_->SetEye({ 0.0f, 4.0f, -10.0f });
 	camera_->SetTarget({ 0.0f, 0.0f, 0.0f });
-	camera_->SetTranslate({ 0.0f, 2.7f, -10.0f });
+	camera_->SetTranslate({ -11.3f, -9.4f, -10.0f });
 
 	TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
@@ -71,7 +72,7 @@ void ParticleScene::Draw() {
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	
 	//primitive_->Draw();
-	//meteor_->Draw();
+	meteor_->Draw();
 }
 
 void ParticleScene::Finalize() {
