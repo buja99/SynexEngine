@@ -7,7 +7,7 @@
 #include <dxgidebug.h>
 #include <iostream>
 #include <d3dx12.h>
-
+#include "SrvManager.h"
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -23,13 +23,11 @@ DirectXCommon* DirectXCommon::GetInstance() {
 	return &instance;
 }
 
-DirectXCommon::~DirectXCommon()
-{
+DirectXCommon::~DirectXCommon() {
 	//delete winApp;
 }
 
-void DirectXCommon::Initialize(WinApp* winApp)
-{
+void DirectXCommon::Initialize(WinApp* winApp) {
 
 	if (this == nullptr) {
 		OutputDebugStringA("DirectXCommon::Initialize: this pointer is null\n");
@@ -48,27 +46,25 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	Command();
 	SwapChain();
 	CreateDescriptorHeaps();
-	CreateDepthBuffer();
+	//CreateDepthBuffer();
 	InitializeRTV();
 	InitializeDSV();
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissor();
-	//InitializeOffscreenRenderTarget();
-
-
+	InitializeCopyPipeline();
+	InitializeGrayscalePipeline();
 }
 
-void DirectXCommon::Device()
-{
+void DirectXCommon::Device() {
 	HRESULT hr;
 
 #ifdef _DEBUG
 	ID3D12Debug1* debugController = nullptr;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
-		
+
 		debugController->EnableDebugLayer();
-		
+
 		debugController->SetEnableGPUBasedValidation(TRUE);
 	}
 #endif // _DEBUG
@@ -161,8 +157,7 @@ void DirectXCommon::Device()
 
 }
 
-void DirectXCommon::Command()
-{
+void DirectXCommon::Command() {
 	HRESULT hr;
 
 
@@ -175,9 +170,9 @@ void DirectXCommon::Command()
 	assert(SUCCEEDED(hr));
 
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
-	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;   
+	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-	commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;  
+	commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	commandQueueDesc.NodeMask = 0;
 	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
 	if (FAILED(hr)) {
@@ -189,10 +184,9 @@ void DirectXCommon::Command()
 	//assert(SUCCEEDED(hr));
 }
 
-void DirectXCommon::SwapChain()
-{
+void DirectXCommon::SwapChain() {
 	HRESULT hr;
-	
+
 	//DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = WinApp::kClientWidth;
 	swapChainDesc.Height = WinApp::kClientHeight;
@@ -214,8 +208,7 @@ void DirectXCommon::SwapChain()
 
 }
 
-void DirectXCommon::CreateDepthBuffer()
-{
+void DirectXCommon::CreateDepthBuffer() {
 	depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -226,8 +219,7 @@ void DirectXCommon::CreateDepthBuffer()
 	device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
-void DirectXCommon::CreateDescriptorHeaps()
-{
+void DirectXCommon::CreateDescriptorHeaps() {
 	descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -241,8 +233,7 @@ void DirectXCommon::CreateDescriptorHeaps()
 
 
 
-ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(ComPtr<ID3D12Device> device, int32_t width, int32_t height)
-{
+ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = width;
 	resourceDesc.Height = height;
@@ -276,8 +267,7 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(ComPtr<I
 	return resource;
 }
 
-ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(ComPtr<ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
-{
+ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(ComPtr<ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 	ComPtr <ID3D12DescriptorHeap> descriptorHeap = nullptr;
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
 	descriptorHeapDesc.Type = heapType;
@@ -288,8 +278,7 @@ ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(ComPtr<ID3D12De
 	return descriptorHeap;
 }
 
-void DirectXCommon::InitializeRTV()
-{
+void DirectXCommon::InitializeRTV() {
 	HRESULT hr;
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
@@ -304,9 +293,9 @@ void DirectXCommon::InitializeRTV()
 	}
 }
 
-void DirectXCommon::InitializeDSV()
-{
+void DirectXCommon::InitializeDSV() {
 	depthStencilBuffer = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
@@ -328,8 +317,7 @@ void DirectXCommon::InitializeDSV()
 }
 
 
-void DirectXCommon::InitializeFence()
-{
+void DirectXCommon::InitializeFence() {
 	HRESULT hr;
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
@@ -337,9 +325,8 @@ void DirectXCommon::InitializeFence()
 	assert(fenceEvent != nullptr);
 }
 
-void DirectXCommon::InitializeViewport()
-{
-	
+void DirectXCommon::InitializeViewport() {
+
 	viewport.Width = WinApp::kClientWidth;
 	viewport.Height = WinApp::kClientHeight;
 	viewport.TopLeftX = 0;
@@ -349,8 +336,7 @@ void DirectXCommon::InitializeViewport()
 
 }
 
-void DirectXCommon::InitializeScissor()
-{
+void DirectXCommon::InitializeScissor() {
 	scissorRect.left = 0;
 	scissorRect.right = WinApp::kClientWidth;
 	scissorRect.top = 0;
@@ -358,15 +344,46 @@ void DirectXCommon::InitializeScissor()
 }
 
 
+void DirectXCommon::RenderTexturePreDraw() {
+	// 리소스 상태: COMMON → RENDER_TARGET
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = offscreenRenderTarget_.Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	// RTV만 설정 (Depth는 사용 안 함)
+	commandList->OMSetRenderTargets(1, &offscreenRTVHandle_, FALSE, &dsvHandle);
 
+	// Clear
+	float clearColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	commandList->ClearRenderTargetView(offscreenRTVHandle_, clearColor, 0, nullptr);
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	// 뷰포트 / 시저
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+}
 
+void DirectXCommon::RenderTexturePostDraw() {
+	// 리소스 상태: RENDER_TARGET → PIXEL_SHADER_RESOURCE
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = offscreenRenderTarget_.Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+}
 
-void DirectXCommon::PreDraw()
-{
+void DirectXCommon::PreDraw() {
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	if (swapChainResources[backBufferIndex] == nullptr) {
-		OutputDebugStringA("Error: swapChainResources[backBufferIndex] is NULL in PreDraw.\n");
+		OutputDebugStringA("Error: swapChainResources[backBufferIndex] is NULL in PreDrawToSwapChain.\n");
 		return;
 	}
 
@@ -381,7 +398,7 @@ void DirectXCommon::PreDraw()
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	if (barrier.Transition.pResource == nullptr) {
-		OutputDebugStringA("Error: pResource is NULL in PreDraw.\n");
+		OutputDebugStringA("Error: pResource is NULL in PreDrawToSwapChain.\n");
 		return;
 	}
 
@@ -390,7 +407,7 @@ void DirectXCommon::PreDraw()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	if (dsvHandle.ptr == 0) {
-		OutputDebugStringA("Error: dsvHandle is invalid in PreDraw.\n");
+		OutputDebugStringA("Error: dsvHandle is invalid in PreDrawToSwapChain.\n");
 		return;
 	}
 
@@ -405,9 +422,8 @@ void DirectXCommon::PreDraw()
 
 }
 
-void DirectXCommon::PostDraw()
-{
-	
+void DirectXCommon::PostDraw() {
+
 
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -448,8 +464,7 @@ void DirectXCommon::PostDraw()
 	hr = commandQueue->Signal(fence.Get(), fenceValue);
 	assert(SUCCEEDED(hr));
 
-	if (fence->GetCompletedValue() < fenceValue)
-	{
+	if (fence->GetCompletedValue() < fenceValue) {
 		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent.get());
 		assert(SUCCEEDED(hr));
 		WaitForSingleObject(fenceEvent.get(), INFINITE);
@@ -461,16 +476,10 @@ void DirectXCommon::PostDraw()
 	assert(SUCCEEDED(hr));
 
 
-	if (commandQueue == nullptr) {
-		OutputDebugStringA("Error: commandQueue is nullptr in PostDraw.\n");
-		return;  // 이 부분으로 인해 nullptr 접근 방지
-	}
-
 }
 
 
-IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
-{
+IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler) {
 	//hlsl
 	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
 
@@ -522,16 +531,16 @@ IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar
 }
 
 
-void DirectXCommon::Cleanup()
-{
+void DirectXCommon::Cleanup() {
 
 	fpsLimiter.reset();
 	if (graphicsPipelineState) { graphicsPipelineState.Reset(); }
 	if (rootSignature) { rootSignature.Reset(); }
-	if (rtvHeap) { rtvHeap.Reset(); }
 	if (rtvDescriptorHeap) { rtvDescriptorHeap.Reset(); }
 	if (dsvDescriptorHeap) { dsvDescriptorHeap.Reset(); }
-	if (depthStencilBuffer){ depthStencilBuffer.Reset(); }
+	if (offscreenRTVHeap_) { offscreenRTVHeap_.Reset(); }
+	if (offscreenRenderTarget_) { offscreenRenderTarget_.Reset(); }
+	if (depthStencilBuffer) { depthStencilBuffer.Reset(); }
 	for (auto& buffer : swapChainResources) {
 		buffer.Reset();
 	}
@@ -540,18 +549,16 @@ void DirectXCommon::Cleanup()
 	if (commandAllocator) { commandAllocator.Reset(); }
 	if (commandQueue) { commandQueue.Reset(); }
 	if (fence) { fence.Reset(); }
-	//ReportLiveObjects();  // Live Objects 확인
+
 	device.Reset();
 
 	OutputDebugStringA("DirectXCommon: Finalized, all resources released\n");
 }
 
-void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)
-{
+void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages) {
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	//全MipMap
-	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel)
-	{
+	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
 		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
 
 		HRESULT hr = texture.Get()->WriteToSubresource(
@@ -565,15 +572,13 @@ void DirectXCommon::UploadTextureDate(ComPtr<ID3D12Resource>& texture, const Dir
 	}
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
@@ -615,34 +620,22 @@ ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResource(ComPtr<ID3D12D
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_COMMON,  // 초기 상태를 COMMON으로 설정
 		&clearValue,
 		IID_PPV_ARGS(&resource));
 	assert(SUCCEEDED(hr));
 
 	return resource;
-	
 }
 
 void DirectXCommon::InitializeOffscreenRenderTarget() {
-
-	/*const Vector4 kRenderTargetClearValue{ 1.0f,0.0f,0.0f,1.0f };
-	auto renderTextureResource = CreateRenderTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTargetClearValue);
-	device->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, );
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC renderTextureSrvDesc{};
-	renderTextureSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	renderTextureSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	renderTextureSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	renderTextureSrvDesc.Texture2D.MostDetailedMip = 1;
-
-	device->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, );*/
-
-
-	const Vector4 clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+	
+	const Vector4 clearColor = { 1.0f, 0.0f, 0.0f, 1.0f };
 	DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	offscreenRenderTarget_ = CreateRenderTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight, format, clearColor);
+	offscreenRenderTarget_ = CreateRenderTextureResource(
+		device, WinApp::kClientWidth, WinApp::kClientHeight, format, clearColor);
+	offscreenRenderTarget_->SetName(L"OffscreenRenderTarget");
 
 	// RTV Heap 생성 및 RTV
 	offscreenRTVHeap_ = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1, false);
@@ -654,18 +647,233 @@ void DirectXCommon::InitializeOffscreenRenderTarget() {
 
 	device->CreateRenderTargetView(offscreenRenderTarget_.Get(), &rtvDesc, offscreenRTVHandle_);
 
-	// SRV Heap 생성 및 SRV
-	offscreenSRVHeap_ = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, true);
-	offscreenSRVHandle_ = GetGPUDescriptorHandle(offscreenSRVHeap_, descriptorSizeSRV, 0);
+	// 🔽 SRVManager를 통해 SRV 등록
 
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
+	if (!SrvManager::GetInstance()->CanAllocate()) {
+		OutputDebugStringA("ERROR: SRVManager ran out of descriptors!\n");
+		return;
+	}
 
-	device->CreateShaderResourceView(offscreenRenderTarget_.Get(), &srvDesc, offscreenSRVHeap_->GetCPUDescriptorHandleForHeapStart());
+	offscreenSRVIndex_ = SrvManager::GetInstance()->Allocate();
+	SrvManager::GetInstance()->CreatSRVforTexture2D(
+		offscreenSRVIndex_, offscreenRenderTarget_.Get(), format, 1);
+}
 
+void DirectXCommon::InitializeCopyPipeline() {
+	HRESULT hr;
+
+	// 셰이더 컴파일
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	auto vs = CompileShader(L"Resources/shaders/CopyImage.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"Resources/shaders/CopyImage.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	// 루트 시그니처 생성 (t0 : SRV, s0 : Sampler)
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	CD3DX12_ROOT_PARAMETER param;
+	param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL);
+
+	CD3DX12_STATIC_SAMPLER_DESC sampler(0);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(1, &param, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ComPtr<ID3DBlob> sigBlob;
+	ComPtr<ID3DBlob> errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&copyRootSignature_));
+
+	// PSO 생성
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = copyRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 }; // 입력 레이아웃 없음
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyPipelineState_));
+}
+
+void DirectXCommon::CopyRenderTextureToSwapChain() {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// 리소스 상태 전환: SWAPCHAIN의 Present → RenderTarget
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// RTV 설정
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], FALSE, nullptr);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	if (!copyRootSignature_) {
+		OutputDebugStringA("copyRootSignature_ is null\n");
+		return;
+	}
+
+	// 루트시그니처, 파이프라인 설정
+	commandList->SetGraphicsRootSignature(copyRootSignature_.Get());
+	commandList->SetPipelineState(copyPipelineState_.Get());
+
+	//// 디스크립터 힙 설정 - SRV 힙만 사용
+	//ID3D12DescriptorHeap* ppHeaps[] = { offscreenSRVHeap_.Get() };
+	//commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+	//// SRV 설정
+	//commandList->SetGraphicsRootDescriptorTable(0, offscreenSRVHandle_);
+
+	SrvManager::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_);
+
+	// 삼각형 1개 (3개 정점)
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	
+}
+
+void DirectXCommon::InitializeGrayscalePipeline() {
+	HRESULT hr;
+
+	// ───────────── DXC 초기화 ─────────────
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	// ───────────── 셰이더 컴파일 ─────────────
+	auto vs = CompileShader(L"Resources/shaders/Grayscale.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"Resources/shaders/Grayscale.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	// ───────────── 루트 시그니처 생성 ─────────────
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0
+
+	CD3DX12_ROOT_PARAMETER params[2];
+	params[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL); // t0 (텍스처)
+	params[1].InitAsConstantBufferView(0); // b0 (강도 조절용 상수 버퍼)
+
+	CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(_countof(params), params, 1, &sampler,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ComPtr<ID3DBlob> sigBlob;
+	ComPtr<ID3DBlob> errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	assert(SUCCEEDED(hr));
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&grayscaleRootSignature_));
+	assert(SUCCEEDED(hr));
+
+	// ───────────── 파이프라인 생성 ─────────────
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = grayscaleRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 }; // SV_VertexID 기반이므로 입력 없음
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&grayscalePipelineState_));
+	assert(SUCCEEDED(hr));
+
+	// ───────────── 상수 버퍼 초기화 ─────────────
+	grayscaleSettings_.strength = 1.0f;
+
+	D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(GrayscaleSettings) + 255) & ~255); // 256바이트 정렬
+
+	hr = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&grayscaleConstBuffer_)
+	);
+	assert(SUCCEEDED(hr));
+	grayscaleConstBuffer_->SetName(L"GrayscaleConstBuffer");
+
+	// 초기값 업로드
+	void* mapped = nullptr;
+	grayscaleConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &grayscaleSettings_, sizeof(GrayscaleSettings));
+	grayscaleConstBuffer_->Unmap(0, nullptr);
+}
+
+void DirectXCommon::DrawGrayscaleToSwapChain() {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// ───────────── 리소스 상태 전환: Present → RenderTarget ─────────────
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// ───────────── 렌더 타겟 설정 ─────────────
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
+	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	// ───────────── 루트 시그니처 / 파이프라인 설정 ─────────────
+	commandList->SetGraphicsRootSignature(grayscaleRootSignature_.Get());
+	commandList->SetPipelineState(grayscalePipelineState_.Get());
+
+	// ───────────── 디스크립터 힙 및 리소스 바인딩 ─────────────
+	SrvManager::GetInstance()->PreDraw(); // 디스크립터 힙 설정
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_); // t0
+
+	// b0 (GrayscaleSettings)
+	commandList->SetGraphicsRootConstantBufferView(1, grayscaleConstBuffer_->GetGPUVirtualAddress());
+
+	// ───────────── Fullscreen Triangle 렌더링 ─────────────
+	commandList->DrawInstanced(3, 1, 0, 0);
+}
+
+void DirectXCommon::SetGrayscaleStrength(float strength) {
+	grayscaleSettings_.strength = strength;
+
+	void* mapped = nullptr;
+	grayscaleConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &grayscaleSettings_, sizeof(GrayscaleSettings));
+	grayscaleConstBuffer_->Unmap(0, nullptr);
 }
 
 

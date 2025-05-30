@@ -5,7 +5,8 @@ const uint32_t SrvManager::kMaxSRVCount = 512;
 
 void SrvManager::Initialize(DirectXCommon* dxCommon)
 {
-	this->directXCommon = dxCommon;
+	OutputDebugStringA("SrvManager::Initialize() called\n");
+	directXCommon = dxCommon;
 
 	if (!directXCommon) {
 		OutputDebugStringA("ERROR: SrvManager::Initialize() - directXCommon is null!\n");
