@@ -8,7 +8,9 @@ std::unique_ptr<BaseScene> SceneFactory::CreateScene(const std::string& sceneNam
     } else if (sceneName == "GAME") {
         newScene = std::make_unique<GameScene>();
     }
-
+    else if (sceneName == "PARTICLE") {
+        newScene = std::make_unique<ParticleScene>();
+    }
 
 
     return newScene;

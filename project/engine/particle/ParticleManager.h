@@ -25,6 +25,7 @@ struct Particle //파티클 1개의 상태 (위치, 속도, 색상, 생존시간
 {         
     Transform transform;
     Vector3 velocity;
+    Vector3 acceleration;
     Vector4 color;
     float lifeTime;
     float currentTime;
@@ -35,6 +36,7 @@ struct  ParticleForGPU    //GPU에 넘길 인스턴싱용 데이터 (WVP, 색상
     Matrix4x4 WVP;
     Matrix4x4 World;
     Vector4 color;
+    
 };
 struct Emitter          //파티클을 방출하는 발사기(Emitter) 상태 (위치, 속도, 색상, 생존시간 등)
 {
@@ -51,9 +53,9 @@ struct ParticleGroup {         //파티클들의 묶음. 텍스처별로 나눔
     ComPtr<ID3D12Resource> instanceBuffer; // 인스턴스 데이터 리소스(Instance data resource)
     int instanceCount;                     // 인스턴스 개수(Number of instances)
     ParticleForGPU* mappedInstanceData;    // GPU 메모리에 매핑된 데이터 포인터(Data pointer mapped to GPU memory)
+	Emitter emitter;                       // 발사기(Emitter) 상태
 };
 
-const int32_t initialInstanceCount = 100;
 
 class ParticleManager {
 public:
@@ -67,9 +69,17 @@ public:
 
     void CreateParticleGroup(const std::string& name, const std::string& textureFilePath);
 
+    void SetInitialInstanceCount(uint32_t count) { initialInstanceCount_ = count; }
    
     void SetCamera(Camera* camera) { camera_ = camera; }
     
+    void SetUseBillboard(bool use) { useBillboard_ = use; }
+    bool GetUseBillboard() const { return useBillboard_; }
+
+    void SetEmitterPosition(const std::string& name, const Vector3& pos);
+        
+    void SetEmitterFrequency(const std::string& name, float freq);
+    void SetEmitterCount(const std::string& name, uint32_t count);
 
 private:
     
@@ -100,5 +110,13 @@ private:
    
     const uint32_t kNumMaxInstance = 100;
     Matrix4x4 billboardMatrix;
+
+    bool useBillboard_ = true;
+
+    const int32_t initialInstanceCount = 100;
+	uint32_t initialInstanceCount_ = 50; 
+
+    std::mt19937 randomEngine_;
+
 };
 
