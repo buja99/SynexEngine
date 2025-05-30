@@ -49,7 +49,7 @@ private:
 	std::unique_ptr<ParticleManager> primitive_;
 	std::mt19937 randomEngine_;
 
-	Emitter emitter_{};
+	
 
 };
 

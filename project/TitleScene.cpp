@@ -70,9 +70,11 @@ void TitleScene::Initialize() {
 	primitive_->CreateParticleGroup("star", "resources/gradationLine.png");
 
 	
-	emitter_.count = 1;
-	emitter_.frequency = 0.7f;
-	emitter_.frequencyTime = 0.0f;
+	primitive_->SetEmitterCount("star", 1);
+	primitive_->SetEmitterFrequency("star", 0.7f);
+	primitive_->SetEmitterPosition("star", { 0.0f, 0.0f, 0.0f });
+
+	primitive_->SetUseBillboard(false);
 
 }
 
@@ -203,13 +205,6 @@ void TitleScene::Update() {
 		return;
 	}
 	
-
-	emitter_.frequencyTime += 1.0f / 60.0f;
-
-	if (emitter_.frequencyTime >= emitter_.frequency) {
-		emitter_.frequencyTime = 0.0f;
-		primitive_->Emit("star", emitter_, randomEngine_);
-	}
 
 	primitive_->Update();
 
