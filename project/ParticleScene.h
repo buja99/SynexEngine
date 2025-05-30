@@ -43,6 +43,7 @@ private:
 
 	std::unique_ptr<ParticleManager> meteor_;
 
+	bool useGrayscale_ = true;
 
 };
 

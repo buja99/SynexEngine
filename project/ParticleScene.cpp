@@ -51,6 +51,11 @@ void ParticleScene::Initialize() {
 void ParticleScene::Update() {
 
 	//camera_->UpdateMatrix();
+
+	if (input_->TriggerKey(DIK_RETURN)) {
+		useGrayscale_ = !useGrayscale_;
+	}
+
 	camera_->Update();
 
 	background->Update();
