@@ -88,16 +88,23 @@ void ParticleManager::Update() {
 				worldMatrix.m[3][1] = p.transform.translate.y;
 				worldMatrix.m[3][2] = p.transform.translate.z;
 
+				float t = p.currentTime / p.lifeTime;
+				float alpha = 1.0f - t * t;
+
+				/*float scaleAlpha = alpha;
+				p.transform.scale.y *= scaleAlpha;*/
+
 				// WVP 계산 및 전송
 				Matrix4x4 wvp = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 				group.mappedInstanceData[i].WVP = wvp;
 				group.mappedInstanceData[i].World = worldMatrix;
 
 				// 색상 및 알파
-				float alpha = 1.0f - (p.currentTime / p.lifeTime);
-				float flicker = 0.5f + 0.5f * std::sin(p.currentTime * 10.0f);
+				//float alpha = 1.0f - (p.currentTime / p.lifeTime);
+				float flicker = 0.9f + 0.2f * std::sin(p.currentTime * 20.0f);
 				group.mappedInstanceData[i].color = p.color;
-				group.mappedInstanceData[i].color.w *= flicker;
+				group.mappedInstanceData[i].color.w *= alpha * flicker;
+				
 			}
 
 			++i;
@@ -161,38 +168,97 @@ Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vect
 {
 	Particle particle;
 
-	// 랜덤한 반경과 각도 생성
-	std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
-	std::uniform_real_distribution<float> distRadius(1.0f, 3.0f);
-	std::uniform_real_distribution<float> distY(-0.2f, 0.2f);
-	std::uniform_real_distribution<float> distLife(2.0f, 5.0f);
-	std::uniform_real_distribution<float> distAlpha(0.2f, 0.8f);
+	//// 랜덤한 반경과 각도 생성
+	//std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
+	//std::uniform_real_distribution<float> distRadius(1.0f, 3.0f);
+	//std::uniform_real_distribution<float> distY(-0.2f, 0.2f);
+	//std::uniform_real_distribution<float> distLife(2.0f, 5.0f);
+	//std::uniform_real_distribution<float> distAlpha(0.2f, 0.8f);
 
-	float angle = distAngle(randomEngine);
-	float radius = distRadius(randomEngine);
-	std::uniform_real_distribution<float> distZ(-0.5f, 0.5f);
-	// 나선형 위치
-	particle.transform.translate.x = std::cos(angle) * radius + translate.x;
-	particle.transform.translate.y = distY(randomEngine) + translate.y;
-	particle.transform.translate.z = std::sin(angle) * radius + translate.z;
+	//float angle = distAngle(randomEngine);
+	//float radius = distRadius(randomEngine);
+	//std::uniform_real_distribution<float> distZ(-0.5f, 0.5f);
+	//// 나선형 위치
+	//particle.transform.translate.x = std::cos(angle) * radius + translate.x;
+	//particle.transform.translate.y = distY(randomEngine) + translate.y;
+	//particle.transform.translate.z = std::sin(angle) * radius + translate.z;
 
-	// 자전처럼 회전하는 속도 (작게)
-	float angularSpeed = 0.02f;
-	particle.velocity.x = -std::sin(angle) * angularSpeed;
-	particle.velocity.z = std::cos(angle) * angularSpeed;
-	particle.velocity.y = 0.0f;
+	//// 자전처럼 회전하는 속도 (작게)
+	//float angularSpeed = 0.02f;
+	//particle.velocity.x = -std::sin(angle) * angularSpeed;
+	//particle.velocity.z = std::cos(angle) * angularSpeed;
+	//particle.velocity.y = 0.0f;
 
-	//particle.acceleration = { 0.0f, 0.0f, 0.0f };
+	////particle.acceleration = { 0.0f, 0.0f, 0.0f };
 
-	// 색상: 은은한 흰빛/푸른빛
-	particle.color = { 0.8f, 0.9f, 1.0f, 1.0f };
+	//// 색상: 은은한 흰빛/푸른빛
+	//particle.color = { 0.8f, 0.9f, 1.0f, 1.0f };
+
+	//particle.lifeTime = distLife(randomEngine);
+	//particle.currentTime = 0.0f;
+
+	//particle.transform.scale = { 0.1f, 0.1f, 0.1f };
+
+	//return particle;
+
+
+	
+	
+
+	std::uniform_real_distribution<float> distX(-30.0f, 30.0f);
+	std::uniform_real_distribution<float> distZ(-10.0f, 10.0f);
+	std::uniform_real_distribution<float> distLife(1.4f, 2.2f);
+
+	// 생성 위치 (높은 위치에서 넓게 퍼지게)
+	particle.transform.translate = {
+		translate.x + distX(randomEngine),
+		translate.y + 8.0f,
+		translate.z 
+	};
+
+	// 속도: 오른쪽에서 왼쪽으로 (기울기 반대)
+	float speed = 0.5f;
+	particle.velocity = {
+		-speed * 0.5f,   // → 왼쪽에서 오른쪽이 아니라 ← 오른쪽에서 왼쪽
+		-speed,
+		speed * 0.3f
+	};
+
+	// 크기: 유성 궤적처럼 길쭉하게
+	particle.transform.scale = { 0.03f, 2.5f, 0.03f };
+
+	// 회전: 반대 방향 기울이기
+	particle.transform.rotate = {
+		0.0f,
+		0.0f,
+		-45.0f * (std::numbers::pi_v<float> / 180.0f)  // 오른쪽에서 왼쪽으로 기울기
+	};
+
+	std::uniform_real_distribution<float> colorPick(0.0f, 1.0f);
+	float colorType = colorPick(randomEngine);
+
+	if (colorType < 0.33f) {
+		// 하얀 유성
+		particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	} else if (colorType < 0.66f) {
+		// 푸른빛 유성
+		particle.color = { 0.6f, 0.7f, 1.0f, 1.0f };
+	} else {
+		// 에메랄드빛 유성
+		particle.color = { 0.5f, 1.0f, 0.9f, 0.9f };
+	}
 
 	particle.lifeTime = distLife(randomEngine);
 	particle.currentTime = 0.0f;
-
-	particle.transform.scale = { 0.1f, 0.1f, 0.1f };
+	particle.acceleration = { 0.0f, 0.0f, 0.0f };
 
 	return particle;
+
+
+
+
+
+
 }
 
 std::list<Particle> ParticleManager::Emit(const std::string& groupName, const Emitter& emitter, std::mt19937& randomEngine) {

@@ -41,7 +41,7 @@ private:
 
 	std::unique_ptr<Sprite> background= nullptr;
 
-
+	std::unique_ptr<ParticleManager> meteor_;
 
 
 };

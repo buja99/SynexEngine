@@ -11,9 +11,10 @@ void ParticleScene::Initialize() {
 	camera_ = std::make_unique<Camera>();
 
 	TextureManager::GetInstance()->LoadTexture("resources/part.png");
+	TextureManager::GetInstance()->LoadTexture("resources/back.png");
 
 	background = std::make_unique<Sprite>();
-	background->Initialize(SpriteCommon::GetInstance(), "resources/part.png");
+	background->Initialize(SpriteCommon::GetInstance(), "resources/back.png");
 	background->SetPosition({ 0.0f, 0.0f });
 
 
@@ -30,23 +31,32 @@ void ParticleScene::Initialize() {
 	primitive_->SetCamera(camera_.get());
 	primitive_->CreateParticleGroup("milkyway", "resources/circle.png");
 
-	primitive_->SetEmitterCount("milkyway", 10);
-	primitive_->SetEmitterFrequency("milkyway", 0.05f);
+	primitive_->SetEmitterCount("milkyway", 1);
+	primitive_->SetEmitterFrequency("milkyway", 0.15f);
 	primitive_->SetEmitterPosition("milkyway", { 0.0f, 0.0f, 0.0f });
 	primitive_->SetUseBillboard(true);
 
+	meteor_ = std::make_unique<ParticleManager>();
+	meteor_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
+	meteor_->SetCamera(camera_.get());
+	meteor_->CreateParticleGroup("meteor", "resources/circle.png");
+
+	meteor_->SetEmitterCount("meteor", 7);          
+	meteor_->SetEmitterFrequency("meteor", 0.07f);  
+	meteor_->SetEmitterPosition("meteor", { 0.0f, 10.0f, 0.0f });
+	meteor_->SetUseBillboard(false);
 }
 
 void ParticleScene::Update() {
 
-	camera_->UpdateMatrix();
+	//camera_->UpdateMatrix();
 	camera_->Update();
 
 	background->Update();
 
 	primitive_->Update();
 
-
+	meteor_->Update();
 }
 
 void ParticleScene::Draw() {
@@ -59,7 +69,9 @@ void ParticleScene::Draw() {
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
-	primitive_->Draw();
+	
+	//primitive_->Draw();
+	//meteor_->Draw();
 }
 
 void ParticleScene::Finalize() {

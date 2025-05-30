@@ -114,7 +114,7 @@ private:
     bool useBillboard_ = true;
 
     const int32_t initialInstanceCount = 100;
-	uint32_t initialInstanceCount_ = 50; 
+	uint32_t initialInstanceCount_ = 100; 
 
     std::mt19937 randomEngine_;
 
