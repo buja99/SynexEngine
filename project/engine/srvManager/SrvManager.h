@@ -38,8 +38,8 @@ private:
 	SrvManager(const SrvManager&) = delete;            
 	SrvManager& operator=(const SrvManager&) = delete; 
 
-	DirectXCommon* directXCommon = nullptr;
-
+	DirectXCommon* directXCommon = DirectXCommon::GetInstance();
+	
 	static const uint32_t kMaxSRVCount;
 	uint32_t descriptorSize;
 	ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;

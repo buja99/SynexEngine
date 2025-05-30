@@ -172,6 +172,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Math\Matrix3x3.h" />
     <ClInclude Include="engine\Math\Matrix4x4.h" />
     <ClInclude Include="engine\Math\MyMath.h" />
+    <ClInclude Include="engine\Math\PostEffect.h" />
     <ClInclude Include="engine\Math\Transform.h" />
     <ClInclude Include="engine\Math\Vector2.h" />
     <ClInclude Include="engine\Math\Vector3.h" />

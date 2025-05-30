@@ -266,6 +266,9 @@
     <ClInclude Include="SpriteCamera.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\Math\PostEffect.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="ParticleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

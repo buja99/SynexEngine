@@ -25,13 +25,15 @@ void Framework::Initialize() {
 	input_->Initialize(winApp_.get());
 
 	srvManager_ = SrvManager::GetInstance();
-
+	
 	if (!srvManager_) {
 		OutputDebugStringA("ERROR: Framework::Initialize() - Failed to create SrvManager!\n");
 		return;
 	}
 
 	srvManager_->Initialize(dxCommon_);
+
+	dxCommon_->InitializeOffscreenRenderTarget();
 
 #ifdef _DEBUG
 
