@@ -23,7 +23,8 @@ void TitleScene::Initialize() {
 	model_->Initialize(Object3dCommon::GetInstance(), worldTransform_.get());
 
 	ModelManager::GetInstance()->LoadModel("resources/test1", "head.obj");
-	model_->SetModel("terrain.gltf");
+	ModelManager::GetInstance()->LoadModel("resources/obj/tree", "tree.obj");
+	model_->SetModel("tree.obj");
 
 	testModel_ = std::make_unique<Object3d>();
 	testModel_->Initialize(Object3dCommon::GetInstance(), testWorldTransform_.get());

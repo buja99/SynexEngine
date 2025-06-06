@@ -27,7 +27,7 @@ public:
 
 	const Vector3& GetPosition() const { return position; }
 
-	Camera* GetCamera() const { return camera_.get(); }
+	void SetCamera(Camera* camera) { camera_ = camera; }
 
 private:
 
@@ -35,7 +35,7 @@ private:
 	
 	float speed = 1.0f;
 
-	std::unique_ptr<Camera> camera_ = nullptr;
+	Camera* camera_ = nullptr;
 
 	//player model
 	static constexpr int kPlayerPartCount = 6; // head, body, armR, armL, legR, legL

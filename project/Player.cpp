@@ -40,9 +40,8 @@ void Player::Initialize() {
 	playerParts_[HEAD]->SetTranslate({ 0.2f, 3.9f, 10.0f });
 
 
-	camera_ = std::make_unique<Camera>();
-	camera_->SetEye({ 0.0f, 4.0f, -10.0f });
-	camera_->SetTarget({ 0.0f, 0.0f, 0.0f });
+	
+
 
 
 
