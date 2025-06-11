@@ -16,8 +16,8 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldT
 	assert(object3dCommon != nullptr);
 	assert(worldTransform != nullptr);
 
-	this->object3dCommon_ = object3dCommon;
-	worldTransform_ = std::make_unique<WorldTransform>();
+        this->object3dCommon_ = object3dCommon;
+        worldTransform_ = worldTransform;
 
 	//modelData = LoadobjFile("resources", "plane.obj");
 
@@ -137,11 +137,7 @@ void Object3d::Cleanup()
 		materialResource_.Reset();             
 		materialData_ = nullptr;               
 	}
-	//model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
-	if (worldTransform_) {
-		worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
-		worldTransform_.reset();     // unique_ptr 해제
-	}
+        //model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
 	object3dCommon_ = nullptr;
 	camera = nullptr;
 	defaultCamera = nullptr;
