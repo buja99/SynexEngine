@@ -200,6 +200,7 @@ ComPtr<ID3D12Resource> Object3d::CreateBufferResource(ComPtr<ID3D12Device> devic
 
 void Object3d::SetModel(const std::string& filePath)
 {
+	modelName_ = filePath;  
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 	if (!model_) {
 		OutputDebugStringA(("Model not found: " + filePath + "\n").c_str());

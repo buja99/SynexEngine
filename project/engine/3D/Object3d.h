@@ -85,7 +85,13 @@ class Object3d
 	void SetUseAreaLight(bool use);
 	bool GetUseAreaLight() const;
 
+	std::string GetModelName() const { return modelName_; }
+
+	WorldTransform* GetWorldTransform() const {return worldTransform_.get();}
+
 private:
+
+	std::string modelName_;
 
 	Model* model_ = nullptr;
 
@@ -127,6 +133,8 @@ private:
 
 	ComPtr<ID3D12Resource> materialResource_;
 	Material* materialData_ = nullptr;
+
+	
 
 };
 

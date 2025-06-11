@@ -12,6 +12,22 @@
 #include "Sound.h"
 #include "WorldTransform.h"
 #include "Player.h"
+#include <fstream>
+#include "json.hpp"
+
+
+struct  LevelData {
+	struct ObjectData {
+		std::string fileName; // Model file name
+		Vector3 translation; // Position
+		Vector3 rotation;
+		Vector3 scaling;
+	};
+
+	std::vector<ObjectData> objects; // List of objects in the level
+
+};
+extern std::unordered_map<std::string, Model*> models;
 
 class GameScene : public BaseScene {
 public:
@@ -28,11 +44,19 @@ public:
 
 	void moveObj();
 
+	void DeserializeObjectRecursive(nlohmann::json& object, LevelData* levelData);
+
+	
 private:
 	DirectXCommon* dxCommon_;
 	Sound* audio_;
 	Input* input_;
 
+
+	//json
+	std::vector<std::unique_ptr<Object3d>> levelObjects_;
+
+	
 
 	std::unique_ptr<Camera> camera_ = nullptr;
 
