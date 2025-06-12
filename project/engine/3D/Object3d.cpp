@@ -17,7 +17,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldT
 	assert(worldTransform != nullptr);
 
 	this->object3dCommon_ = object3dCommon;
-	worldTransform_ = std::make_unique<WorldTransform>();
+	worldTransform_ = worldTransform;
 
 	//modelData = LoadobjFile("resources", "plane.obj");
 
@@ -45,11 +45,11 @@ void Object3d::Update()
 		return;
 	}
 
-	if (worldTransform_) {
+	/*if (worldTransform_) {
 		worldTransform_->scale_ = transform.scale;
 		worldTransform_->rotate_ = transform.rotate;
 		worldTransform_->translate_ = transform.translate;
-	}
+	}*/
 
 	// WorldTransform에서 행렬 계산
 	worldTransform_->UpdateMatrix();
@@ -138,10 +138,10 @@ void Object3d::Cleanup()
 		materialData_ = nullptr;               
 	}
 	//model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
-	if (worldTransform_) {
-		worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
-		worldTransform_.reset();     // unique_ptr 해제
-	}
+	//if (worldTransform_) {
+	//	worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
+	//	worldTransform_.reset();     // unique_ptr 해제
+	//}
 	object3dCommon_ = nullptr;
 	camera = nullptr;
 	defaultCamera = nullptr;

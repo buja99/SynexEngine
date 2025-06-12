@@ -129,7 +129,7 @@ private:
 	Camera* camera = nullptr;
 	Camera* defaultCamera = nullptr;
 
-	std::unique_ptr<WorldTransform> worldTransform_;
+	WorldTransform* worldTransform_ = nullptr;
 
 	ComPtr<ID3D12Resource> materialResource_;
 	Material* materialData_ = nullptr;
