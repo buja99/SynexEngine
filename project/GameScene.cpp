@@ -86,6 +86,18 @@ Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
 
 //json
+
+modelTable["treeModel_"] = treeModel_.get();
+modelTable["treeModel2_"] = treeModel2_.get();
+modelTable["weedsModel_"] = weedsModel_.get();
+modelTable["weedsModel2_"] = weedsModel2_.get();
+
+transformTable["treeModel_"] = treeWorldTransform_.get();
+transformTable["treeModel2_"] = tree2WorldTransform_.get();
+transformTable["weedsModel_"] = weedsWorldTransform_.get();
+transformTable["weedsModel2_"] = weeds2WorldTransform_.get();
+
+
 const std::string fillpath = std::string("resources/json/") + "test1.json";
 
 std::ifstream file;
@@ -94,7 +106,7 @@ file.open(fillpath);
 
 if (file.fail()) {
 	assert(0);
-}
+	}
 
 nlohmann::json deserialized;
 file >> deserialized;
@@ -111,22 +123,20 @@ LevelData* levelData = new LevelData();
 
 for (nlohmann::json& object : deserialized["objects"]) {
 	DeserializeObjectRecursive(object, levelData);
-}
-for (auto& objectData : levelData->objects) {
-	// file_name이 같은 Object3d가 이미 존재하는지 확인
-	auto it = std::find_if(levelObjects_.begin(), levelObjects_.end(),
-		[&objectData](const std::unique_ptr<Object3d>& obj) {
-			return obj->GetModelName() == objectData.fileName;
-		});
-
-	if (it != levelObjects_.end()) {
-		// 🔁 기존 Object3d가 존재하면 transform만 덮어씌움
-		(*it)->SetTranslate(objectData.translation);
-		(*it)->SetRotate(objectData.rotation);
-		(*it)->SetScale(objectData.scaling);
 	}
-	// ❌ 존재하지 않는 경우는 무시 (생성하지 않음)
-}
+for (auto& objectData : levelData->objects) {
+	const std::string& key = objectData.fileName;
+
+	if (transformTable.contains(key)) {
+		WorldTransform* wt = transformTable[key];
+		wt->translate_ = objectData.translation;
+		wt->rotate_ = objectData.rotation;
+		wt->scale_ = objectData.scaling;
+	}
+	}
+
+
+
 
 }
 

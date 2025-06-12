@@ -85,9 +85,7 @@ class Object3d
 	void SetUseAreaLight(bool use);
 	bool GetUseAreaLight() const;
 
-	std::string GetModelName() const { return modelName_; }
-
-	WorldTransform* GetWorldTransform() const {return worldTransform_.get();}
+	
 
 private:
 

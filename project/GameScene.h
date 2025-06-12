@@ -83,7 +83,8 @@ private:
 	std::unique_ptr<WorldTransform> weeds2WorldTransform_ = nullptr;
 
 
-
+	std::unordered_map<std::string, Object3d*> modelTable;
+	std::unordered_map<std::string, WorldTransform*> transformTable;
 
 
 	std::unique_ptr<Player> player_ = nullptr;
