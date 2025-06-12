@@ -68,22 +68,13 @@ void GameScene::Initialize() {
 	weedsModel_->SetCamera(camera_.get());
 	weedsModel2_->SetCamera(camera_.get());
 
-	treeModel_->SetTranslate({ -8.0f,0.0f,10.0f });
-	treeModel_->SetRotate({ 0.0f, 0.0f, 0.0f });
-
-	treeModel2_->SetTranslate({ 4.0f,0.0f,3.0f });
-	treeModel2_->SetRotate({ 0.0f, 0.0f, 0.0f });
-
-	weedsModel_->SetTranslate({ -4.0f,0.0f,3.0f });
-	weedsModel_->SetRotate({ 0.0f, 0.0f, 0.0f });
-
-	weedsModel2_->SetTranslate({ 0.0f,0.0f,0.0f });
-	weedsModel2_->SetRotate({ 0.0f, 0.0f, 0.0f });
+	//weedsWorldTransform_->translate_ = { -10.0f, 0.0f, 0.0f };
+	
 
 	player_ = std::make_unique<Player>();
 	player_->Initialize();
 	
-	weedsWorldTransform_->translate_ = { 10.0f, 0.0f, 0.0f };
+	
 
 	player_->SetCamera(camera_.get());
 
@@ -92,6 +83,25 @@ void GameScene::Initialize() {
 }
 
 void GameScene::Update() {
+
+
+#ifdef _DEBUG
+	ImGui::Begin("Model Transform");
+	if (ImGui::CollapsingHeader("Tree")) {
+		ImGui::DragFloat3("Tree Position", &treeWorldTransform_->translate_.x, 0.1f);
+		ImGui::DragFloat3("Tree Rotation", &treeWorldTransform_->rotate_.x, 0.1f);
+		ImGui::DragFloat3("Tree Scale", &treeWorldTransform_->scale_.x, 0.1f);
+	}
+
+	// Weeds Model Transform
+	if (ImGui::CollapsingHeader("Weeds")) {
+		ImGui::DragFloat3("Weeds Position", &weedsWorldTransform_->translate_.x, 0.1f);
+		ImGui::DragFloat3("Weeds Rotation", &weedsWorldTransform_->rotate_.x, 0.1f);
+		ImGui::DragFloat3("Weeds Scale", &weedsWorldTransform_->scale_.x, 0.1f);
+	}
+
+	ImGui::End();
+#endif
 
 
 	back_->Update();
@@ -136,23 +146,7 @@ void GameScene::Update() {
 	}
 
 
-#ifdef _DEBUG
-	ImGui::Begin("Model Transform");
-	if (ImGui::CollapsingHeader("Tree")) {
-		ImGui::DragFloat3("Tree Position", &treeWorldTransform_->translate_.x, 0.1f);
-		ImGui::DragFloat3("Tree Rotation", &treeWorldTransform_->rotate_.x, 0.1f);
-		ImGui::DragFloat3("Tree Scale", &treeWorldTransform_->scale_.x, 0.1f);
-	}
 
-	// Weeds Model Transform
-	if (ImGui::CollapsingHeader("Weeds")) {
-		ImGui::DragFloat3("Weeds Position", &weedsWorldTransform_->translate_.x, 0.1f);
-		ImGui::DragFloat3("Weeds Rotation", &weedsWorldTransform_->rotate_.x, 0.1f);
-		ImGui::DragFloat3("Weeds Scale", &weedsWorldTransform_->scale_.x, 0.1f);
-	}
-	
-	ImGui::End();
-#endif
 
 	
 
