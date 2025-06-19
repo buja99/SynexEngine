@@ -14,7 +14,7 @@
 #include "Player.h"
 #include <fstream>
 #include "json.hpp"
-
+#include "Ground.h"
 
 struct  LevelData {
 	struct ObjectData {
@@ -68,8 +68,7 @@ private:
 
 
 	//model
-	std::unique_ptr<Object3d> ground_ = nullptr;
-	std::unique_ptr<WorldTransform> groundWorldTransform_ = nullptr;
+	std::unique_ptr<Ground> ground_ = nullptr;
 
 	std::unique_ptr<Object3d> treeModel_ = nullptr;
 	std::unique_ptr<Object3d> treeModel2_ = nullptr;

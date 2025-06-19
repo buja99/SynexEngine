@@ -1,5 +1,5 @@
 #include "Player.h"
-
+#include "ImGuiManager.h"
 Player::~Player() {
 }
 
@@ -32,16 +32,20 @@ void Player::Initialize() {
 	playerParts_[BODY]->SetModel("body.obj");
 	playerParts_[HEAD]->SetModel("head.obj");
 
-	playerParts_[ARM_R]->SetTranslate({ 4.7f, 3.2f, 10.0f });
-	playerParts_[ARM_L]->SetTranslate({ -4.7f, 3.2f, 10.0f });
-	playerParts_[LEG_R]->SetTranslate({ -2.4f, -2.1f, 10.1f });
-	playerParts_[LEG_L]->SetTranslate({ 2.5f, -2.1f, 10.1f });
-	playerParts_[BODY]->SetTranslate({ 0.0f, 0.0f, 10.0f });
-	playerParts_[HEAD]->SetTranslate({ 0.2f, 3.9f, 10.0f });
-
-
 	
+	playerTransforms_[ARM_R]->translate_ = { 4.7f, 3.2f, 0.0f };
+	playerTransforms_[ARM_L]->translate_ = { -4.7f, 3.2f, 0.0f };
+	playerTransforms_[LEG_R]->translate_ = { -2.4f, -2.1f, 0.1f };
+	playerTransforms_[LEG_L]->translate_ = { 2.5f, -2.1f, 0.1f };
+	playerTransforms_[BODY]->translate_ = { 0.0f, 5.0f, 0.0f };
+	playerTransforms_[HEAD]->translate_ = { 0.2f, 3.9f, 0.0f };
 
+	playerTransforms_[BODY]->scale_ = { 0.5f, 0.5f, 1.0f };
+	playerTransforms_[HEAD]->scale_ = { 2.5f, 1.3f, 1.0f };
+
+	if (camera_) {
+		
+	}
 
 
 
@@ -50,11 +54,6 @@ void Player::Initialize() {
 
 void Player::Updata() {
 
-	for (auto& transform : playerTransforms_) {
-		transform->UpdateMatrix();
-	}
-
-	// 예시: A, D 키 입력으로 BODY 좌우 이동
 	Input* input = Input::GetInstance();
 
 	if (input->PushKey(DIK_A)) {
@@ -64,13 +63,58 @@ void Player::Updata() {
 		playerTransforms_[BODY]->translate_.x += speed;
 	}
 
-	// position 값도 BODY 기준으로 업데이트
-	position = playerTransforms_[BODY]->translate_;
+	// 이동 후 범위 제한
+	Vector3& pos = playerTransforms_[BODY]->translate_;
+	float fieldLimitX = 150.0f;
+	float fieldLimitZ = 150.0f;
+	pos.x = std::clamp(pos.x, -fieldLimitX, fieldLimitX);
+	pos.z = std::clamp(pos.z, -fieldLimitZ, fieldLimitZ);
+
+	position = pos;
+
+	playerTransforms_[BODY]->UpdateMatrix();
+	playerTransforms_[BODY]->TransferMatrix();
+
+	// 2. 자식들 업데이트
+	for (int i = 0; i < kPlayerPartCount; ++i) {
+		if (i == BODY) continue;
+		playerTransforms_[i]->UpdateMatrix();
+		playerTransforms_[i]->TransferMatrix();
+	}
+
+
+#ifdef _DEBUG
+	ImGui::Begin("Player Model Transform");
+
+	static const char* partNames[] = {
+		"ARM_R", "ARM_L", "LEG_R", "LEG_L", "BODY", "HEAD"
+	};
+
+	for (int i = 0; i < kPlayerPartCount; ++i) {
+		if (ImGui::CollapsingHeader(partNames[i])) {
+			ImGui::DragFloat3("Position", &playerTransforms_[i]->translate_.x, 0.1f);
+			ImGui::DragFloat3("Rotation", &playerTransforms_[i]->rotate_.x, 0.1f);
+			ImGui::DragFloat3("Scale", &playerTransforms_[i]->scale_.x, 0.1f);
+		}
+	}
+
+	ImGui::End();
+#endif
+
 }
 
 void Player::Draw() {
 
 	for (auto& part : playerParts_) {
 		part->Draw();
+	}
+}
+
+void Player::SetCamera(Camera* camera) {
+	camera_ = camera;
+	for (auto& part : playerParts_) {
+		if (part) {
+			part->SetCamera(camera_);
+		}
 	}
 }

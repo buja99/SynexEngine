@@ -81,6 +81,12 @@ public:
 	ComPtr<ID3D12Resource> CreateRenderTextureResource
 	(ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
 	void InitializeOffscreenRenderTarget();
+
+	void SetViewport(float x, float y, float width, float height);
+	void SetScissorRect(int left, int top, int right, int bottom);
+
+	
+
 private:
 
 	DirectXCommon() = default;

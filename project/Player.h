@@ -27,13 +27,13 @@ public:
 
 	const Vector3& GetPosition() const { return position; }
 
-	void SetCamera(Camera* camera) { camera_ = camera; }
+	void SetCamera(Camera* camera);
 
 private:
 
 	Vector3 position;
 	
-	float speed = 1.0f;
+	float speed = 0.5f;
 
 	Camera* camera_ = nullptr;
 

@@ -1,7 +1,7 @@
 #include "GameScene.h"
 #include "SceneManager.h"
 #include "ImGuiManager.h"
-
+#include "MyMath.h"
 
 GameScene::~GameScene() {
 }
@@ -12,7 +12,7 @@ void GameScene::Initialize() {
 
 	audio_ = Sound::GetInstance();
 	input_ = Input::GetInstance();
-
+	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
 	TextureManager::GetInstance()->LoadTexture("resources/back.png");
 
@@ -21,8 +21,8 @@ void GameScene::Initialize() {
 	back_->Initialize(SpriteCommon::GetInstance(), "resources/back.png");
 	back_->SetPosition({ 0.0f, 0.0f });
 
-
-
+	ground_ = std::make_unique<Ground>();
+	ground_->Initialize();
 
 
 
@@ -63,8 +63,7 @@ weedsModel2_->Initialize(Object3dCommon::GetInstance(), weeds2WorldTransform_.ge
 weedsModel2_->SetModel("weeds.obj");
 
 camera_ = std::make_unique<Camera>();
-camera_->SetEye({ 0.0f, 4.0f, -10.0f });
-camera_->SetTarget({ 0.0f, 0.0f, 0.0f });
+ground_->SetCamera(camera_.get());
 
 treeModel_->SetCamera(camera_.get());
 treeModel2_->SetCamera(camera_.get());
@@ -74,9 +73,9 @@ weedsModel2_->SetCamera(camera_.get());
 	//weedsWorldTransform_->translate_ = { -10.0f, 0.0f, 0.0f };
 	
 
-	player_ = std::make_unique<Player>();
-	player_->Initialize();
-	
+player_ = std::make_unique<Player>();
+player_->Initialize();
+
 	
 
 player_->SetCamera(camera_.get());
@@ -136,6 +135,10 @@ for (auto& objectData : levelData->objects) {
 	}
 
 
+DirectXCommon* dx = DirectXCommon::GetInstance();
+dx->SetViewport(200.0f, 100.0f, 600.0f, 400.0f);
+dx->SetScissorRect(200, 100, 800, 500);
+
 
 
 }
@@ -158,17 +161,49 @@ void GameScene::Update() {
 		ImGui::DragFloat3("Weeds Scale", &weedsWorldTransform_->scale_.x, 0.1f);
 	}
 
+
+	// 🆕 Viewport / Scissor 설정
+	static float viewportX = 200.0f;
+	static float viewportY = 100.0f;
+	static float viewportW = 600.0f;
+	static float viewportH = 400.0f;
+
+	ImGui::DragFloat("Viewport X", &viewportX, 1.0f);
+	ImGui::DragFloat("Viewport Y", &viewportY, 1.0f);
+	ImGui::DragFloat("Viewport W", &viewportW, 1.0f);
+	ImGui::DragFloat("Viewport H", &viewportH, 1.0f);
+
+	// 적용
+	DirectXCommon::GetInstance()->SetViewport(viewportX, viewportY, viewportW, viewportH);
+	DirectXCommon::GetInstance()->SetScissorRect(
+		(int)viewportX, (int)viewportY,
+		(int)(viewportX + viewportW), (int)(viewportY + viewportH));
+
+
+
+
+
+
+
 	ImGui::End();
 #endif
 
 
 	back_->Update();
 
+	ground_->Update();
 
+	player_->Updata();
 
+	Vector3 playerPos = player_->GetPosition();
+	Vector3 eye = MyMath::Add( playerPos , Vector3{0.0f, 8.0f, -15.0f}); // 위에서 바라보는 시점
+	Vector3 target = playerPos;
 
+	camera_->SetEye(eye);
+	camera_->SetTarget(target);
+	camera_->SetUp({ 0.0f, 1.0f, 0.0f }); // 기본 업벡터
 	camera_->UpdateMatrix();
-	camera_->Update();
+
 	treeModel_->Update();
 	treeModel2_->Update();
 	weedsModel_->Update();
@@ -188,7 +223,7 @@ void GameScene::Update() {
 	weeds2WorldTransform_->UpdateMatrix();
 	weeds2WorldTransform_->TransferMatrix();
 
-	player_->Updata();
+	
 	if (input_->TriggerKey(DIK_R)) {
 		sceneManager_->ChangeScene("TITLE");
 
@@ -219,11 +254,16 @@ void GameScene::Draw() {
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	treeModel_->Draw(); 
-		treeModel2_->Draw();
+	ground_->Draw();
+
+	DirectXCommon::GetInstance()->PreDrawToOffscreen(); 
+	Object3dCommon::GetInstance()->CommonDrawSettings();
+
+	/*treeModel_->Draw(); 
+	treeModel2_->Draw();
 
 	weedsModel_->Draw();
-	weedsModel2_->Draw();
+	weedsModel2_->Draw();*/
 
 	player_->Draw();
 
@@ -233,13 +273,7 @@ void GameScene::Draw() {
 }
 
 void GameScene::Finalize() {
-	/*for (int i = 0; i < kPlayerPartCount; ++i) {
-
-		playerParts_[i]->Cleanup();
-		playerParts_[i].reset();
-		playerTransforms_[i]->Cleanup();
-		playerTransforms_[i].reset();
-	}*/
+	
 
 	camera_.reset();
 }

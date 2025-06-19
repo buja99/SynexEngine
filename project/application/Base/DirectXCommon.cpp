@@ -668,6 +668,28 @@ void DirectXCommon::InitializeOffscreenRenderTarget() {
 
 }
 
+void DirectXCommon::SetViewport(float x, float y, float width, float height) {
+	viewport.TopLeftX = x;
+	viewport.TopLeftY = y;
+	viewport.Width = width;
+	viewport.Height = height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+}
+
+void DirectXCommon::SetScissorRect(int left, int top, int right, int bottom) {
+	scissorRect.left = left;
+	scissorRect.top = top;
+	scissorRect.right = right;
+	scissorRect.bottom = bottom;
+}
+
+void DirectXCommon::PreDrawToOffscreen() {
+}
+
+void DirectXCommon::PostDrawFromOffscreen() {
+}
+
 
 
 

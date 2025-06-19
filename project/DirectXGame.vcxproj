@@ -134,6 +134,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Math\MyMath.cpp" />
     <ClCompile Include="Framework.cpp" />
     <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="ImGuiManager.cpp" />
     <ClCompile Include="LeakCheck.h" />
     <ClCompile Include="main.cpp" />
@@ -181,6 +182,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\particle\ParticleManager.h" />
     <ClInclude Include="Framework.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="Ground.h" />
     <ClInclude Include="ImGuiManager.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="Player.h" />
