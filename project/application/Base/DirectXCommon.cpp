@@ -852,6 +852,9 @@ void DirectXCommon::DrawGrayscaleToSwapChain() {
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 
+	float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f }; // 어두운 회색
+	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
 	// ───────────── 루트 시그니처 / 파이프라인 설정 ─────────────
 	commandList->SetGraphicsRootSignature(grayscaleRootSignature_.Get());
 	commandList->SetPipelineState(grayscalePipelineState_.Get());
