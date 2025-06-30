@@ -231,8 +231,7 @@ void GameScene::Draw() {
 
 	ground_->Draw();
 
-	//DirectXCommon::GetInstance()->PreDrawToOffscreen(); 
-	Object3dCommon::GetInstance()->CommonDrawSettings();
+	
 
 	/*treeModel_->Draw(); 
 	treeModel2_->Draw();
