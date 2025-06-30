@@ -23,6 +23,8 @@ public:
 
 	void CommonDrawSettings();
 
+	void stencilMaskSettings();
+
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
 
@@ -52,10 +54,21 @@ private:
 	void CreateRootSignature();
 	void CreateGraphicsPipeline();
 
+	void CreateStencilWritePipeline(); // 스텐실 값 기록용
+	void CreateStencilTestPipeline();  // 값이 1인 경우에만 통과
+
 	ComPtr<ID3D12Device> device;
 
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> graphicsPipelineState;
+
+	ComPtr<ID3D12PipelineState> stencilMaskPipelineState_;
+	ComPtr<ID3D12RootSignature> stencilMaskRootSignature_;
+	ComPtr<ID3D12PipelineState> stencilTestPipelineState_; // EQUAL 조건용
+
+	ComPtr<ID3D12Resource> stencilMaskVertexBuffer_;
+	D3D12_VERTEX_BUFFER_VIEW stencilMaskVBView_{};
+
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 
 	DirectXCommon* dxCommon_ = nullptr;
@@ -63,5 +76,8 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 
 	Camera* defaultCamera = nullptr;
+
+	
+
 };
 

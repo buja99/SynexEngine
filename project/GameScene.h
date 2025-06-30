@@ -31,6 +31,10 @@ public:
 
 	void Draw() override;
 
+	void DrawStencilMask();
+
+	void DrawModels();
+
 	void Finalize() override;
 
 	

@@ -146,13 +146,8 @@ void GameScene::Update() {
 		(int)viewportX, (int)viewportY,
 		(int)(viewportX + viewportW), (int)(viewportY + viewportH));*/
 
-
-
-
-
-
-
 	ImGui::End();
+
 #endif
 
 
@@ -227,6 +222,7 @@ void GameScene::Draw() {
 	back_->Draw();
 
 	SrvManager::GetInstance()->PreDraw();
+	Object3dCommon::GetInstance()->stencilMaskSettings();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
 	ground_->Draw();
@@ -244,6 +240,14 @@ void GameScene::Draw() {
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	primitive_->Draw();
 
+}
+
+void GameScene::DrawStencilMask() {
+	
+}
+
+void GameScene::DrawModels() {
+	Object3dCommon::GetInstance()->CommonDrawSettings();
 }
 
 void GameScene::Finalize() {

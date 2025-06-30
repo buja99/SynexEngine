@@ -1,6 +1,7 @@
 #include "Object3dCommon.h"
 #include "Logger.h"
 #include "StringUtility.h"
+#include <d3dx12.h>
 
 using namespace Logger;
 using namespace StringUtility;
@@ -15,8 +16,10 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 	commandList = dxCommon_->GetCommandList();
 
 	CreateGraphicsPipeline();
+	CreateStencilWritePipeline();
+	CreateStencilTestPipeline();
 
-
+	
 }
 
 void Object3dCommon::Finalize() {
@@ -39,6 +42,23 @@ void Object3dCommon::CommonDrawSettings()
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 }
+
+void Object3dCommon::stencilMaskSettings() {
+
+	dxCommon_->GetCommandList()->SetGraphicsRootSignature(stencilMaskRootSignature_.Get());
+
+	dxCommon_->GetCommandList()->SetPipelineState(stencilMaskPipelineState_.Get());
+
+	dxCommon_->GetCommandList()->OMSetStencilRef(1);
+
+	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &stencilMaskVBView_);
+
+	dxCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+
+}
+
 
 IDxcBlob* Object3dCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
 {
@@ -272,4 +292,136 @@ void Object3dCommon::CreateGraphicsPipeline()
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
+}
+
+void Object3dCommon::CreateStencilWritePipeline() {
+	HRESULT hr;
+
+	// DXC 컴파일러 초기화
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	// 간단한 사각형용 셰이더 컴파일 (Color만 출력하는 단순 셰이더)
+	auto vs = CompileShader(L"resources/shaders/StencilMask.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"resources/shaders/StencilMask.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	// 루트 시그니처 (입력 없음)
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ComPtr<ID3DBlob> sigBlob, errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	assert(SUCCEEDED(hr));
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&stencilMaskRootSignature_));
+	assert(SUCCEEDED(hr));
+
+	// PSO 설정
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = stencilMaskRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = {};
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = TRUE;
+	psoDesc.DepthStencilState.StencilWriteMask = 0xFF;
+
+	psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	psoDesc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+	psoDesc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+
+	psoDesc.DepthStencilState.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	psoDesc.DepthStencilState.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+	psoDesc.DepthStencilState.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&stencilMaskPipelineState_));
+	assert(SUCCEEDED(hr));
+}
+
+void Object3dCommon::CreateStencilTestPipeline() {
+	HRESULT hr;
+
+	// DXC 초기화
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	assert(SUCCEEDED(hr));
+
+	// Object3d용 셰이더 컴파일
+	auto vs = CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	// Input Layout
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,        0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
+	inputLayoutDesc.pInputElementDescs = inputElementDescs;
+	inputLayoutDesc.NumElements = _countof(inputElementDescs);
+
+	// Blend / Rasterizer
+	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+	// Depth-Stencil 설정 (💡 핵심!)
+	D3D12_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	dsDesc.StencilEnable = TRUE;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0x00; // 쓰지 않음
+	dsDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
+	dsDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+
+	dsDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
+	dsDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	dsDesc.BackFace = dsDesc.FrontFace;
+
+	// PSO 생성
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.pRootSignature = rootSignature.Get();
+	psoDesc.InputLayout = inputLayoutDesc;
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = blendDesc;
+	psoDesc.RasterizerState = rasterizerDesc;
+	psoDesc.DepthStencilState = dsDesc;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&stencilTestPipelineState_));
+	assert(SUCCEEDED(hr));
 }

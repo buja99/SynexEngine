@@ -309,5 +309,7 @@
     <FxCompile Include="resources\shaders\CopyImage.VS.hlsl" />
     <FxCompile Include="resources\shaders\Grayscale.PS.hlsl" />
     <FxCompile Include="resources\shaders\Grayscale.VS.hlsl" />
+    <FxCompile Include="resources\shaders\StencilMask.PS.hlsl" />
+    <FxCompile Include="resources\shaders\StencilMask.VS.hlsl" />
   </ItemGroup>
 </Project>
