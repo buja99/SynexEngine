@@ -4,12 +4,11 @@
 #include "MyMath.h"
 #include <math.h>
 using Microsoft::WRL::ComPtr;
-class SrvManager
-{
+class SrvManager {
 
 public:
 	static SrvManager* GetInstance() {
-		static SrvManager instance; 
+		static SrvManager instance;
 		return &instance;
 	}
 	void Initialize(DirectXCommon* dxCommon);
@@ -35,10 +34,10 @@ private:
 
 	SrvManager() = default;
 	~SrvManager() = default;
-	SrvManager(const SrvManager&) = delete;            
-	SrvManager& operator=(const SrvManager&) = delete; 
+	SrvManager(const SrvManager&) = delete;
+	SrvManager& operator=(const SrvManager&) = delete;
 
-	DirectXCommon* directXCommon = nullptr;
+	DirectXCommon* directXCommon = DirectXCommon::GetInstance();
 
 	static const uint32_t kMaxSRVCount;
 	uint32_t descriptorSize;
@@ -48,4 +47,3 @@ private:
 
 
 };
-

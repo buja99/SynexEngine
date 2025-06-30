@@ -13,21 +13,12 @@
 #include "WorldTransform.h"
 #include "Player.h"
 #include <fstream>
-#include "json.hpp"
 #include "Ground.h"
+#include "json.hpp"
+#include "LevelLoader.h"
+#include "LevelApplier.h"
+#include "ModelRegistry.h"
 
-struct  LevelData {
-	struct ObjectData {
-		std::string fileName; // Model file name
-		Vector3 translation; // Position
-		Vector3 rotation;
-		Vector3 scaling;
-	};
-
-	std::vector<ObjectData> objects; // List of objects in the level
-
-};
-extern std::unordered_map<std::string, Model*> models;
 
 class GameScene : public BaseScene {
 public:
@@ -41,10 +32,6 @@ public:
 	void Draw() override;
 
 	void Finalize() override;
-
-	void moveObj();
-
-	void DeserializeObjectRecursive(nlohmann::json& object, LevelData* levelData);
 
 	
 private:
@@ -87,5 +74,21 @@ private:
 
 
 	std::unique_ptr<Player> player_ = nullptr;
+
+	//efects
+	std::unique_ptr<ParticleManager> primitive_;
+	std::mt19937 randomEngine_;
+
+	Emitter emitter_{};
+	
+	
+	
+	
+	
+	//json
+	ModelRegistry registry_;
+
+
+
 };
 

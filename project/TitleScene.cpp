@@ -65,16 +65,21 @@ void TitleScene::Initialize() {
 	title->SetPosition({ 0.0f, 0.0f });
 	
 	TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
 	primitive_ = std::make_unique<ParticleManager>();
 	primitive_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
 	primitive_->SetCamera(camera_.get());
-	primitive_->CreateParticleGroup("star", "resources/gradationLine.png");
+	primitive_->CreateParticleGroup("ash", "resources/circle.png");
 
 	
-	emitter_.count = 1;
-	emitter_.frequency = 0.7f;
+	emitter_.count = 4;
+	emitter_.frequency = 0.05f;
 	emitter_.frequencyTime = 0.0f;
+	emitter_.transform.translate = { 0.0f, 10.0f, 0.0f };
 
+	
+	
+	
 }
 
 void TitleScene::Update() {
@@ -192,11 +197,15 @@ void TitleScene::Update() {
 
 	ImGui::End();
 
+	
+
 	ImGui::Begin("sprite");
 	//ImGui::DragFloat3();
 	ImGui::End();
 
 #endif
+
+	
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
@@ -209,7 +218,7 @@ void TitleScene::Update() {
 
 	if (emitter_.frequencyTime >= emitter_.frequency) {
 		emitter_.frequencyTime = 0.0f;
-		primitive_->Emit("star", emitter_, randomEngine_);
+		primitive_->Emit("ash", emitter_, randomEngine_);
 	}
 
 	primitive_->Update();

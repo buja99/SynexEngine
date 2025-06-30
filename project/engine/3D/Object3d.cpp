@@ -7,7 +7,7 @@
 
 
 Object3d::~Object3d() {
-	OutputDebugStringA("Object3d Destructor Called\n");
+	//OutputDebugStringA("Object3d Destructor Called\n");
 	Cleanup();
 }
 

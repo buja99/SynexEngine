@@ -11,7 +11,7 @@
 #include "Camera.h"
 #include "Sound.h"
 #include "WorldTransform.h"
-#include "ParticleManager.h"
+
 
 
 class TitleScene : public BaseScene {
@@ -50,6 +50,8 @@ private:
 	std::mt19937 randomEngine_;
 
 	Emitter emitter_{};
+
+	bool useGrayscale_ = true;
 
 };
 

@@ -8,8 +8,7 @@
 using namespace Logger;
 using namespace StringUtility;
 
-void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvManager)
-{
+void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvManager) {
 #ifdef _DEBUG
 	// 유효성 검사(Validation)
 	assert(directXCommon != nullptr);
@@ -19,8 +18,7 @@ void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvMa
 	dxCommon_ = directXCommon;
 	srvManager_ = srvManager;
 
-	std::random_device seedGenerator;   // 시드 생성기(Seed Generator)//난수 제공
-	std::mt19937 randomEngine(seedGenerator()); // 랜덤 엔진 초기화(Random Engine Initialization)//seedGenerator 초기화
+	randomEngine_.seed(std::random_device{}());
 
 	InitializeVertices();
 
@@ -28,14 +26,11 @@ void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvMa
 
 	CreateVertexBuffer();
 
-
 }
 
-void ParticleManager::Update()
-{
+void ParticleManager::Update() {
 	if (!camera_) return;
 
-	// ✅ 반드시 호출!
 	calculationBillboardMatrix();
 
 	Matrix4x4 cameraMatrix = camera_->GetWorldMatrix();
@@ -45,52 +40,76 @@ void ParticleManager::Update()
 
 	constexpr float deltaTime = 1.0f / 60.0f;
 
-	// 파티클 그룹 순회
 	for (auto& [name, group] : particleGroups) {
-		// 수명 갱신 및 제거
+		// ✅ emitter 자동 발사
+		group.emitter.frequencyTime += deltaTime;
+		if (group.emitter.frequencyTime >= group.emitter.frequency) {
+			group.emitter.frequencyTime = 0.0f;
+			Emit(name, group.emitter, randomEngine_);
+		}
+
+		// ✅ 수명 갱신 및 파티클 제거
 		group.particles.remove_if([deltaTime](Particle& p) {
 			p.currentTime += deltaTime;
 			return p.currentTime >= p.lifeTime;
 			});
 
-		int i = 0;
+		// ✅ 파티클 업데이트 및 GPU 전송
+		uint32_t  i = 0;
 		for (auto& p : group.particles) {
+			// 위치 이동
+			//p.velocity = MyMath::Add(p.velocity, p.acceleration); //가속도
 			p.transform.translate = MyMath::Add(p.transform.translate, p.velocity);
 
-			if (group.mappedInstanceData && i < initialInstanceCount) {
-				// scale → billboard → 위치
+			if (group.mappedInstanceData && i < initialInstanceCount_) {
+				// 스케일 행렬
 				Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix(p.transform.scale);
-				Matrix4x4 rotateXMatrix = MyMath::MakeRotateXMatrix(p.transform.rotate.x);
-				Matrix4x4 rotateYMatrix = MyMath::MakeRotateYMatrix(p.transform.rotate.y);
-				Matrix4x4 rotateZMatrix = MyMath::MakeRotateZMatrix(p.transform.rotate.z);
-				//Matrix4x4 scaleRotate = MyMath::Multiply(scaleMatrix, rotateZMatrix);
-				
-				Matrix4x4 rotationMatrix = MyMath::Multiply(rotateZMatrix, MyMath::Multiply(rotateYMatrix, rotateXMatrix));
-				Matrix4x4 scaleRotate = MyMath::Multiply(scaleMatrix, rotationMatrix);
 
-				//billboard
-				//Matrix4x4 worldMatrix = MyMath::Multiply(scaleRotate, billboardMatrix);
+				// 회전 or 빌보드 행렬
+				Matrix4x4 scaleRotate;
+				if (useBillboard_) {
+					scaleRotate = MyMath::Multiply(scaleMatrix, billboardMatrix);
+				} else {
+					Matrix4x4 rotX = MyMath::MakeRotateXMatrix(p.transform.rotate.x);
+					Matrix4x4 rotY = MyMath::MakeRotateYMatrix(p.transform.rotate.y);
+					Matrix4x4 rotZ = MyMath::MakeRotateZMatrix(p.transform.rotate.z);
+					Matrix4x4 rotationMatrix = MyMath::Multiply(rotZ, MyMath::Multiply(rotY, rotX));
+					scaleRotate = MyMath::Multiply(scaleMatrix, rotationMatrix);
+				}
+
+				// 최종 World 행렬
 				Matrix4x4 worldMatrix = scaleRotate;
 				worldMatrix.m[3][0] = p.transform.translate.x;
 				worldMatrix.m[3][1] = p.transform.translate.y;
 				worldMatrix.m[3][2] = p.transform.translate.z;
 
-				Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
-				group.mappedInstanceData[i].WVP = worldViewProjectionMatrix;
+				float t = p.currentTime / p.lifeTime;
+				float alpha = 1.0f - t * t;
+
+				/*float scaleAlpha = alpha;
+				p.transform.scale.y *= scaleAlpha;*/
+
+				// WVP 계산 및 전송
+				Matrix4x4 wvp = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
+				group.mappedInstanceData[i].WVP = wvp;
 				group.mappedInstanceData[i].World = worldMatrix;
 
-				// 알파 감소
-				float alpha = 1.0f - (p.currentTime / p.lifeTime);
+				// 색상 및 알파
+				//float alpha = 1.0f - (p.currentTime / p.lifeTime);
+				float flicker = 0.9f + 0.2f * std::sin(p.currentTime * 20.0f);
 				group.mappedInstanceData[i].color = p.color;
-				group.mappedInstanceData[i].color.w = alpha;
+				group.mappedInstanceData[i].color.w *= alpha * flicker;
+
 			}
+
 			++i;
 		}
+
 		group.instanceCount = i;
 	}
 }
 
-void ParticleManager::Draw()
+void ParticleManager::Draw() 
 {
 	auto commandList = dxCommon_->GetCommandList();
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
@@ -98,8 +117,7 @@ void ParticleManager::Draw()
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-	for (auto& [name, group] : particleGroups)
-	{
+	for (auto& [name, group] : particleGroups) {
 
 		if (group.instanceCount > 0) {
 
@@ -142,35 +160,39 @@ void ParticleManager::calculationBillboardMatrix() {
 
 Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
-	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+	std::uniform_real_distribution<float> distX(-10.0f, 10.0f);   // 좌우로 퍼짐
+	std::uniform_real_distribution<float> distY(0.0f, 2.0f);    // 위쪽에서 떨어짐
+	std::uniform_real_distribution<float> distZ(-3.0f, 3.0f);   // 앞뒤로 퍼짐
+	std::uniform_real_distribution<float> distFallSpeed(0.01f, 0.05f); // 느린 낙하
+	std::uniform_real_distribution<float> distSideDrift(-0.01f, 0.01f);
+	std::uniform_real_distribution<float> distScale(0.1f, 0.3f);
+	std::uniform_real_distribution<float> distLifetime(3.0f, 6.0f);
+	std::uniform_real_distribution<float> distAlpha(0.4f, 0.8f);
 
-	
+	Particle p{};
+	// 위에서 흩뿌리듯 떨어지는 위치
+	p.transform.translate = {
+		translate.x + distX(randomEngine),
+		translate.y + distY(randomEngine) + 5.0f,  // 기준점보다 위로
+		translate.z + distZ(randomEngine)
+	};
+	// 느리게 아래로 떨어지며 약간 흩어짐
+	p.velocity = {
+		distSideDrift(randomEngine),
+		-distFallSpeed(randomEngine),  // 아래로 떨어짐
+		distSideDrift(randomEngine)
+	};
+	// 회전 없이 크기만 랜덤
+	float scale = distScale(randomEngine);
+	p.transform.scale = { scale, scale, 1.0f };
+	p.transform.rotate = { 0.0f, 0.0f, 0.0f };
 
+	// 어두운 회색/불투명도 랜덤
+	p.color = { 0.2f, 0.2f, 0.2f, distAlpha(randomEngine) };
+	p.lifeTime = distLifetime(randomEngine);
+	p.currentTime = 0.0f;
 
-	Particle particle;
-	float randomScale = distScale(randomEngine);
-	//particle.transform.rotate = { distRotate(randomEngine), distRotate(randomEngine), distRotate(randomEngine)};
-	//particle.transform.rotate = {0.0f,0.0f ,0.0f };
-	//particle.transform.translate = MyMath::Add(translate, spread);
-	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-	particle.transform.scale = { 3.0f, 3.0f, 3.0f };
-	particle.transform.translate = { 0.0f,5.0f,0.0f };
-	particle.velocity = { 0.0f,0.0f,0.0f };
-
-	//Vector3 randomTranslate{ distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	//particle.transform.translate = MyMath::Add(translate, randomTranslate);
-
-	//particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-	particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-	//particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	//std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	//particle.lifeTime = distTime(randomEngine);
-	particle.lifeTime = 1.0f;
-	particle.currentTime = 0.0f;
-	return particle;
+	return p;
 }
 
 std::list<Particle> ParticleManager::Emit(const std::string& groupName, const Emitter& emitter, std::mt19937& randomEngine) {
@@ -190,8 +212,7 @@ std::list<Particle> ParticleManager::Emit(const std::string& groupName, const Em
 
 
 
-void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath)
-{
+void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath) {
 	if (particleGroups.find(name) != particleGroups.end()) {
 		// 이미 등록된 이름이 있다면 assert로 중단(If the name is already registered, stop with assert)
 		assert(false && "Particle group with the given name already exists!");
@@ -209,9 +230,13 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 
 	newGroup.instanceCount = 0;
 	newGroup.mappedInstanceData = nullptr;
+	newGroup.emitter.count = 1;
+	newGroup.emitter.frequency = 0.2f;
+	newGroup.emitter.frequencyTime = 0.0f;
 
+	particleGroups[name] = std::move(newGroup);
 
-	newGroup.instanceBuffer= CreateBufferResource(dxCommon_->GetDevice(), sizeof(ParticleForGPU) * kNumMaxInstance);
+	newGroup.instanceBuffer = CreateBufferResource(dxCommon_->GetDevice(), sizeof(ParticleForGPU) * kNumMaxInstance);
 
 	// 리소스 매핑
 	HRESULT hr = newGroup.instanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.mappedInstanceData));
@@ -229,15 +254,35 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	srvManager_->CreatSRVforStruturedBuffer(
 		newGroup.instanceSRVIndex,
 		newGroup.instanceBuffer.Get(),
-		static_cast<UINT>(initialInstanceCount),
+		static_cast<UINT>(initialInstanceCount_),
 		sizeof(ParticleForGPU)
 	);
+
+
+
+
 
 	//컨테이너 설정(Container Settings)
 	particleGroups[name] = std::move(newGroup);
 
 }
+void ParticleManager::SetEmitterPosition(const std::string& name, const Vector3& pos) {
+	if (particleGroups.contains(name)) {
+		particleGroups[name].emitter.transform.translate = pos;
+	}
+}
 
+void ParticleManager::SetEmitterFrequency(const std::string& name, float freq) {
+	if (particleGroups.contains(name)) {
+		particleGroups[name].emitter.frequency = freq;
+	}
+}
+
+void ParticleManager::SetEmitterCount(const std::string& name, uint32_t count) {
+	if (particleGroups.contains(name)) {
+		particleGroups[name].emitter.count = count;
+	}
+}
 ComPtr<ID3D12Resource> ParticleManager::CreateBufferResource(ComPtr<ID3D12Device> device, size_t sizeInBytes)
 {
 	//頂点Heap
@@ -265,8 +310,7 @@ ComPtr<ID3D12Resource> ParticleManager::CreateBufferResource(ComPtr<ID3D12Device
 	return vertexResource;
 }
 
-IDxcBlob* ParticleManager::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler)
-{
+IDxcBlob* ParticleManager::CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler) {
 	//hlsl
 	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
 
@@ -316,8 +360,7 @@ IDxcBlob* ParticleManager::CompileShader(const std::wstring& filePath, const wch
 	return shaderBlob;
 }
 
-void ParticleManager::CreateRootSignature()
-{
+void ParticleManager::CreateRootSignature() {
 	HRESULT hr;
 
 	//DescriptorRange
@@ -387,8 +430,7 @@ void ParticleManager::CreateRootSignature()
 	rootSignature->SetName(L"ParticleRootSignature");
 }
 
-void ParticleManager::CreateGraphicsPipeline()
-{
+void ParticleManager::CreateGraphicsPipeline() {
 	HRESULT hr;
 	//DXC Compiler 初期化
 	IDxcUtils* dxcUtils = nullptr;
@@ -481,8 +523,7 @@ void ParticleManager::CreateGraphicsPipeline()
 
 }
 
-void ParticleManager::InitializeVertices()
-{
+void ParticleManager::InitializeVertices() {
 	vertices_.clear();
 	const uint32_t kCylinderDivide = 32;
 	const float kTopRadius = 1.0f;
@@ -491,34 +532,34 @@ void ParticleManager::InitializeVertices()
 
 	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kCylinderDivide);
 
-	for (uint32_t index = 0; index < kCylinderDivide; ++index) {
-		float sin = std::sin(index * radianPerDivide);
-		float cos = std::cos(index * radianPerDivide);
-		float sinNext = std::sin((index + 1) * radianPerDivide);
-		float cosNext = std::cos((index + 1) * radianPerDivide);
-		float u = float(index) / float(kCylinderDivide);
-		float uNext = float(index + 1) / float(kCylinderDivide);
+	//for (uint32_t index = 0; index < kCylinderDivide; ++index) {
+	//	float sin = std::sin(index * radianPerDivide);
+	//	float cos = std::cos(index * radianPerDivide);
+	//	float sinNext = std::sin((index + 1) * radianPerDivide);
+	//	float cosNext = std::cos((index + 1) * radianPerDivide);
+	//	float u = float(index) / float(kCylinderDivide);
+	//	float uNext = float(index + 1) / float(kCylinderDivide);
 
-		// 삼각형 1
-		vertices_.push_back({ { sin * kTopRadius, kHeight, cos * kTopRadius, 1.0f }, { u, 0.0f } });
-		vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
-		vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
+	//	// 삼각형 1
+	//	vertices_.push_back({ { sin * kTopRadius, kHeight, cos * kTopRadius, 1.0f }, { u, 0.0f } });
+	//	vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
+	//	vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
 
-		// 삼각형 2
-		vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
-		vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
-		vertices_.push_back({ { sinNext * kBottomRadius, 0.0f, cosNext * kBottomRadius, 1.0f }, { uNext, 1.0f } });
-	
-	}
-	//// 삼각형 1: 좌상, 좌하, 우상
-	//vertices_.push_back({ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }); // 좌상
-	//vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
-	//vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+	//	// 삼각형 2
+	//	vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
+	//	vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
+	//	vertices_.push_back({ { sinNext * kBottomRadius, 0.0f, cosNext * kBottomRadius, 1.0f }, { uNext, 1.0f } });
+	//
+	//}
+	// 삼각형 1: 좌상, 좌하, 우상
+	vertices_.push_back({ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }); // 좌상
+	vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
+	vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
 
-	//// 삼각형 2: 우상, 좌하, 우하
-	//vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
-	//vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
-	//vertices_.push_back({ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } }); // 우하
+	// 삼각형 2: 우상, 좌하, 우하
+	vertices_.push_back({ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }); // 우상
+	vertices_.push_back({ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }); // 좌하
+	vertices_.push_back({ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } }); // 우하
 	//vertices_.push_back({ { -1.0f, -1.0f, 0.0f,1.0f }, { 1.0f, 1.0f } }); // lower right
 }
 

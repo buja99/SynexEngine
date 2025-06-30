@@ -9,8 +9,8 @@ void MyGame::Initialize() {
 	sceneFactory_ = std::make_unique<SceneFactory>();
 	sceneManager_->SetSceneFactory(std::move(sceneFactory_));
 
-	//sceneManager_->ChangeScene("GAME");
-	sceneManager_->ChangeScene("TITLE");
+	sceneManager_->ChangeScene("GAME");
+	//sceneManager_->ChangeScene("TITLE");
 
 }
 
@@ -28,17 +28,20 @@ void MyGame::Update() {
 
 void MyGame::Draw() {
 
-	dxCommon_->PreDraw();
+	// 1. 오프스크린 렌더링
+	dxCommon_->RenderTexturePreDraw();
 	srvManager_->PreDraw();
-
 	sceneManager_->Draw();
-
+	dxCommon_->RenderTexturePostDraw();
+	//dxCommon_->PreDraw();
+	// 2. 스왑체인으로 복사
+	//dxCommon_->CopyRenderTextureToSwapChain();
+	dxCommon_->DrawGrayscaleToSwapChain();
 #ifdef _DEBUG
-
 	imGuiManager_->Draw();
-
 #endif // _DEBUG
 
+	// 3. 최종 렌더링 완료
 	dxCommon_->PostDraw();
 
 

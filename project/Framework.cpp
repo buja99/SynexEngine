@@ -33,6 +33,8 @@ void Framework::Initialize() {
 
 	srvManager_->Initialize(dxCommon_);
 
+	dxCommon_->InitializeOffscreenRenderTarget();
+
 #ifdef _DEBUG
 
 	imGuiManager_ = std::make_unique<ImGuiManager>();
@@ -130,7 +132,7 @@ void Framework::Update() {
 
 #endif // _DEBUG
 
-	
+	//input_->Update();
 	
 	sceneManager_->Update();
 

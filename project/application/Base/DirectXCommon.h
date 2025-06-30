@@ -11,6 +11,7 @@
 #include "FPSLimiter.h"
 #include <memory>
 #include "Vector4.h"
+#include "PostEffect.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -45,6 +46,8 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 
+	void RenderTexturePreDraw();
+	void RenderTexturePostDraw();
 	void PreDraw();
 	void PostDraw();
 
@@ -77,10 +80,16 @@ public:
 
 	void ReportLiveObjects();
 
-	//OffscreenRendering
-	ComPtr<ID3D12Resource> CreateRenderTextureResource
-	(ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+	// OffscreenRendering
+		ComPtr<ID3D12Resource> CreateRenderTextureResource
+		(ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4 & clearColor);
 	void InitializeOffscreenRenderTarget();
+	void InitializeCopyPipeline();
+	void CopyRenderTextureToSwapChain();
+	//Grayscale
+	void InitializeGrayscalePipeline();
+	void DrawGrayscaleToSwapChain();
+	void SetGrayscaleStrength(float strength);
 
 	void SetViewport(float x, float y, float width, float height);
 	void SetScissorRect(int left, int top, int right, int bottom);
@@ -135,8 +144,15 @@ private:
 	ComPtr<ID3D12Resource> offscreenRenderTarget_;
 	ComPtr<ID3D12DescriptorHeap> offscreenRTVHeap_;
 	D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTVHandle_;
-	ComPtr<ID3D12DescriptorHeap> offscreenSRVHeap_;
-	D3D12_GPU_DESCRIPTOR_HANDLE offscreenSRVHandle_;
+	ComPtr<ID3D12RootSignature> copyRootSignature_;
+	ComPtr<ID3D12PipelineState> copyPipelineState_;
+	uint32_t offscreenSRVIndex_ = 0;
+	//Grayscale
+	ComPtr<ID3D12RootSignature> grayscaleRootSignature_;
+	ComPtr<ID3D12PipelineState> grayscalePipelineState_;
+	ComPtr<ID3D12Resource> grayscaleConstBuffer_;
+	GrayscaleSettings grayscaleSettings_ = { 1.0f }; // 초기값 100%
+	D3D12_GPU_DESCRIPTOR_HANDLE grayscaleCbvHandle_;
 	
 
 };

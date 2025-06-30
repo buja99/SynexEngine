@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include <assert.h>
 #include <iostream>
+#include "DirectXCommon.h"
 
 SceneManager* SceneManager::GetInstance() {
 	static SceneManager instance;
@@ -30,8 +31,15 @@ void SceneManager::Update() {
 		assert(sceneFactory_);
 		scene_ = sceneFactory_->CreateScene(nextSceneName_);
 		scene_->SetSceneManager(this);
-		scene_->Initialize();
+		
 
+		DirectXCommon* dx = DirectXCommon::GetInstance();
+		dx->SetViewport(0.0f, 0.0f, WinApp::kClientWidth, WinApp::kClientHeight);
+		dx->SetScissorRect(0, 0, WinApp::kClientWidth, WinApp::kClientHeight);
+
+
+
+		scene_->Initialize();
 		nextSceneName_.clear(); // 다음 씬 이름 초기화
 	}
 

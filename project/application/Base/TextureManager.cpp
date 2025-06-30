@@ -32,7 +32,7 @@ void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 
 void TextureManager::LoadTexture(const std::string& filePath)
 {
-	OutputDebugStringA(("Attempting to load texture from file path: " + filePath + "\n").c_str());
+	//OutputDebugStringA(("Attempting to load texture from file path: " + filePath + "\n").c_str());
 
 	if (textureDatas.contains(filePath)) {
 		return; // Textures already loadedS
