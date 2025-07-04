@@ -86,6 +86,7 @@ public:
 	void InitializeOffscreenRenderTarget();
 	void InitializeCopyPipeline();
 	void CopyRenderTextureToSwapChain();
+	void InitializeOffscreenDSV();
 	//Grayscale
 	void InitializeGrayscalePipeline();
 	void DrawGrayscaleToSwapChain();
@@ -142,6 +143,9 @@ private:
 
 	//OffscreenRendering
 	ComPtr<ID3D12Resource> offscreenRenderTarget_;
+	ComPtr<ID3D12Resource> offscreenDepthStencilBuffer_;
+	ComPtr<ID3D12DescriptorHeap> offscreenDSVHeap_;
+	D3D12_CPU_DESCRIPTOR_HANDLE offscreenDSVHandle_;
 	ComPtr<ID3D12DescriptorHeap> offscreenRTVHeap_;
 	D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTVHandle_;
 	ComPtr<ID3D12RootSignature> copyRootSignature_;

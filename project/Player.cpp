@@ -55,13 +55,25 @@ void Player::Initialize() {
 void Player::Updata() {
 
 	Input* input = Input::GetInstance();
-
+	Vector3 move = { 0.0f, 0.0f, 0.0f };
 	if (input->PushKey(DIK_A)) {
-		playerTransforms_[BODY]->translate_.x -= speed;
+		move.x -= 1.0f;
 	}
 	if (input->PushKey(DIK_D)) {
-		playerTransforms_[BODY]->translate_.x += speed;
+		move.x += 1.0f;
 	}
+	if (input->PushKey(DIK_W)) {
+		move.z += 1.0f;
+	}
+	if (input->PushKey(DIK_S)) {
+		move.z -= 1.0f;
+	}
+	if (move.x != 0.0f || move.z != 0.0f) {
+		move = MyMath::normalize(move);  // ← Vector3에 Normalize 함수가 있어야 함
+		move = MyMath::Multiply(move,speed);
+	}
+
+	playerTransforms_[BODY]->translate_ = MyMath::Add(playerTransforms_[BODY]->translate_, move);
 
 	// 이동 후 범위 제한
 	Vector3& pos = playerTransforms_[BODY]->translate_;

@@ -354,14 +354,15 @@ void DirectXCommon::RenderTexturePreDraw() {
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 	commandList->ResourceBarrier(1, &barrier);
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	//D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = offscreenDSVHandle_;
 	// RTV만 설정 (Depth는 사용 안 함)
 	commandList->OMSetRenderTargets(1, &offscreenRTVHandle_, FALSE, &dsvHandle);
 
 	// Clear
 	float clearColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	commandList->ClearRenderTargetView(offscreenRTVHandle_, clearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	commandList->ClearDepthStencilView(offscreenDSVHandle_, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	// 뷰포트 / 시저
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
@@ -547,7 +548,9 @@ void DirectXCommon::Cleanup() {
 
 	if (rtvDescriptorHeap) { rtvDescriptorHeap.Reset(); }
 	if (dsvDescriptorHeap) { dsvDescriptorHeap.Reset(); }
+	if (offscreenDSVHeap_) { offscreenDSVHeap_.Reset(); }
 	if (offscreenRTVHeap_) { offscreenRTVHeap_.Reset(); }
+	if (offscreenDepthStencilBuffer_) { offscreenDepthStencilBuffer_.Reset(); }
 	if (offscreenRenderTarget_) { offscreenRenderTarget_.Reset(); }
 	if (depthStencilBuffer) { depthStencilBuffer.Reset(); }
 
@@ -668,6 +671,9 @@ void DirectXCommon::InitializeOffscreenRenderTarget() {
 	offscreenSRVIndex_ = SrvManager::GetInstance()->Allocate();
 	SrvManager::GetInstance()->CreatSRVforTexture2D(
 		offscreenSRVIndex_, offscreenRenderTarget_.Get(), format, 1);
+
+	InitializeOffscreenDSV();
+
 }
 
 void DirectXCommon::InitializeCopyPipeline() {
@@ -761,6 +767,29 @@ void DirectXCommon::CopyRenderTextureToSwapChain() {
 	commandList->DrawInstanced(3, 1, 0, 0);
 
 
+}
+
+void DirectXCommon::InitializeOffscreenDSV() {
+	// 오프스크린용 DepthStencil 리소스 생성
+	offscreenDepthStencilBuffer_ = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+
+	// Heap 생성
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	HRESULT hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&offscreenDSVHeap_));
+	assert(SUCCEEDED(hr));
+	offscreenDSVHeap_->SetName(L"OffscreenDSVHeap");
+
+	// DSV 생성
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	offscreenDSVHandle_ = offscreenDSVHeap_->GetCPUDescriptorHandleForHeapStart();
+	device->CreateDepthStencilView(offscreenDepthStencilBuffer_.Get(), &dsvDesc, offscreenDSVHandle_);
 }
 
 void DirectXCommon::InitializeGrayscalePipeline() {

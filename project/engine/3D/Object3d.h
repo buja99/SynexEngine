@@ -85,8 +85,6 @@ class Object3d
 	void SetUseAreaLight(bool use);
 	bool GetUseAreaLight() const;
 
-	
-
 private:
 
 	std::string modelName_;

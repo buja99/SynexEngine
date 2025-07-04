@@ -20,6 +20,8 @@ void Ground::Initialize() {
 		ground_->SetCamera(camera);
 	}
 
+	
+
 }
 
 void Ground::Update() {

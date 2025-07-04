@@ -297,6 +297,8 @@ bool Object3d::GetUseAreaLight() const {
 }
 
 
+
+
 void Object3d::InitializeTransformationMatrix()
 {
 

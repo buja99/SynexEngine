@@ -31,10 +31,6 @@ public:
 
 	void Draw() override;
 
-	void DrawStencilMask();
-
-	void DrawModels();
-
 	void Finalize() override;
 
 	
@@ -93,6 +89,16 @@ private:
 	ModelRegistry registry_;
 
 
+	Vector3 cameraOffset_;
 
+	float centerX = 0.0f;
+	float centerY = 0.0f;
+	float halfW = 0.1f;
+	float halfH = 0.1f;
+
+	float left = centerX - halfW;
+	float right = centerX + halfW;
+	float top = centerY + halfH;
+	float bottom = centerY - halfH;
 };
 

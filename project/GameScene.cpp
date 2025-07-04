@@ -26,7 +26,7 @@ void GameScene::Initialize() {
 
 
 
-
+	
 
 
 ModelManager::GetInstance()->Initialize(DirectXCommon::GetInstance());
@@ -106,6 +106,9 @@ emitter_.frequency = 0.05f;
 emitter_.frequencyTime = 0.0f;
 emitter_.transform.translate = { 0.0f, 10.0f, 0.0f };
 
+
+camera_->SetRotate({ 1.2f, 0.0f, 0.0f });
+cameraOffset_ = { 0.1f, 41.2f, -33.9f };
 }
 
 void GameScene::Update() {
@@ -128,26 +131,26 @@ void GameScene::Update() {
 		ImGui::DragFloat3("Weeds Scale", &weedsWorldTransform_->scale_.x, 0.1f);
 	}
 
-
-	// 🆕 Viewport / Scissor 설정
-	static float viewportX = 200.0f;
-	static float viewportY = 100.0f;
-	static float viewportW = 600.0f;
-	static float viewportH = 400.0f;
-
-	ImGui::DragFloat("Viewport X", &viewportX, 1.0f);
-	ImGui::DragFloat("Viewport Y", &viewportY, 1.0f);
-	ImGui::DragFloat("Viewport W", &viewportW, 1.0f);
-	ImGui::DragFloat("Viewport H", &viewportH, 1.0f);
-
-	// 적용
-	/*DirectXCommon::GetInstance()->SetViewport(viewportX, viewportY, viewportW, viewportH);
-	DirectXCommon::GetInstance()->SetScissorRect(
-		(int)viewportX, (int)viewportY,
-		(int)(viewportX + viewportW), (int)(viewportY + viewportH));*/
-
 	ImGui::End();
 
+	ImGui::Begin("cameraOffset ");
+
+	// 카메라 오프셋 조정
+	if (ImGui::CollapsingHeader("Camera Offset")) {
+		ImGui::DragFloat3("Offset", &cameraOffset_.x, 0.1f);
+	}
+
+	
+		ImGui::End();
+
+		ImGui::Begin("Stencil Mask");
+
+		ImGui::SliderFloat("Center X", &centerX, -1.0f, 1.0f);
+		ImGui::SliderFloat("Center Y", &centerY, -1.0f, 1.0f);
+		ImGui::SliderFloat("Half Width", &halfW, 0.0f, 10.0f);
+		ImGui::SliderFloat("Half Height", &halfH, 0.0f, 10.0f);
+
+		ImGui::End();
 #endif
 
 
@@ -156,16 +159,16 @@ void GameScene::Update() {
 	ground_->Update();
 
 	player_->Updata();
-
-	Vector3 playerPos = player_->GetPosition();
-	Vector3 eye = MyMath::Add( playerPos , Vector3{0.0f, 8.0f, -15.0f}); // 위에서 바라보는 시점
-	Vector3 target = playerPos;
-
-	camera_->SetEye(eye);
-	camera_->SetTarget(target);
-	camera_->SetUp({ 0.0f, 1.0f, 0.0f }); // 기본 업벡터
-	camera_->UpdateMatrix();
 	camera_->Update();
+	//Vector3 playerPos = player_->GetPosition();
+	//Vector3 eye = MyMath::Add(playerPos, cameraOffset_); // 위에서 바라보는 시점
+	//Vector3 target = playerPos;
+
+	//camera_->SetEye(eye);
+	//camera_->SetTarget(target);
+	
+	camera_->UpdateMatrix();
+	
 
 	treeModel_->Update();
 	treeModel2_->Update();
@@ -193,14 +196,6 @@ void GameScene::Update() {
 		return;
 	}
 
-	/*if (input_->TriggerKey(DIK_A)) {
-		moveObj();
-		treeModel_->SetRotate({ -1.7f, 0.0f, 0.0f });
-		treeModel2_->SetRotate({ -1.7f, 0.0f, 0.0f });
-		weedsModel_->SetRotate({ -1.7f, 0.0f, 0.0f });
-		weedsModel2_->SetRotate({ -1.7f, 0.0f, 0.0f });
-	}*/
-
 
 	emitter_.frequencyTime += 1.0f / 60.0f;
 
@@ -219,13 +214,48 @@ void GameScene::Update() {
 void GameScene::Draw() {
 	SpriteCommon::GetInstance()->SetUIPipeline();
 	
-	back_->Draw();
+	//back_->Draw();
 
 	SrvManager::GetInstance()->PreDraw();
-	Object3dCommon::GetInstance()->stencilMaskSettings();
-	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	ground_->Draw();
+	left = centerX - halfW;
+	right = centerX + halfW;
+	top = centerY + halfH;
+	bottom = centerY - halfH;
+
+	//// 1. 마스크 사각형 지정
+	//Object3dCommon::GetInstance()->SetStencilQuadArea(-1.0f, 1.0f, 1.0f, -1.0f, 0.0f);
+	//Object3dCommon::GetInstance()->SetStencilWriteMaskValue(0); // ← 필요 시 스텐실 참조값 설정 함수
+	//Object3dCommon::GetInstance()->SetStencilWritePipeline();   // ← 전체 1로 설정하는 PSO
+	//Object3dCommon::GetInstance()->stencilMaskSettings();       // ← 마스크 렌더링 (DrawInstanced(6))
+
+
+	Object3dCommon::GetInstance()->SetStencilQuadArea(left, right, top, bottom, 0.0f);
+	Object3dCommon::GetInstance()->SetStencilWriteMaskValue(0); // 스텐실 0으로 쓰기
+	Object3dCommon::GetInstance()->SetStencilWritePipeline();   // ← 같은 PSO 사용해도 됨
+	Object3dCommon::GetInstance()->stencilMaskSettings();
+
+	//auto commandList = DirectXCommon::GetInstance()->GetCommandList();
+	//commandList->SetGraphicsRootConstantBufferView(
+	//	9, // RootParameter Index
+	//	Object3dCommon::GetInstance()->GetPlayerRangeCB()->GetGPUVirtualAddress()
+	//);
+
+	//Vector3 playerPos = player_->GetPosition(); // Vector3 → XMFLOAT3
+	//float visibleRange = 30.0f;
+
+	//struct PlayerRangeData {
+	//	Vector3 playerPos;
+	//	float range;
+	//};
+
+	//PlayerRangeData* mapped = nullptr;
+	//Object3dCommon::GetInstance()->GetPlayerRangeCB()->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	//mapped->playerPos = playerPos;
+	//mapped->range = visibleRange;
+	//Object3dCommon::GetInstance()->GetPlayerRangeCB()->Unmap(0, nullptr);
+
+	//ground_->Draw();
 
 	
 
@@ -235,20 +265,14 @@ void GameScene::Draw() {
 	weedsModel_->Draw();
 	weedsModel2_->Draw();*/
 
-	player_->Draw();
+	
+	//player_->Draw();
 
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
-	primitive_->Draw();
+	//primitive_->Draw();
 
 }
 
-void GameScene::DrawStencilMask() {
-	
-}
-
-void GameScene::DrawModels() {
-	Object3dCommon::GetInstance()->CommonDrawSettings();
-}
 
 void GameScene::Finalize() {
 	
