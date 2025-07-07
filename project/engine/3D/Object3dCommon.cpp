@@ -16,8 +16,8 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 	commandList = dxCommon_->GetCommandList();
 
 	CreateGraphicsPipeline();
-	CreateStencilWritePipeline();
-	CreateStencilTestPipeline();
+	/*CreateStencilWritePipeline();
+	CreateStencilTestPipeline();*/
 
 	
 
@@ -63,7 +63,7 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 	//stencilMaskVBView_.SizeInBytes = static_cast<UINT>(vbSize);
 	//stencilMaskVBView_.StrideInBytes = sizeof(SimpleVertex);
 
-	size_t vbSize = sizeof(quadVertices);
+	/*size_t vbSize = sizeof(quadVertices);
 
 	D3D12_HEAP_PROPERTIES heapProp{};
 	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -83,7 +83,7 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 
 	stencilMaskVBView_.BufferLocation = stencilMaskVertexBuffer_->GetGPUVirtualAddress();
 	stencilMaskVBView_.SizeInBytes = static_cast<UINT>(vbSize);
-	stencilMaskVBView_.StrideInBytes = sizeof(SimpleVertex);
+	stencilMaskVBView_.StrideInBytes = sizeof(SimpleVertex);*/
 
 	//D3D12_HEAP_PROPERTIES heapProp = {};
 	//heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;

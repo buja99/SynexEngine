@@ -64,7 +64,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json;$(ProjectDir)application\core;$(ProjectDir)application\debug;$(ProjectDir)application\scenes;$(ProjectDir)application\sceneSystem;$(ProjectDir)engine\audio;$(ProjectDir)engine\gameplay;$(ProjectDir)engine\spriteCamera;$(ProjectDir)engine\utils;$(ProjectDir)engine\worldTransform;$(ProjectDir)engine\utils\json</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,8 +94,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json;$(ProjectDir)application\core;$(ProjectDir)application\debug;$(ProjectDir)application\scenes;$(ProjectDir)application\sceneSystem;$(ProjectDir)engine\audio;$(ProjectDir)engine\gameplay;$(ProjectDir)engine\spriteCamera;$(ProjectDir)engine\utils;$(ProjectDir)engine\worldTransform;$(ProjectDir)engine\utils\json</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -122,7 +122,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Base\TextureManager.cpp" />
     <ClCompile Include="application\Base\WinApp.cpp" />
     <ClCompile Include="application\Input\Input.cpp" />
-    <ClCompile Include="BaseScene.cpp" />
+    <ClCompile Include="application\sceneSystem\BaseScene.cpp" />
     <ClCompile Include="engine\camera\Camera.cpp" />
     <ClCompile Include="engine\2D\Sprite.cpp" />
     <ClCompile Include="engine\2D\SpriteCommon.cpp" />
@@ -132,29 +132,29 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3D\Object3d.cpp" />
     <ClCompile Include="engine\3D\Object3dCommon.cpp" />
     <ClCompile Include="engine\Math\MyMath.cpp" />
-    <ClCompile Include="Framework.cpp" />
-    <ClCompile Include="GameScene.cpp" />
-    <ClCompile Include="Ground.cpp" />
-    <ClCompile Include="ImGuiManager.cpp" />
-    <ClCompile Include="LeakCheck.h" />
-    <ClCompile Include="LevelApplier.cpp" />
-    <ClCompile Include="LevelLoader.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="application\core\Framework.cpp" />
+    <ClCompile Include="application\scenes\GameScene.cpp" />
+    <ClCompile Include="engine\gameplay\Ground.cpp" />
+    <ClCompile Include="application\debug\ImGuiManager.cpp" />
+    <ClCompile Include="engine\utils\LeakCheck.h" />
+    <ClCompile Include="engine\utils\json\LevelApplier.cpp" />
+    <ClCompile Include="engine\utils\json\LevelLoader.cpp" />
+    <ClCompile Include="application\core\main.cpp" />
     <ClCompile Include="engine\srvManager\SrvManager.cpp" />
     <ClCompile Include="engine\particle\ParticleManager.cpp" />
-    <ClCompile Include="ModelRegistry.cpp" />
-    <ClCompile Include="MyGame.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="ResourceUtils.cpp" />
-    <ClCompile Include="SceneFactory.cpp" />
-    <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="Sound.cpp" />
-    <ClCompile Include="SpriteCamera.cpp" />
-    <ClCompile Include="TitleScene.cpp" />
-    <ClCompile Include="WorldTransform.cpp" />
+    <ClCompile Include="engine\utils\json\ModelRegistry.cpp" />
+    <ClCompile Include="application\core\MyGame.cpp" />
+    <ClCompile Include="engine\gameplay\Player.cpp" />
+    <ClCompile Include="engine\utils\ResourceUtils.cpp" />
+    <ClCompile Include="application\sceneSystem\SceneFactory.cpp" />
+    <ClCompile Include="application\sceneSystem\SceneManager.cpp" />
+    <ClCompile Include="engine\audio\Sound.cpp" />
+    <ClCompile Include="engine\spriteCamera\SpriteCamera.cpp" />
+    <ClCompile Include="application\scenes\TitleScene.cpp" />
+    <ClCompile Include="engine\worldTransform\WorldTransform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractSceneFactory.h" />
+    <ClInclude Include="application\sceneSystem\AbstractSceneFactory.h" />
     <ClInclude Include="application\Base\DirectXCommon.h" />
     <ClInclude Include="application\Base\FPSLimiter.h" />
     <ClInclude Include="application\Base\Logger.h" />
@@ -162,7 +162,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Base\TextureManager.h" />
     <ClInclude Include="application\Base\WinApp.h" />
     <ClInclude Include="application\Input\Input.h" />
-    <ClInclude Include="BaseScene.h" />
+    <ClInclude Include="application\sceneSystem\BaseScene.h" />
     <ClInclude Include="engine\camera\Camera.h" />
     <ClInclude Include="engine\2D\Sprite.h" />
     <ClInclude Include="engine\2D\SpriteCommon.h" />
@@ -183,22 +183,22 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Math\VertexData.h" />
     <ClInclude Include="engine\srvManager\SrvManager.h" />
     <ClInclude Include="engine\particle\ParticleManager.h" />
-    <ClInclude Include="Framework.h" />
-    <ClInclude Include="GameScene.h" />
-    <ClInclude Include="Ground.h" />
-    <ClInclude Include="ImGuiManager.h" />
-    <ClInclude Include="LevelApplier.h" />
-    <ClInclude Include="LevelLoader.h" />
-    <ClInclude Include="ModelRegistry.h" />
-    <ClInclude Include="MyGame.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="ResourceUtils.h" />
-    <ClInclude Include="SceneFactory.h" />
-    <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Sound.h" />
-    <ClInclude Include="SpriteCamera.h" />
-    <ClInclude Include="TitleScene.h" />
-    <ClInclude Include="WorldTransform.h" />
+    <ClInclude Include="application\core\Framework.h" />
+    <ClInclude Include="application\scenes\GameScene.h" />
+    <ClInclude Include="engine\gameplay\Ground.h" />
+    <ClInclude Include="application\debug\ImGuiManager.h" />
+    <ClInclude Include="engine\utils\json\LevelApplier.h" />
+    <ClInclude Include="engine\utils\json\LevelLoader.h" />
+    <ClInclude Include="engine\utils\json\ModelRegistry.h" />
+    <ClInclude Include="application\core\MyGame.h" />
+    <ClInclude Include="engine\gameplay\Player.h" />
+    <ClInclude Include="engine\utils\ResourceUtils.h" />
+    <ClInclude Include="application\sceneSystem\SceneFactory.h" />
+    <ClInclude Include="application\sceneSystem\SceneManager.h" />
+    <ClInclude Include="engine\audio\Sound.h" />
+    <ClInclude Include="engine\spriteCamera\SpriteCamera.h" />
+    <ClInclude Include="application\scenes\TitleScene.h" />
+    <ClInclude Include="engine\worldTransform\WorldTransform.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
@@ -218,6 +218,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="resources\shaders\Particle.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="resources\shaders\Skybox.hlsli">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </None>
@@ -248,6 +252,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="resources\shaders\Particle.VS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Skybox.PS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Skybox.VS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

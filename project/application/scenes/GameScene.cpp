@@ -160,12 +160,12 @@ void GameScene::Update() {
 
 	player_->Updata();
 	camera_->Update();
-	//Vector3 playerPos = player_->GetPosition();
-	//Vector3 eye = MyMath::Add(playerPos, cameraOffset_); // 위에서 바라보는 시점
-	//Vector3 target = playerPos;
+	Vector3 playerPos = player_->GetPosition();
+	Vector3 eye = MyMath::Add(playerPos, cameraOffset_); // 위에서 바라보는 시점
+	Vector3 target = playerPos;
 
-	//camera_->SetEye(eye);
-	//camera_->SetTarget(target);
+	camera_->SetEye(eye);
+	camera_->SetTarget(target);
 	
 	camera_->UpdateMatrix();
 	
@@ -230,10 +230,10 @@ void GameScene::Draw() {
 	//Object3dCommon::GetInstance()->stencilMaskSettings();       // ← 마스크 렌더링 (DrawInstanced(6))
 
 
-	Object3dCommon::GetInstance()->SetStencilQuadArea(left, right, top, bottom, 0.0f);
-	Object3dCommon::GetInstance()->SetStencilWriteMaskValue(0); // 스텐실 0으로 쓰기
-	Object3dCommon::GetInstance()->SetStencilWritePipeline();   // ← 같은 PSO 사용해도 됨
-	Object3dCommon::GetInstance()->stencilMaskSettings();
+	//Object3dCommon::GetInstance()->SetStencilQuadArea(left, right, top, bottom, 0.0f);
+	//Object3dCommon::GetInstance()->SetStencilWriteMaskValue(0); // 스텐실 0으로 쓰기
+	//Object3dCommon::GetInstance()->SetStencilWritePipeline();   // ← 같은 PSO 사용해도 됨
+	//Object3dCommon::GetInstance()->stencilMaskSettings();
 
 	//auto commandList = DirectXCommon::GetInstance()->GetCommandList();
 	//commandList->SetGraphicsRootConstantBufferView(
@@ -255,7 +255,9 @@ void GameScene::Draw() {
 	//mapped->range = visibleRange;
 	//Object3dCommon::GetInstance()->GetPlayerRangeCB()->Unmap(0, nullptr);
 
-	//ground_->Draw();
+
+	Object3dCommon::GetInstance()->CommonDrawSettings();
+	ground_->Draw();
 
 	
 
@@ -266,7 +268,7 @@ void GameScene::Draw() {
 	weedsModel2_->Draw();*/
 
 	
-	//player_->Draw();
+	player_->Draw();
 
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	//primitive_->Draw();
