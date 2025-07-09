@@ -331,3 +331,6 @@ x86/
 
 # DirectXGame project directory
 DirectXGame/
+
+# Debug symbol files
+*.pdb
