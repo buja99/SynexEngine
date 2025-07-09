@@ -2,7 +2,7 @@
 #include "SceneManager.h"
 #include "ImGuiManager.h"
 #include "MyMath.h"
-
+#include "LevelObjectBuilder.h"
 GameScene::~GameScene() {
 }
 
@@ -13,6 +13,7 @@ void GameScene::Initialize() {
 	audio_ = Sound::GetInstance();
 	input_ = Input::GetInstance();
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+	camera_ = std::make_unique<Camera>();
 
 	TextureManager::GetInstance()->LoadTexture("resources/back.png");
 
@@ -34,41 +35,19 @@ ModelManager::GetInstance()->Initialize(DirectXCommon::GetInstance());
 ModelManager::GetInstance()->LoadModel("resources/obj/tree", "tree.obj");
 ModelManager::GetInstance()->LoadModel("resources/obj/weeds", "weeds.obj");
 
-treeWorldTransform_ = std::make_unique<WorldTransform>();
-treeWorldTransform_->Initialize();
 
-tree2WorldTransform_ = std::make_unique<WorldTransform>();
-tree2WorldTransform_->Initialize();
+//LevelObjectBuilder::BuildFromJson(
+//	"resources/json/test3.json",
+//	registry,
+//	levelObjects_,
+//	levelTransforms_,
+//	camera_.get()
+//);
 
-treeModel_ = std::make_unique<Object3d>();
-treeModel_->Initialize(Object3dCommon::GetInstance(), treeWorldTransform_.get());
-treeModel_->SetModel("tree.obj");
 
-treeModel2_ = std::make_unique<Object3d>();
-treeModel2_->Initialize(Object3dCommon::GetInstance(), tree2WorldTransform_.get());
-treeModel2_->SetModel("tree.obj");
-
-weedsWorldTransform_ = std::make_unique<WorldTransform>();
-weedsWorldTransform_->Initialize();
-
-weeds2WorldTransform_ = std::make_unique<WorldTransform>();
-weeds2WorldTransform_->Initialize();
-
-weedsModel_ = std::make_unique<Object3d>();
-weedsModel_->Initialize(Object3dCommon::GetInstance(), weedsWorldTransform_.get());
-weedsModel_->SetModel("weeds.obj");
-
-weedsModel2_ = std::make_unique<Object3d>();
-weedsModel2_->Initialize(Object3dCommon::GetInstance(), weeds2WorldTransform_.get());
-weedsModel2_->SetModel("weeds.obj");
-
-camera_ = std::make_unique<Camera>();
 ground_->SetCamera(camera_.get());
 
-treeModel_->SetCamera(camera_.get());
-treeModel2_->SetCamera(camera_.get());
-weedsModel_->SetCamera(camera_.get());
-weedsModel2_->SetCamera(camera_.get());
+
 
 	//weedsWorldTransform_->translate_ = { -10.0f, 0.0f, 0.0f };
 	
@@ -82,14 +61,9 @@ Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
 
 // Register models and transforms
-registry_.Register("treeModel_", treeModel_.get(), treeWorldTransform_.get());
-registry_.Register("treeModel2_", treeModel2_.get(), tree2WorldTransform_.get());
-registry_.Register("weedsModel_", weedsModel_.get(), weedsWorldTransform_.get());
-registry_.Register("weedsModel2_", weedsModel2_.get(), weeds2WorldTransform_.get());
 
 // Load and apply level data
-LevelData* levelData = LevelLoader::LoadLevelData("resources/json/test1.json");
-LevelApplier::ApplyLevelTransforms(levelData, registry_.GetTransformMap());
+
 
 
 DirectXCommon::GetInstance()->SetGrayscaleStrength(0.0f);
@@ -118,18 +92,7 @@ void GameScene::Update() {
 
 #ifdef _DEBUG
 	ImGui::Begin("Model Transform");
-	if (ImGui::CollapsingHeader("Tree")) {
-		ImGui::DragFloat3("Tree Position", &treeWorldTransform_->translate_.x, 0.1f);
-		ImGui::DragFloat3("Tree Rotation", &treeWorldTransform_->rotate_.x, 0.1f);
-		ImGui::DragFloat3("Tree Scale", &treeWorldTransform_->scale_.x, 0.1f);
-	}
-
-	// Weeds Model Transform
-	if (ImGui::CollapsingHeader("Weeds")) {
-		ImGui::DragFloat3("Weeds Position", &weedsWorldTransform_->translate_.x, 0.1f);
-		ImGui::DragFloat3("Weeds Rotation", &weedsWorldTransform_->rotate_.x, 0.1f);
-		ImGui::DragFloat3("Weeds Scale", &weedsWorldTransform_->scale_.x, 0.1f);
-	}
+	
 
 	ImGui::End();
 
@@ -169,25 +132,14 @@ void GameScene::Update() {
 	
 	camera_->UpdateMatrix();
 	
+	/*for (auto& wt : levelTransforms_) {
+		wt->UpdateMatrix();
+		wt->TransferMatrix();
+	}
 
-	treeModel_->Update();
-	treeModel2_->Update();
-	weedsModel_->Update();
-	weedsModel2_->Update();
-	
-
-
-	treeWorldTransform_->UpdateMatrix();
-	treeWorldTransform_->TransferMatrix();
-
-	tree2WorldTransform_->UpdateMatrix();
-	tree2WorldTransform_->TransferMatrix();
-
-	weedsWorldTransform_->UpdateMatrix();
-	weedsWorldTransform_->TransferMatrix();
-
-	weeds2WorldTransform_->UpdateMatrix();
-	weeds2WorldTransform_->TransferMatrix();
+	for (auto& obj : levelObjects_) {
+		obj->Update();
+	}*/
 
 	
 	if (input_->TriggerKey(DIK_R)) {
@@ -260,12 +212,9 @@ void GameScene::Draw() {
 	ground_->Draw();
 
 	
-
-	/*treeModel_->Draw(); 
-	treeModel2_->Draw();
-
-	weedsModel_->Draw();
-	weedsModel2_->Draw();*/
+	/*for (auto& obj : levelObjects_) {
+		obj->Draw();
+	}*/
 
 	
 	player_->Draw();

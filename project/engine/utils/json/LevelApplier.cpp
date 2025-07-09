@@ -5,7 +5,7 @@ void LevelApplier::ApplyLevelTransforms(
     const std::unordered_map<std::string, WorldTransform*>& transformTable
 ) {
     for (const auto& objectData : levelData->objects) {
-        const std::string& key = objectData.fileName;
+        const std::string& key = objectData.name;
 
         auto it = transformTable.find(key);
         if (it != transformTable.end()) {

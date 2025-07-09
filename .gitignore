@@ -321,3 +321,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Build output directories
+x64/
+x86/

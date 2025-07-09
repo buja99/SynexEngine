@@ -6,6 +6,7 @@
 
 struct LevelData {
     struct ObjectData {
+        std::string name; 
         std::string fileName;
         Vector3 translation;
         Vector3 rotation;

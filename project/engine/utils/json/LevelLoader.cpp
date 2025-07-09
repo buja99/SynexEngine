@@ -31,6 +31,11 @@ void LevelLoader::DeserializeObjectRecursive(nlohmann::json& object, LevelData* 
         levelData->objects.emplace_back(LevelData::ObjectData{});
         LevelData::ObjectData& objectData = levelData->objects.back();
 
+        if (object.contains("name")) {
+            objectData.name = object["name"];
+        } else {
+            assert(0 && "Missing 'name' field in JSON object.");
+        }
         if (object.contains("file_name")) {
             objectData.fileName = object["file_name"];
         }
