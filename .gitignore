@@ -321,3 +321,19 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Build output directories
+x64/
+x86/
+
+# Visual Studio Code settings
+.vscode/
+
+# DirectXGame project directory
+DirectXGame/
+
+# Debug symbol files
+*.pdb
+
+# ImGui settings file
+imgui.ini

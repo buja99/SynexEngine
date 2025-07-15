@@ -75,6 +75,11 @@ ConstantBuffer<PointLight> gPointLight : register(b3);
 ConstantBuffer<SpotLight> gSpotLight : register(b4);
 ConstantBuffer<AmbientLight> gAmbientLight : register(b5);
 ConstantBuffer<AreaLight> gAreaLight : register(b6);
+cbuffer PlayerRange : register(b7)
+{
+    float3 playerWorldPos;
+    float visibleRange;
+};
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 struct PixelShaderOutput
@@ -86,6 +91,12 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
 
+    //float dist = distance(input.worldPosition, playerWorldPos);
+    //if (dist > visibleRange)
+    //{
+    //    discard;
+    //}
+    
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
 

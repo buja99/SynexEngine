@@ -7,6 +7,7 @@
 using Microsoft::WRL::ComPtr;
 
 
+
 class Object3dCommon
 {
 
@@ -22,6 +23,17 @@ public:
 	void Finalize();
 
 	void CommonDrawSettings();
+
+	void stencilMaskSettings();
+
+	void SetStencilTestDrawSettings();
+
+	void SetStencilQuadArea(float left, float right, float top, float bottom,float z);
+
+	void SetStencilWriteMaskValue(uint8_t value);
+
+	void SetStencilWritePipeline();
+
 
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
@@ -41,6 +53,10 @@ public:
 
 	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
 	Camera* GetDefaultCamera() const { return defaultCamera; }
+	ComPtr<ID3D12PipelineState> GetStencilTestPipelineState() const { return stencilTestPipelineState_; }
+	ComPtr<ID3D12RootSignature> GetRootSignature() const { return rootSignature; }
+
+	ComPtr<ID3D12Resource> GetPlayerRangeCB() const { return playerRangeCB_; }
 
 private:
 
@@ -52,10 +68,21 @@ private:
 	void CreateRootSignature();
 	void CreateGraphicsPipeline();
 
+	void CreateStencilWritePipeline(); // 스텐실 값 기록용
+	void CreateStencilTestPipeline();  // 값이 1인 경우에만 통과
+
 	ComPtr<ID3D12Device> device;
 
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> graphicsPipelineState;
+
+	ComPtr<ID3D12PipelineState> stencilMaskPipelineState_;
+	ComPtr<ID3D12RootSignature> stencilMaskRootSignature_;
+	ComPtr<ID3D12PipelineState> stencilTestPipelineState_; // EQUAL 조건용
+
+	ComPtr<ID3D12Resource> stencilMaskVertexBuffer_;
+	D3D12_VERTEX_BUFFER_VIEW stencilMaskVBView_{};
+
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 
 	DirectXCommon* dxCommon_ = nullptr;
@@ -63,5 +90,12 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 
 	Camera* defaultCamera = nullptr;
+
+	struct SimpleVertex {
+		Vector3 pos;
+	};
+
+	ComPtr<ID3D12Resource> playerRangeCB_;
+
 };
 

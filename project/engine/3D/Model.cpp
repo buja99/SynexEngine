@@ -58,7 +58,10 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 
 	std::string filePath = directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath,
-		aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_FlipWindingOrder);
+		aiProcess_Triangulate |
+		aiProcess_FlipUVs |
+		aiProcess_FlipWindingOrder |
+		aiProcess_ConvertToLeftHanded);
 
 	assert(scene && scene->HasMeshes());
 
@@ -76,8 +79,8 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 			aiVector3D tex = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][index] : aiVector3D();
 
 			VertexData vtx;
-			vtx.position = { -pos.x, pos.y, pos.z, 1.0f }; // 좌우반전
-			vtx.normal = { -norm.x, norm.y, norm.z };     // 좌우반전
+			vtx.position = { pos.x, pos.y, pos.z, 1.0f }; // 좌우반전
+			vtx.normal = { norm.x, norm.y, norm.z };     // 좌우반전
 			vtx.texCoord = { tex.x, tex.y };
 
 			modelData.vertices.push_back(vtx);

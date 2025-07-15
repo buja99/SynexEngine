@@ -7,7 +7,7 @@
 
 
 Object3d::~Object3d() {
-	OutputDebugStringA("Object3d Destructor Called\n");
+	//OutputDebugStringA("Object3d Destructor Called\n");
 	Cleanup();
 }
 
@@ -17,7 +17,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldT
 	assert(worldTransform != nullptr);
 
 	this->object3dCommon_ = object3dCommon;
-	worldTransform_ = std::make_unique<WorldTransform>();
+	worldTransform_ = worldTransform;
 
 	//modelData = LoadobjFile("resources", "plane.obj");
 
@@ -45,16 +45,17 @@ void Object3d::Update()
 		return;
 	}
 
-	if (worldTransform_) {
+	/*if (worldTransform_) {
 		worldTransform_->scale_ = transform.scale;
 		worldTransform_->rotate_ = transform.rotate;
 		worldTransform_->translate_ = transform.translate;
-	}
+	}*/
 
 	// WorldTransform에서 행렬 계산
 	worldTransform_->UpdateMatrix();
 
 	// WVP 계산
+	
 	if (camera) {
 		const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 
@@ -137,10 +138,10 @@ void Object3d::Cleanup()
 		materialData_ = nullptr;               
 	}
 	//model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
-	if (worldTransform_) {
-		worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
-		worldTransform_.reset();     // unique_ptr 해제
-	}
+	//if (worldTransform_) {
+	//	worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
+	//	worldTransform_.reset();     // unique_ptr 해제
+	//}
 	object3dCommon_ = nullptr;
 	camera = nullptr;
 	defaultCamera = nullptr;
@@ -199,8 +200,11 @@ ComPtr<ID3D12Resource> Object3d::CreateBufferResource(ComPtr<ID3D12Device> devic
 
 void Object3d::SetModel(const std::string& filePath)
 {
+	modelName_ = filePath;  
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
-
+	if (!model_) {
+		OutputDebugStringA(("Model not found: " + filePath + "\n").c_str());
+	}
 }
 
 void Object3d::SetPointLight(const Vector3& position, float intensity, float radius, float decay) {
@@ -291,6 +295,8 @@ void Object3d::SetUseAreaLight(bool use) {
 bool Object3d::GetUseAreaLight() const {
 	return materialData_ ? materialData_->useAreaLight != 0 : false;
 }
+
+
 
 
 void Object3d::InitializeTransformationMatrix()

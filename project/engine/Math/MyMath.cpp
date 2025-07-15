@@ -361,6 +361,12 @@ namespace MyMath {
 		return closestPoint;
 	}
 
+	bool IsAABBCollision(const Vector3& aMin, const Vector3& aMax, const Vector3& bMin, const Vector3& bMax) {
+		return (aMin.x <= bMax.x && aMax.x >= bMin.x) &&
+			   (aMin.y <= bMax.y && aMax.y >= bMin.y) &&
+			   (aMin.z <= bMax.z && aMax.z >= bMin.z);
+	}
+
 	Vector3 Lerp(const Vector3& a, const Vector3& b, float t) {
 		Vector3 result;
 		result.x = t * a.x + (1.0f - t) * b.x;
@@ -378,6 +384,10 @@ namespace MyMath {
 		result.m[3][0] = aiMat.d1; result.m[3][1] = aiMat.d2; result.m[3][2] = aiMat.d3; result.m[3][3] = aiMat.d4;
 
 		return result;
+	}
+
+	float Distance(const Vector3& a, const Vector3& b) {
+		return length(Subtract(a, b));
 	}
 
 	
