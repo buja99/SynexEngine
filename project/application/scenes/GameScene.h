@@ -18,7 +18,8 @@
 #include "LevelLoader.h"
 #include "LevelApplier.h"
 #include "ModelRegistry.h"
-
+#include "Enemy.h"
+#include "ParticleEffectLibrary.h"
 
 class GameScene : public BaseScene {
 public:
@@ -34,6 +35,7 @@ public:
 	void Finalize() override;
 
 	
+
 private:
 	DirectXCommon* dxCommon_;
 	Sound* audio_;
@@ -65,12 +67,12 @@ private:
 
 	std::unique_ptr<Player> player_ = nullptr;
 
+	std::unique_ptr<Enemy> enemy_ = nullptr;
+	std::unique_ptr<ParticleEffectLibrary> effectLibrary_;
+
 	//efects
-	std::unique_ptr<ParticleManager> primitive_;
 	std::mt19937 randomEngine_;
 
-	Emitter emitter_{};
-	
 	
 	
 	

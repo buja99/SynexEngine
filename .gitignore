@@ -334,3 +334,6 @@ DirectXGame/
 
 # Debug symbol files
 *.pdb
+
+# ImGui settings file
+imgui.ini

@@ -11,7 +11,9 @@
 #include "Sound.h"
 #include "WorldTransform.h"
 #include "MyMath.h"
-
+#include "BaseEnemy.h"
+#include "Enemy.h"
+#include "ParticleEffectLibrary.h"
 class Player {
 
 
@@ -25,10 +27,20 @@ public:
 
 	void Draw();
 
+	void HitEffectDraw();
+
 	const Vector3& GetPosition() const { return position; }
 
 	void SetCamera(Camera* camera);
 
+	bool HitCheck();
+
+	void SetEnemies(const std::vector<BaseEnemy*>& enemies) {
+		enemies_ = enemies;
+	}
+	const Vector3& GetWeaponPosition();
+	void SetEffectLibrary(ParticleEffectLibrary* effectLibrary);
+	void SetRandomEngine(std::mt19937* engine);
 private:
 
 	Vector3 position;
@@ -38,17 +50,24 @@ private:
 	Camera* camera_ = nullptr;
 
 	//player model
-	static constexpr int kPlayerPartCount = 6; // head, body, armR, armL, legR, legL
+	static constexpr int kPlayerPartCount = 7; // head, body, armR, armL, legR, legL, weapon
 	std::array<std::unique_ptr<Object3d>, kPlayerPartCount> playerParts_;
 	std::array<std::unique_ptr<WorldTransform>, kPlayerPartCount> playerTransforms_;
 
 	enum PlayerPartIndex {
-		ARM_R, ARM_L, LEG_R, LEG_L, BODY, HEAD
+		ARM_R, ARM_L, LEG_R, LEG_L, BODY, HEAD, WEAPON
 
 	};
 
-	
+	bool isAttacking_ = false;
+	int attackTimer_ = 0;
+	const int attackDuration_ = 60; // 60프레임
+	float originalWeaponAngleX_ = 0.0f;
+	bool hasHit_ = false;
+	bool isHitProcessed_ = false;
 
-
+	std::vector<BaseEnemy*> enemies_;
+	ParticleEffectLibrary* effectLibrary_ = nullptr;
+	std::mt19937* randomEngine_ = nullptr;
 };
 

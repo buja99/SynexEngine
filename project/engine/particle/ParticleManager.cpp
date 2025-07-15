@@ -262,6 +262,12 @@ std::list<Particle> ParticleManager::Emit(const std::string& groupName, const Em
 	return particles;
 }
 
+void ParticleManager::Emit(const std::string& groupName, const Particle& particle) {
+	if (particleGroups.contains(groupName)) {
+		particleGroups[groupName].particles.push_back(particle);
+	}
+}
+
 
 
 void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath) {
@@ -322,6 +328,11 @@ void ParticleManager::SetUseRingMesh(bool flag) {
 	useRingMesh_ = flag;
 	InitializeVertices();     
 	CreateVertexBuffer();     
+}
+void ParticleManager::SetUseCylinderMesh(bool flag) {
+	useRingMesh_ = flag;
+	InitializeVertices();
+	CreateVertexBuffer();
 }
 void ParticleManager::SetEmitterPosition(const std::string& name, const Vector3& pos) {
 	if (particleGroups.contains(name)) {
@@ -586,7 +597,33 @@ void ParticleManager::CreateGraphicsPipeline() {
 void ParticleManager::InitializeVertices() {
 	vertices_.clear();
 
-	if (useRingMesh_) {
+	if (useCylinderMesh_) {
+		const uint32_t kCylinderDivide = 32;
+		const float kTopRadius = 1.0f;
+		const float kBottomRadius = 1.0f;
+		const float kHeight = 3.0f;
+
+		const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kCylinderDivide);
+
+		for (uint32_t index = 0; index < kCylinderDivide; ++index) {
+			float sin = std::sin(index * radianPerDivide);
+			float cos = std::cos(index * radianPerDivide);
+			float sinNext = std::sin((index + 1) * radianPerDivide);
+			float cosNext = std::cos((index + 1) * radianPerDivide);
+			float u = float(index) / float(kCylinderDivide);
+			float uNext = float(index + 1) / float(kCylinderDivide);
+
+			// 삼각형 1
+			vertices_.push_back({ { sin * kTopRadius, kHeight, cos * kTopRadius, 1.0f }, { u, 0.0f } });
+			vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
+			vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
+
+			// 삼각형 2
+			vertices_.push_back({ { sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, 1.0f } });
+			vertices_.push_back({ { sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, 0.0f } });
+			vertices_.push_back({ { sinNext * kBottomRadius, 0.0f, cosNext * kBottomRadius, 1.0f }, { uNext, 1.0f } });
+		}
+	} else if (useRingMesh_) {
 		// 🔁 링 메쉬 생성
 		const uint32_t kRingDivide = 32;
 		const float kOuterRadius = 1.0f;

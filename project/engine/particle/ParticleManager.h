@@ -80,6 +80,8 @@ public:
 
     std::list<Particle> Emit(const std::string& groupName, const Emitter& emitter, std::mt19937& randomEngine);
 
+    void Emit(const std::string& groupName, const Particle& particle);
+
     void CreateParticleGroup(const std::string& name, const std::string& textureFilePath);
 
     void SetInitialInstanceCount(uint32_t count) { initialInstanceCount_ = count; }
@@ -90,7 +92,9 @@ public:
     bool GetUseBillboard() const { return useBillboard_; }
 
     bool useRingMesh_ = false; // 기본은 정사각형
+	bool useCylinderMesh_ = false; // 원통 모양으로 변경
     void SetUseRingMesh(bool flag);
+    void SetUseCylinderMesh(bool flag);
 
 
     void SetEmitterPosition(const std::string& name, const Vector3& pos);

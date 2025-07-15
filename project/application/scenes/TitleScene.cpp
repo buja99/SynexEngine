@@ -66,76 +66,18 @@ void TitleScene::Initialize() {
 	
 	TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
-	primitive_ = std::make_unique<ParticleManager>();
-	primitive_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
-	primitive_->SetCamera(camera_.get());
-	primitive_->CreateParticleGroup("primitive", "resources/circle.png");
-	primitive_->SetUseBillboard(false);
-	primitive_->SetUseRingMesh(false);
-	primitive_->RegisterGenerator("primitive", [this](std::mt19937& randomEngine, const Vector3& translate) {
-		std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
-		std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
-		std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+	
+	effectLibrary_ = std::make_unique<ParticleEffectLibrary>();
+	effectLibrary_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance(), camera_.get());
 
-		Particle particle;
-		particle.transform.scale = { 0.05f, distScale(randomEngine), 1.0f };
-		particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };
-		particle.transform.translate = translate;
+	effectLibrary_->EmitPrimitive({ 0.0f, 10.0f, 0.0f }, randomEngine_);
+	effectLibrary_->SetUsePrimitiveAutoEmit(true);
 
-		particle.velocity = { 0.0f, 0.0f, 0.0f };
-		particle.acceleration = { 0.0f, 0.0f, 0.0f };
+	effectLibrary_->EmitRing({ 0.0f, 2.0f, 0.0f }, randomEngine_);
+	effectLibrary_->SetUseRingAutoEmit(true);
 
-		// 컬러를 랜덤하게 하려면 아래처럼 할 수도 있음:
-		// particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-		particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-		particle.lifeTime = 1.0f;
-		particle.currentTime = 0.0f;
-
-		return particle;
-		});
-
-	primitiveEmit_.count = 100;
-	primitiveEmit_.frequency = 0.2f;
-	primitiveEmit_.frequencyTime = 0.0f;
-	primitiveEmit_.transform.translate = { 0.0f, 10.0f, 0.0f };
-
-	ring_ = std::make_unique<ParticleManager>();
-	ring_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
-	ring_->SetCamera(camera_.get());
-	ring_->CreateParticleGroup("ring", "resources/gradationLine.png");
-	ring_->SetUseBillboard(false);
-	ring_->SetUseRingMesh(true);
-	ring_->RegisterGenerator("ring", [this](std::mt19937& randomEngine, const Vector3& translate) {
-		std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
-		std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
-		std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-
-		Particle particle;
-		float randomScale = distScale(randomEngine);
-
-		particle.transform.rotate = {
-			distRotate(randomEngine),
-			distRotate(randomEngine),
-			distRotate(randomEngine)
-		};
-		particle.transform.scale = { 3.0f, 3.0f, 3.0f };
-		particle.transform.translate = { 0.0f, 5.0f, 0.0f };
-
-		particle.velocity = { 0.0f, 0.0f, 0.0f };
-		particle.acceleration = { 0.0f, 0.0f, 0.0f };
-
-		particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-		particle.lifeTime = 1.0f;
-		particle.currentTime = 0.0f;
-
-		return particle; // ✅ 반드시 반환
-		});
-
-	ringEmit_.count = 5;
-	ringEmit_.frequency = 0.7f;
-	ringEmit_.frequencyTime = 0.0f;
+	effectLibrary_->EmitCylinder({ 8.0f, 2.0f, 0.0f }, randomEngine_);
+	effectLibrary_->SetUseCylinderAutoEmit(true);
 
 }
 
@@ -147,8 +89,8 @@ void TitleScene::Update() {
 	testModel_->Update();
 	worldTransform_->UpdateMatrix();
 	testWorldTransform_->UpdateMatrix();
-	camera_->UpdateMatrix();
 	camera_->Update();
+	effectLibrary_->Update();
 	
 #ifdef _DEBUG
 	ImGui::Begin("Model Transform");
@@ -272,20 +214,9 @@ void TitleScene::Update() {
 	}
 	
 
-	primitiveEmit_.frequencyTime += 1.0f / 60.0f;
-	if (primitiveEmit_.frequencyTime >= primitiveEmit_.frequency) {
-		primitiveEmit_.frequencyTime = 0.0f;
-		primitive_->Emit("primitive", primitiveEmit_, randomEngine_);
-	}
-	ringEmit_.frequencyTime += 1.0f / 60.0f;
-
-	if (ringEmit_.frequencyTime >= ringEmit_.frequency) {
-		ringEmit_.frequencyTime = 0.0f;
-		primitive_->Emit("ring", ringEmit_, randomEngine_);
-	}
-
-	primitive_->Update();
-	ring_->Update();
+	effectLibrary_->GetPrimitiveManager()->Update();
+	effectLibrary_->GetRingManager()->Update();
+	effectLibrary_->GetCylinderManager()->Update();
 }
 
 void TitleScene::Draw() {
@@ -298,9 +229,10 @@ void TitleScene::Draw() {
 	/*model_->Draw();
 	testModel_->Draw();*/
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
-	primitive_->Draw();
-	ring_->Draw();
-
+	
+	//effectLibrary_->GetPrimitiveManager()->Draw();
+	//effectLibrary_->GetRingManager()->Draw();
+	effectLibrary_->GetCylinderManager()->Draw();
 }
 
 void TitleScene::Finalize() {

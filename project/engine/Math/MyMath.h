@@ -45,7 +45,9 @@ namespace  MyMath
 	Vector3 Perpendicular(const Vector3& vector);
 	void EnsureAABB(AABB& aabb);
 	Vector3 ClosestPointOnAABB(const Vector3& point, const AABB& aabb);
+	bool IsAABBCollision(const Vector3& aMin, const Vector3& aMax, const Vector3& bMin, const Vector3& bMax);
 	Vector3 Lerp(const Vector3& a, const Vector3& b, float t);
 	Matrix4x4 ConvertMatrix( aiMatrix4x4& aiMat);
+	float Distance(const Vector3& a, const Vector3& b);
 };
 
