@@ -36,7 +36,6 @@ struct  ParticleForGPU    //GPU에 넘길 인스턴싱용 데이터 (WVP, 색상
     Matrix4x4 WVP;
     Matrix4x4 World;
     Vector4 color;
-
 };
 struct Emitter          //파티클을 방출하는 발사기(Emitter) 상태 (위치, 속도, 색상, 생존시간 등)
 {
@@ -56,6 +55,7 @@ struct ParticleGroup {         //파티클들의 묶음. 텍스처별로 나눔
     Emitter emitter;                       // 발사기(Emitter) 상태
 };
 
+const int32_t initialInstanceCount = 100;
 
 using ParticleGenerator = std::function<Particle(std::mt19937&, const Vector3&)>;
 
@@ -91,13 +91,8 @@ public:
     void SetUseBillboard(bool use) { useBillboard_ = use; }
     bool GetUseBillboard() const { return useBillboard_; }
 
-    void SetEmitterPosition(const std::string& name, const Vector3& pos);
-
-    void SetEmitterFrequency(const std::string& name, float freq);
-    void SetEmitterCount(const std::string& name, uint32_t count);
-
     bool useRingMesh_ = false; // 기본은 정사각형
-	bool useCylinderMesh_ = false; // 원통 모양으로 변경
+    bool useCylinderMesh_ = false; // 원통 모양으로 변경
     void SetUseRingMesh(bool flag);
     void SetUseCylinderMesh(bool flag);
 
@@ -142,8 +137,10 @@ private:
     bool useBillboard_ = true;
 
     const int32_t initialInstanceCount = 100;
-    uint32_t initialInstanceCount_ = 50;
+    uint32_t initialInstanceCount_ = 100;
 
     std::mt19937 randomEngine_;
+
+    std::unordered_map<std::string, ParticleGenerator> generators_;
 
 };

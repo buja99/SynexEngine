@@ -46,10 +46,14 @@ private:
 	std::unique_ptr<Object3d> testModel_ = nullptr;
 	std::unique_ptr<WorldTransform> testWorldTransform_ = nullptr;
 
-	
+
 	std::mt19937 randomEngine_;
 
-	
+	Emitter primitiveEmit_{};
+	Emitter ringEmit_{};
+
+	bool useGrayscale_ = true;
+
+	std::unique_ptr<ParticleEffectLibrary> effectLibrary_;
 
 };
-

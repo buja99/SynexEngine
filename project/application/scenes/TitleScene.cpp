@@ -38,19 +38,19 @@ void TitleScene::Initialize() {
 	testModel_->SetUseDirectionalLight(false);  // Directional Light 
 	testModel_->SetUseSpotLight(false);	        // Spot Light
 	testModel_->SetUseAmbientLight(false);      // Ambient Light
-	testModel_->SetUseAreaLight(true);         
-	
+	testModel_->SetUseAreaLight(true);
+
 	//testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
-	
-	
-	
-	
+
+
+
+
 	// Area Light
 	// 카메라 생성
 	camera_ = std::make_unique<Camera>();
 	camera_->SetEye({ 0.0f, 4.0f, -10.0f });
 	camera_->SetTarget({ 0.0f, 0.0f, 0.0f });
-	
+
 	// 모델에 카메라 설정
 	model_->SetCamera(camera_.get());
 	testModel_->SetCamera(camera_.get());
@@ -63,19 +63,15 @@ void TitleScene::Initialize() {
 	title = std::make_unique<Sprite>();
 	title->Initialize(SpriteCommon::GetInstance(), "resources/title.png");
 	title->SetPosition({ 0.0f, 0.0f });
-	
+
 	TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
-	primitive_ = std::make_unique<ParticleManager>();
-	primitive_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance());
-	primitive_->SetCamera(camera_.get());
-	primitive_->CreateParticleGroup("star", "resources/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
 
-	
-	primitive_->SetEmitterCount("star", 1);
-	primitive_->SetEmitterFrequency("star", 0.7f);
-	primitive_->SetEmitterPosition("star", { 0.0f, 0.0f, 0.0f });
+	effectLibrary_ = std::make_unique<ParticleEffectLibrary>();
+	effectLibrary_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance(), camera_.get());
 
-	primitive_->SetUseBillboard(false);
+	effectLibrary_->EmitPrimitive({ 0.0f, 10.0f, 0.0f }, randomEngine_);
+	effectLibrary_->SetUsePrimitiveAutoEmit(true);
 
 	effectLibrary_->EmitRing({ 0.0f, 2.0f, 0.0f }, randomEngine_);
 	effectLibrary_->SetUseRingAutoEmit(true);
@@ -95,7 +91,7 @@ void TitleScene::Update() {
 	testWorldTransform_->UpdateMatrix();
 	camera_->Update();
 	effectLibrary_->Update();
-	
+
 #ifdef _DEBUG
 	ImGui::Begin("Model Transform");
 
@@ -111,7 +107,7 @@ void TitleScene::Update() {
 	model_->SetScale(scale);
 	model_->SetRotate(rotate);
 	model_->SetTranslate(translate);
-	
+
 	ImGui::End();
 
 	ImGui::Begin("Light Settings");
@@ -201,7 +197,7 @@ void TitleScene::Update() {
 
 	ImGui::End();
 
-	
+
 
 	ImGui::Begin("sprite");
 	//ImGui::DragFloat3();
@@ -209,16 +205,14 @@ void TitleScene::Update() {
 
 #endif
 
-	
+
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
 
 		return;
 	}
-	
 
-	primitive_->Update();
 
 	effectLibrary_->GetPrimitiveManager()->Update();
 	effectLibrary_->GetRingManager()->Update();
@@ -235,7 +229,7 @@ void TitleScene::Draw() {
 	/*model_->Draw();
 	testModel_->Draw();*/
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
-	
+
 	//effectLibrary_->GetPrimitiveManager()->Draw();
 	//effectLibrary_->GetRingManager()->Draw();
 	effectLibrary_->GetCylinderManager()->Draw();
@@ -243,14 +237,14 @@ void TitleScene::Draw() {
 
 void TitleScene::Finalize() {
 	if (model_) {
-		model_->Cleanup(); 
+		model_->Cleanup();
 		model_.reset();
 	}
 	if (worldTransform_) {
-		worldTransform_->Cleanup(); 
+		worldTransform_->Cleanup();
 		worldTransform_.reset();
 	}
-    camera_.reset();
-    
+	camera_.reset();
+
 	title.reset();
 }

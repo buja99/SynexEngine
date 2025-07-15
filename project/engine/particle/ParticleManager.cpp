@@ -18,11 +18,7 @@ void ParticleManager::Initialize(DirectXCommon* directXCommon, SrvManager* srvMa
 	dxCommon_ = directXCommon;
 	srvManager_ = srvManager;
 
-	//std::random_device seedGenerator;   // 시드 생성기(Seed Generator)//난수 제공
-	//std::mt19937 randomEngine(seedGenerator()); // 랜덤 엔진 초기화(Random Engine Initialization)//seedGenerator 초기화
-
 	randomEngine_.seed(std::random_device{}());
-
 
 	InitializeVertices();
 
@@ -87,16 +83,23 @@ void ParticleManager::Update() {
 				worldMatrix.m[3][1] = p.transform.translate.y;
 				worldMatrix.m[3][2] = p.transform.translate.z;
 
+				float t = p.currentTime / p.lifeTime;
+				float alpha = 1.0f - t * t;
+
+				/*float scaleAlpha = alpha;
+				p.transform.scale.y *= scaleAlpha;*/
+
 				// WVP 계산 및 전송
 				Matrix4x4 wvp = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 				group.mappedInstanceData[i].WVP = wvp;
 				group.mappedInstanceData[i].World = worldMatrix;
 
 				// 색상 및 알파
-				float alpha = 1.0f - (p.currentTime / p.lifeTime);
-				float flicker = 0.5f + 0.5f * std::sin(p.currentTime * 10.0f);
+				//float alpha = 1.0f - (p.currentTime / p.lifeTime);
+				float flicker = 0.9f + 0.2f * std::sin(p.currentTime * 20.0f);
 				group.mappedInstanceData[i].color = p.color;
-				group.mappedInstanceData[i].color.w *= flicker;
+				group.mappedInstanceData[i].color.w *= alpha * flicker;
+
 			}
 
 			++i;
@@ -106,8 +109,7 @@ void ParticleManager::Update() {
 	}
 }
 
-void ParticleManager::Draw() 
-{
+void ParticleManager::Draw() {
 	auto commandList = dxCommon_->GetCommandList();
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
@@ -288,6 +290,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	newGroup.emitter.count = 1;
 	newGroup.emitter.frequency = 0.2f;
 	newGroup.emitter.frequencyTime = 0.0f;
+
 	particleGroups[name] = std::move(newGroup);
 
 	newGroup.instanceBuffer = CreateBufferResource(dxCommon_->GetDevice(), sizeof(ParticleForGPU) * kNumMaxInstance);
@@ -320,7 +323,16 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	particleGroups[name] = std::move(newGroup);
 
 }
-
+void ParticleManager::SetUseRingMesh(bool flag) {
+	useRingMesh_ = flag;
+	InitializeVertices();
+	CreateVertexBuffer();
+}
+void ParticleManager::SetUseCylinderMesh(bool flag) {
+	useRingMesh_ = flag;
+	InitializeVertices();
+	CreateVertexBuffer();
+}
 void ParticleManager::SetEmitterPosition(const std::string& name, const Vector3& pos) {
 	if (particleGroups.contains(name)) {
 		particleGroups[name].emitter.transform.translate = pos;
@@ -338,17 +350,10 @@ void ParticleManager::SetEmitterCount(const std::string& name, uint32_t count) {
 		particleGroups[name].emitter.count = count;
 	}
 }
-
-void ParticleManager::SetEmitterCount(const std::string& name, uint32_t count) {
-	if (particleGroups.contains(name)) {
-		particleGroups[name].emitter.count = count;
-	}
-}
 void ParticleManager::RegisterGenerator(const std::string& name, const ParticleGenerator& generator) {
 	generators_[name] = generator;
 }
-ComPtr<ID3D12Resource> ParticleManager::CreateBufferResource(ComPtr<ID3D12Device> device, size_t sizeInBytes)
-{
+ComPtr<ID3D12Resource> ParticleManager::CreateBufferResource(ComPtr<ID3D12Device> device, size_t sizeInBytes) {
 	//頂点Heap
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -653,8 +658,7 @@ void ParticleManager::InitializeVertices() {
 	}
 }
 
-void ParticleManager::CreateVertexBuffer()
-{
+void ParticleManager::CreateVertexBuffer() {
 
 	auto device = dxCommon_->GetDevice();
 
@@ -670,5 +674,5 @@ void ParticleManager::CreateVertexBuffer()
 	// 정점 데이터 복사(Copy vertex data)
 	memcpy(vertexDataParticle, vertices_.data(), sizeof(ParticleVertex) * vertices_.size());
 	// 매핑 해제(Unmap)
-	vertexBufferResource_->Unmap(0, nullptr); 
+	vertexBufferResource_->Unmap(0, nullptr);
 }
