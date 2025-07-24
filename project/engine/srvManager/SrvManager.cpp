@@ -61,6 +61,16 @@ D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index) {
 
 }
 
+void SrvManager::CreateSRV(uint32_t srvIndex, ID3D12Resource* pResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc) {
+	if (!directXCommon) {
+		OutputDebugStringA("ERROR: SrvManager::CreateSRV() - DirectXCommon is null!\n");
+		return;
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = GetCPUDescriptorHandle(srvIndex);
+	directXCommon->GetDevice()->CreateShaderResourceView(pResource, &desc, handle);
+}
+
 void SrvManager::CreatSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels) {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -104,4 +114,10 @@ bool SrvManager::CanAllocate() const {
 void SrvManager::Finalize() {
 	srvDescriptorHeap.Reset();
 
+}
+
+void SrvManager::Free(uint32_t index) {
+	if (index < kMaxSRVCount) {
+		freeList.push_back(index);
+	}
 }

@@ -26,6 +26,9 @@ void GameScene::Initialize() {
 	ground_->Initialize();
 
 
+	//skubox
+	skybox_ = std::make_unique<Skybox>();
+	skybox_->Initialize(DirectXCommon::GetInstance(), L"resources/rostock_laage_airport_4k.dds");
 
 	
 
@@ -138,7 +141,10 @@ void GameScene::Draw() {
 	
 	//back_->Draw();
 
+
 	SrvManager::GetInstance()->PreDraw();
+
+	
 
 	left = centerX - halfW;
 	right = centerX + halfW;
@@ -177,9 +183,12 @@ void GameScene::Draw() {
 	//mapped->range = visibleRange;
 	//Object3dCommon::GetInstance()->GetPlayerRangeCB()->Unmap(0, nullptr);
 
+	skybox_->Draw(camera_->GetViewMatrix(), camera_->GetProjectionMatrix());
 
 	Object3dCommon::GetInstance()->CommonDrawSettings();
-	ground_->Draw();
+
+
+	//ground_->Draw();
 
 	
 	/*for (auto& obj : levelObjects_) {

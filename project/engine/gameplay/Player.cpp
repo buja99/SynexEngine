@@ -180,7 +180,7 @@ void Player::SetCamera(Camera* camera) {
 
 bool Player::HitCheck() {
 	// 1. 무기의 AABB 계산
-	Vector3 weaponPos = GetWeaponPosition();
+	Vector3 weaponPos = playerTransforms_[WEAPON]->translate_;
 	Vector3 weaponHalfSize = playerTransforms_[WEAPON]->scale_; // 크기는 무기 사이즈에 맞게 조정
 
 	Vector3 weaponMin = MyMath::Subtract(weaponPos,weaponHalfSize);
@@ -199,7 +199,7 @@ bool Player::HitCheck() {
 		// 3. AABB 충돌 판정
 		if (MyMath::IsAABBCollision(weaponMin, weaponMax, enemyMin, enemyMax)) {
 
-			enemy->OnHit(10.0f);
+ 			enemy->OnHit(10.0f);
 
 			// 충돌 지점 계산
 			Vector3 hitMin = {
@@ -232,6 +232,10 @@ void Player::SetEffectLibrary(ParticleEffectLibrary* effectLibrary) {
 
 void Player::SetRandomEngine(std::mt19937* engine) {
 	randomEngine_ = engine;
+}
+
+Vector3 Player::GetWeaponWorldPosition() {
+	return MyMath::GetTranslate(playerTransforms_[WEAPON]->matWorld_);
 }
 
 

@@ -157,6 +157,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\worldTransform\WorldTransform.cpp" />
     <ClCompile Include="engine\utils\json\LevelObjectBuilder.cpp" />
     <ClCompile Include="engine\particle\ParticleEffectLibrary.cpp" />
+    <ClCompile Include="Skybox.cpp" />
+    <ClCompile Include="TextureUploader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\sceneSystem\AbstractSceneFactory.h" />
@@ -208,6 +210,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\worldTransform\WorldTransform.h" />
     <ClInclude Include="engine\utils\json\LevelObjectBuilder.h" />
     <ClInclude Include="engine\particle\ParticleEffectLibrary.h" />
+    <ClInclude Include="Skybox.h" />
+    <ClInclude Include="TextureUploader.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

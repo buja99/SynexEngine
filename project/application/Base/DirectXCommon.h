@@ -61,6 +61,9 @@ public:
 		IDxcCompiler3* dxcCompiler,
 		IDxcIncludeHandler* includeHandler);
 
+	
+	
+
 	ComPtr<ID3D12Device> GetDevice() const { return device; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
 	void Cleanup();
@@ -79,6 +82,9 @@ public:
 	ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
 
 	void ReportLiveObjects();
+
+	DXGI_FORMAT GetRTVFormat() const { return rtvDesc.Format; }
+	DXGI_FORMAT GetDSVFormat() const { return DXGI_FORMAT_D24_UNORM_S8_UINT; }
 
 	// OffscreenRendering
 		ComPtr<ID3D12Resource> CreateRenderTextureResource

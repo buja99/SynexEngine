@@ -390,6 +390,10 @@ namespace MyMath {
 		return length(Subtract(a, b));
 	}
 
+	Vector3 GetTranslate(const Matrix4x4& m) {
+		return { m.m[3][0], m.m[3][1], m.m[3][2] };
+	}
+
 	
 
 }

@@ -20,6 +20,8 @@ public:
 
 	ID3D12DescriptorHeap* GetSrvDescriptorHeap() const { return srvDescriptorHeap.Get(); }
 
+	void CreateSRV(uint32_t srvIndex, ID3D12Resource* pResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
+
 	void CreatSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels);
 	void CreatSRVforStruturedBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 
@@ -28,7 +30,7 @@ public:
 	bool CanAllocate() const;
 	bool IsValid() const { return srvDescriptorHeap != nullptr; }
 	void Finalize();
-
+	void Free(uint32_t index);
 
 private:
 
@@ -45,5 +47,5 @@ private:
 	//ComPtr<ID3D12Device> device;
 	uint32_t useIndex = 0;
 
-
+	std::vector<uint32_t> freeList;
 };
