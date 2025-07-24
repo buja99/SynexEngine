@@ -49,5 +49,6 @@ namespace  MyMath
 	Vector3 Lerp(const Vector3& a, const Vector3& b, float t);
 	Matrix4x4 ConvertMatrix( aiMatrix4x4& aiMat);
 	float Distance(const Vector3& a, const Vector3& b);
+	Vector3 GetTranslate(const Matrix4x4& m);
 };
 

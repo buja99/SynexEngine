@@ -41,6 +41,7 @@ public:
 	const Vector3& GetWeaponPosition();
 	void SetEffectLibrary(ParticleEffectLibrary* effectLibrary);
 	void SetRandomEngine(std::mt19937* engine);
+	Vector3 GetWeaponWorldPosition();
 private:
 
 	Vector3 position;

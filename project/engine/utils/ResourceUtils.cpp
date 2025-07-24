@@ -31,6 +31,40 @@ namespace ResourceUtils {
 		return vertexResource;
 	}
 
+	ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
+		ComPtr<ID3D12Resource> buffer;
+
+		D3D12_HEAP_PROPERTIES heapProps{};
+		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+		D3D12_RESOURCE_DESC resDesc{};
+		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		resDesc.Width = sizeInBytes;
+		resDesc.Height = 1;
+		resDesc.DepthOrArraySize = 1;
+		resDesc.MipLevels = 1;
+		resDesc.SampleDesc.Count = 1;
+		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+		HRESULT hr = device->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&resDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&buffer)
+		);
+
+		if (FAILED(hr)) {
+			OutputDebugStringA("Failed to create upload buffer.");
+		}
+
+		return buffer;
+	
+	}
+
 	ComPtr<ID3D12Resource> CreateTextureResource(ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata) {
 		// metadataを基にResourceの設定
 		D3D12_RESOURCE_DESC resourceDesc{};

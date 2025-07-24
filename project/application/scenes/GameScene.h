@@ -20,6 +20,7 @@
 #include "ModelRegistry.h"
 #include "Enemy.h"
 #include "ParticleEffectLibrary.h"
+#include "Skybox.h"
 
 class GameScene : public BaseScene {
 public:
@@ -74,8 +75,8 @@ private:
 	std::mt19937 randomEngine_;
 
 	
-	
-	
+	//skybox
+	std::unique_ptr<Skybox> skybox_ = nullptr;
 	
 	//json
 	//ModelRegistry registry;

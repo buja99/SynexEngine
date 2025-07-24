@@ -12,6 +12,7 @@
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
+using namespace DirectX;
 using namespace Logger;
 using namespace StringUtility;
 
@@ -530,6 +531,10 @@ IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar
 	shaderResult->Release();
 	return shaderBlob;
 }
+
+
+
+
 
 
 void DirectXCommon::Cleanup() {
