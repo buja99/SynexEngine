@@ -9,7 +9,8 @@ cbuffer RadialBlurSettings : register(b0)
     float blurWidth; // 샘플 이동 거리
     int numSamples; // 샘플 수
 }
-
+Texture2D<float4> gTexture : register(t0);
+SamplerState gSamplerLinear : register(s0);
 // ------------------------------
 // PixelShader Entry
 // ------------------------------

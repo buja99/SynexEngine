@@ -98,6 +98,20 @@ public:
 	void SetVignetteStrength(float strength);
 	float GetVignetteStrength() const { return vignetteSettings_.vignetteStrength; }
 
+	//RadialBlur
+	void InitializeRadialBlurPipeline();
+	void DrawRadialBlurToSwapChain();
+	void SetRadialBlurEnabled(bool enabled);
+	bool IsRadialBlurEnabled() const { return useRadialBlur_; }
+	void SetRadialBlurStrength(float strength);
+	float GetRadialBlurStrength() const { return radialBlurSettings_.blurStrength; }
+
+	int GetRadialBlurNumSamples() const;
+	void SetRadialBlurNumSamples(int);
+
+	float GetRadialBlurCenterX() const;
+	float GetRadialBlurCenterY() const;
+	void SetRadialBlurCenter(float x, float y);
 
 	void SetViewport(float x, float y, float width, float height);
 	void SetScissorRect(int left, int top, int right, int bottom);
@@ -159,7 +173,7 @@ private:
 	ComPtr<ID3D12RootSignature> grayscaleRootSignature_;
 	ComPtr<ID3D12PipelineState> grayscalePipelineState_;
 	ComPtr<ID3D12Resource> grayscaleConstBuffer_;
-	GrayscaleSettings grayscaleSettings_ = { 1.0f }; // 초기값 100%
+	GrayscaleSettings grayscaleSettings_ = { 1.0f }; 
 	D3D12_GPU_DESCRIPTOR_HANDLE grayscaleCbvHandle_;\
 	bool useGrayscale_ = true;
 	//Vignette
@@ -168,7 +182,12 @@ private:
 	bool useVignette_ = false;
 	VignetteSettings vignetteSettings_ = { 1.0f };
 	ComPtr<ID3D12Resource> vignetteConstBuffer_;
-
+	//RadialBlur
+	ComPtr<ID3D12RootSignature> radialBlurRootSignature_;
+	ComPtr<ID3D12PipelineState> radialBlurPipelineState_;
+	ComPtr<ID3D12Resource> radialBlurConstBuffer_;
+	RadialBlurSettings radialBlurSettings_; 
+	bool useRadialBlur_ = false;
 
 };
 

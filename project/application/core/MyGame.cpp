@@ -40,6 +40,8 @@ void MyGame::Draw() {
 		dxCommon_->DrawVignetteToSwapChain();
 	} else if (dxCommon_->IsGrayscaleEnabled()) {
 		dxCommon_->DrawGrayscaleToSwapChain();
+	} else if (dxCommon_->IsRadialBlurEnabled()) {
+		dxCommon_->DrawRadialBlurToSwapChain();
 	} else {
 		dxCommon_->CopyRenderTextureToSwapChain();
 	}
