@@ -55,6 +55,7 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	InitializeScissor();
 	InitializeCopyPipeline();
 	InitializeGrayscalePipeline();
+	InitializeVignettePipeline();
 }
 
 void DirectXCommon::Device() {
@@ -924,6 +925,10 @@ void DirectXCommon::SetGrayscaleStrength(float strength) {
 	grayscaleConstBuffer_->Unmap(0, nullptr);
 }
 
+void DirectXCommon::SetGrayscaleEnabled(bool enabled) {
+	useGrayscale_ = enabled;
+}
+
 void DirectXCommon::SetViewport(float x, float y, float width, float height) {
 	viewport.TopLeftX = x;
 	viewport.TopLeftY = y;
@@ -939,3 +944,116 @@ void DirectXCommon::SetScissorRect(int left, int top, int right, int bottom) {
 	scissorRect.right = right;
 	scissorRect.bottom = bottom;
 }
+
+void DirectXCommon::InitializeVignettePipeline() {
+	HRESULT hr;
+
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	auto vs = CompileShader(L"Resources/shaders/Vignette.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"Resources/shaders/Vignette.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	CD3DX12_ROOT_PARAMETER params[2];
+	params[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL); // t0
+	params[1].InitAsConstantBufferView(0);
+
+	CD3DX12_STATIC_SAMPLER_DESC samplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR); // s0
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(
+		_countof(params), params,         // 루트 파라미터
+		1, &samplerDesc,                  // 정적 샘플러(s0)
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
+
+	ComPtr<ID3DBlob> sigBlob;
+	ComPtr<ID3DBlob> errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&vignetteRootSignature_));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = vignetteRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&vignettePipelineState_));
+}
+
+void DirectXCommon::DrawVignetteToSwapChain() {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// 상태 전환: Present > RenderTarget
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// RTV 설정
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], FALSE, nullptr);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	commandList->SetGraphicsRootSignature(vignetteRootSignature_.Get());
+	commandList->SetPipelineState(vignettePipelineState_.Get());
+
+	SrvManager::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_);
+
+
+	commandList->SetGraphicsRootConstantBufferView(1, vignetteConstBuffer_->GetGPUVirtualAddress());
+	
+
+	commandList->DrawInstanced(3, 1, 0, 0);
+}
+
+void DirectXCommon::SetVignetteEnabled(bool enabled) {
+	useVignette_ = enabled;
+}
+
+void DirectXCommon::SetVignetteStrength(float strength) {
+	vignetteSettings_.vignetteStrength = strength;
+
+	// GPU 상수 버퍼에 복사
+	D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(VignetteSettings) + 255) & ~255);
+
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vignetteConstBuffer_)
+	);
+	assert(SUCCEEDED(hr));
+	vignetteConstBuffer_->SetName(L"VignetteConstBuffer");
+
+	void* mapped = nullptr;
+	vignetteConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &vignetteSettings_, sizeof(VignetteSettings));
+	vignetteConstBuffer_->Unmap(0, nullptr);
+}
+
+
+	

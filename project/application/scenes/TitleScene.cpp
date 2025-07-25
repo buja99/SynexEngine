@@ -203,9 +203,46 @@ void TitleScene::Update() {
 	//ImGui::DragFloat3();
 	ImGui::End();
 
+
+	ImGui::Begin("PostEffect");
+
+	bool prevGrayscale = useGrayscale_;
+	if (ImGui::Checkbox("Use Grayscale", &useGrayscale_)) {
+		if (useGrayscale_) {
+			useVignette_ = false; // Grayscale 켜면 Vignette 자동으로 끔
+			DirectXCommon::GetInstance()->SetVignetteEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetGrayscaleEnabled(useGrayscale_);
+	}
+
+	float grayscaleStrength = DirectXCommon::GetInstance()->GetGrayscaleStrength();
+	if (ImGui::SliderFloat("Grayscale Strength", &grayscaleStrength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetGrayscaleStrength(grayscaleStrength);
+	}
+
+	bool prevVignette = useVignette_;
+	if (ImGui::Checkbox("Use Vignette", &useVignette_)) {
+		if (useVignette_) {
+			useGrayscale_ = false; // Vignette 켜면 Grayscale 자동으로 끔
+			DirectXCommon::GetInstance()->SetGrayscaleEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetVignetteEnabled(useVignette_);
+	}
+
+	float vignetteStrength = DirectXCommon::GetInstance()->GetVignetteStrength();
+	if (ImGui::SliderFloat("Vignette Strength", &vignetteStrength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetVignetteStrength(vignetteStrength);
+	}
+
+	ImGui::End();
+
+
 #endif
 
-	
+	if (input_->TriggerKey(DIK_V)) {
+		useVignette_ = !useVignette_;
+		DirectXCommon::GetInstance()->SetVignetteEnabled(useVignette_);
+	}
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
@@ -226,13 +263,13 @@ void TitleScene::Draw() {
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	/*model_->Draw();
-	testModel_->Draw();*/
+	//model_->Draw();
+	testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	
 	//effectLibrary_->GetPrimitiveManager()->Draw();
 	//effectLibrary_->GetRingManager()->Draw();
-	effectLibrary_->GetCylinderManager()->Draw();
+	//effectLibrary_->GetCylinderManager()->Draw();
 }
 
 void TitleScene::Finalize() {

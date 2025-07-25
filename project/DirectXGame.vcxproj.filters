@@ -350,5 +350,8 @@
     <FxCompile Include="resources\shaders\StencilMask.VS.hlsl" />
     <FxCompile Include="resources\shaders\Skybox.PS.hlsl" />
     <FxCompile Include="resources\shaders\Skybox.VS.hlsl" />
+    <FxCompile Include="resources\shaders\Vignette.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Vignette.VS.hlsl" />
+    <FxCompile Include="resources\shaders\RadialBlur.PS.hlsl" />
   </ItemGroup>
 </Project>

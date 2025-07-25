@@ -9,8 +9,8 @@ void MyGame::Initialize() {
 	sceneFactory_ = std::make_unique<SceneFactory>();
 	sceneManager_->SetSceneFactory(std::move(sceneFactory_));
 
-	sceneManager_->ChangeScene("GAME");
-	//sceneManager_->ChangeScene("TITLE");
+	//sceneManager_->ChangeScene("GAME");
+	sceneManager_->ChangeScene("TITLE");
 
 }
 
@@ -36,7 +36,13 @@ void MyGame::Draw() {
 	//dxCommon_->PreDraw();
 	// 2. 스왑체인으로 복사
 	//dxCommon_->CopyRenderTextureToSwapChain();
-	dxCommon_->DrawGrayscaleToSwapChain();
+	if (dxCommon_->IsVignetteEnabled()) {
+		dxCommon_->DrawVignetteToSwapChain();
+	} else if (dxCommon_->IsGrayscaleEnabled()) {
+		dxCommon_->DrawGrayscaleToSwapChain();
+	} else {
+		dxCommon_->CopyRenderTextureToSwapChain();
+	}
 #ifdef _DEBUG
 	imGuiManager_->Draw();
 #endif // _DEBUG
