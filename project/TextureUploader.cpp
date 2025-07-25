@@ -34,8 +34,10 @@ ComPtr<ID3D12Resource> TextureUploader::UploadTexture(
     );
     assert(SUCCEEDED(hr));
 
+    UINT subresourceCount = UINT(mipImages.GetImageCount());
+
     // Upload용 중간 리소스 크기 계산
-    UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, static_cast<UINT>(metadata.mipLevels));
+    UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, subresourceCount);
 
     // Upload Heap에 중간 버퍼 생성
     D3D12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
@@ -53,7 +55,20 @@ ComPtr<ID3D12Resource> TextureUploader::UploadTexture(
 
     // Subresource 데이터 준비
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
-    DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), metadata, subresources);
+    HRESULT result = DirectX::PrepareUpload(
+        device,
+        mipImages.GetImages(),
+        mipImages.GetImageCount(),
+        mipImages.GetMetadata(),
+        subresources
+    );
+
+    if (FAILED(result)) {
+        OutputDebugStringA(" PrepareUpload failed!\n");
+        return nullptr; // 또는 적절한 에러 처리
+    } else {
+        OutputDebugStringA(" PrepareUpload succeeded.\n");
+    }
 
     // 커맨드 리스트에 복사 명령
     UpdateSubresources(

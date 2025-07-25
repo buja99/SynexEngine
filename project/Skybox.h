@@ -14,7 +14,10 @@ using Microsoft::WRL::ComPtr;
 struct VertexPos {
     Vector4 position;
 };
-
+struct ConstBufferData {
+    Matrix4x4 world;
+    Matrix4x4 viewProjectionInverse;
+};
 class Skybox {
 public:
     void Initialize(DirectXCommon* dxCommon, const std::wstring& ddsFilePath);
@@ -36,7 +39,7 @@ private:
     ComPtr<ID3D12PipelineState> pipelineState_;
 
     ComPtr<ID3D12Resource> constantBuffer_;
-    Matrix4x4* mappedMatrix_ = nullptr;
+    ConstBufferData* mappedMatrix_ = nullptr;
 
     ComPtr<ID3D12Resource> cubemapTexture_;
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc_{};
@@ -45,8 +48,6 @@ private:
     std::vector<VertexPos> vertices_;
     VertexPos* vertexMapped_ = nullptr;
 
-    struct ConstBufferData {
-        Matrix4x4 viewProjectionInverse;
-    };
+   
     
 };
