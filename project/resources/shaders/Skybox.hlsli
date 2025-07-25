@@ -12,6 +12,7 @@ struct VertexShaderOutput
 // RootParameter 0 → b2
 cbuffer ViewProjection : register(b2)
 {
+    float4x4 world;
     float4x4 viewProjectionInverse;
 };
 

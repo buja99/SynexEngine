@@ -1,50 +1,82 @@
 #include "Skybox.h"
 #include "d3dx12.h"
 #include "ResourceUtils.h"
+#include "worldTransform.h"
 
 void Skybox::Initialize(DirectXCommon* dxCommon, const std::wstring& ddsFilePath) {
     dxCommon_ = dxCommon;
 
-    // 1. Cubemap 로드 및 업로드
-    DirectX::ScratchImage mipImages;
-    HRESULT hr = DirectX::LoadFromDDSFile(ddsFilePath.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, mipImages);
+    // DDS 로드
+    DirectX::TexMetadata metadata{};
+    DirectX::ScratchImage mipImages{};
+    HRESULT hr = DirectX::LoadFromDDSFile(ddsFilePath.c_str(), DirectX::DDS_FLAGS_NONE, &metadata, mipImages);
     if (FAILED(hr)) {
         OutputDebugStringA("Failed to load DDS file!\n");
         return; // 또는 assert(false);
     } else {
         OutputDebugStringA("DDS file loading success\n");
     }
+    std::string msg = " ScratchImage count: " + std::to_string(mipImages.GetImageCount()) + "\n";
+    OutputDebugStringA(msg.c_str());
 
-    auto result = TextureUploader::UploadAndDescribe(dxCommon_->GetDevice().Get(), dxCommon_->GetCommandList().Get(), mipImages);
-    cubemapTexture_ = result.texture;
-    srvDesc_ = result.srvDesc;
-    assert(cubemapTexture_);
-    // 2. SRVManager 등록
-    auto srvMgr = SrvManager::GetInstance();
-    srvIndex_ = srvMgr->Allocate();
-    srvMgr->CreateSRV(srvIndex_, cubemapTexture_.Get(), srvDesc_);
-    assert(srvIndex_ >= 0);
-    // 3. 정점 버퍼 생성
-    CreateVertexBuffer();
+    std::string mipMsg = " MipLevels: " + std::to_string(metadata.mipLevels) + "\n";
+    OutputDebugStringA(mipMsg.c_str());
 
-    // 4. 루트 시그니처 및 파이프라인 초기화
+    std::string arrayMsg = " ArraySize: " + std::to_string(metadata.arraySize) + "\n";
+    OutputDebugStringA(arrayMsg.c_str());
+
+    if (!metadata.IsCubemap()) {
+        OutputDebugStringA("Not in cubemap format. Skybox may not work properly.\n");
+    } else {
+        OutputDebugStringA("Cubemap format DDS confirmed\n");
+    }
+
+    // 큐브맵 텍스처 업로드 (UploadAndWait 내부에서 GPU 커맨드 실행과 대기까지 수행)
+    cubemapTexture_ = TextureUploader::UploadAndWait(
+        dxCommon_->GetDevice().Get(),
+        dxCommon_->GetCommandQueue().Get(),
+        mipImages
+    );
+
+    // SRV 생성
+    srvIndex_ = SrvManager::GetInstance()->Allocate();
+
+    srvDesc_ = {};
+    srvDesc_.Format = metadata.format;
+    srvDesc_.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc_.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc_.TextureCube.MostDetailedMip = 0;
+    srvDesc_.TextureCube.MipLevels = UINT(metadata.mipLevels);
+    srvDesc_.TextureCube.ResourceMinLODClamp = 0.0f;
+
+    dxCommon_->GetDevice()->CreateShaderResourceView(
+        cubemapTexture_.Get(),
+        &srvDesc_,
+        SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex_)
+    );
+
+    // 파이프라인 및 정점 버퍼 생성
     CreateRootSignature();
     CreatePipeline();
+    CreateVertexBuffer();
 
-    // 5. 상수 버퍼 생성 (ViewProjection)
-    D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    D3D12_RESOURCE_DESC cbDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(Matrix4x4) + 255) & ~255);
-    hr = dxCommon_->GetDevice()->CreateCommittedResource(
-        &heapProps,
+    // 상수 버퍼 생성
+    D3D12_RESOURCE_DESC cbDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        (sizeof(ConstBufferData) + D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1) &
+        ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)
+    );
+    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+    dxCommon_->GetDevice()->CreateCommittedResource(
+        &heapProps, 
         D3D12_HEAP_FLAG_NONE,
         &cbDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&constantBuffer_)
     );
-    assert(SUCCEEDED(hr));
-    constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMatrix_));
 
+    // 상수 버퍼 맵핑
+    constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMatrix_));
 }
 
 void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
@@ -64,6 +96,9 @@ void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
     cmdList->IASetVertexBuffers(0, 1, &vbView_);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+    
+    Matrix4x4 world = MyMath::MakeScaleMatrix({ 100.0f, 100.0f, 100.0f });
+    mappedMatrix_->world = world;
     Matrix4x4 viewNoPos = view;
     viewNoPos.m[3][0] = 0.0f;
     viewNoPos.m[3][1] = 0.0f;
@@ -71,7 +106,9 @@ void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
 
     // ViewProjection 역행렬 계산 후 상수 버퍼에 기록
     Matrix4x4 vp = MyMath::Multiply(viewNoPos, projection);
-    *mappedMatrix_ = MyMath::Inverse(vp);
+    Matrix4x4 wvp = MyMath::Multiply(world, vp);
+
+    mappedMatrix_->viewProjectionInverse = MyMath::Inverse(vp);
 
     // 루트 파라미터 설정
     cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
