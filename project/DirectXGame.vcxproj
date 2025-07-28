@@ -64,7 +64,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json;$(ProjectDir)application\core;$(ProjectDir)application\debug;$(ProjectDir)application\scenes;$(ProjectDir)application\sceneSystem;$(ProjectDir)engine\audio;$(ProjectDir)engine\gameplay;$(ProjectDir)engine\spriteCamera;$(ProjectDir)engine\utils;$(ProjectDir)engine\worldTransform;$(ProjectDir)engine\utils\json;$(ProjectDir)externals\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json;$(ProjectDir)application\core;$(ProjectDir)application\debug;$(ProjectDir)application\scenes;$(ProjectDir)application\sceneSystem;$(ProjectDir)engine\audio;$(ProjectDir)engine\gameplay;$(ProjectDir)engine\spriteCamera;$(ProjectDir)engine\utils;$(ProjectDir)engine\worldTransform;$(ProjectDir)engine\utils\json;$(ProjectDir)externals\imgui;$(ProjectDir)engine\render\skybox;$(ProjectDir)engine\graphics\texture</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -95,7 +95,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json;$(ProjectDir)application\core;$(ProjectDir)application\debug;$(ProjectDir)application\scenes;$(ProjectDir)application\sceneSystem;$(ProjectDir)engine\audio;$(ProjectDir)engine\gameplay;$(ProjectDir)engine\spriteCamera;$(ProjectDir)engine\utils;$(ProjectDir)engine\worldTransform;$(ProjectDir)engine\utils\json;$(ProjectDir)externals\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)application\Base;$(ProjectDir)application\Input;$(ProjectDir)engine\2D;$(ProjectDir)engine\3D;$(ProjectDir)engine\Math;$(ProjectDir)imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\srvManager;$(ProjectDir)engine\camera;$(ProjectDir)engine\particle;$(ProjectDir)resources\shaders;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann_json;$(ProjectDir)application\core;$(ProjectDir)application\debug;$(ProjectDir)application\scenes;$(ProjectDir)application\sceneSystem;$(ProjectDir)engine\audio;$(ProjectDir)engine\gameplay;$(ProjectDir)engine\spriteCamera;$(ProjectDir)engine\utils;$(ProjectDir)engine\worldTransform;$(ProjectDir)engine\utils\json;$(ProjectDir)externals\imgui;$(ProjectDir)engine\render\skybox;$(ProjectDir)engine\graphics\texture</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,8 +157,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\worldTransform\WorldTransform.cpp" />
     <ClCompile Include="engine\utils\json\LevelObjectBuilder.cpp" />
     <ClCompile Include="engine\particle\ParticleEffectLibrary.cpp" />
-    <ClCompile Include="Skybox.cpp" />
-    <ClCompile Include="TextureUploader.cpp" />
+    <ClCompile Include="engine\render\skybox\Skybox.cpp" />
+    <ClCompile Include="engine\graphics\texture\TextureUploader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\sceneSystem\AbstractSceneFactory.h" />
@@ -210,8 +210,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\worldTransform\WorldTransform.h" />
     <ClInclude Include="engine\utils\json\LevelObjectBuilder.h" />
     <ClInclude Include="engine\particle\ParticleEffectLibrary.h" />
-    <ClInclude Include="Skybox.h" />
-    <ClInclude Include="TextureUploader.h" />
+    <ClInclude Include="engine\render\skybox\Skybox.h" />
+    <ClInclude Include="engine\graphics\texture\TextureUploader.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
