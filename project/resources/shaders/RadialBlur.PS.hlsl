@@ -1,5 +1,11 @@
 #include "CopyImage.hlsli"
 
+struct CopyPSInput
+{
+    float4 position : SV_POSITION;
+    float2 texcoord : TEXCOORD0;
+};
+
 // ------------------------------
 // Constant Buffer: RadialBlur 설정값
 // ------------------------------

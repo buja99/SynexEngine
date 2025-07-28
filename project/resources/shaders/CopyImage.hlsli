@@ -4,8 +4,3 @@ struct VSOutput
     float2 texcoord : TEXCOORD0;
 };
 
-struct CopyPSInput
-{
-    float4 position : SV_POSITION;
-    float2 texcoord : TEXCOORD0;
-};

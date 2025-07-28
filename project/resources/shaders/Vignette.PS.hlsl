@@ -11,7 +11,7 @@ cbuffer VignetteSettings : register(b0)
 
 struct PixelShaderOutput
 {
-    float4 color : SV_TARGET0;
+    float4 color : SV_TARGET;
 };
 
 PixelShaderOutput main(VSOutput input)
