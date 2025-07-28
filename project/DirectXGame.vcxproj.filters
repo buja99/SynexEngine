@@ -168,10 +168,10 @@
     <ClCompile Include="engine\gameplay\Enemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Skybox.cpp">
+    <ClCompile Include="engine\render\skybox\Skybox.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="TextureUploader.cpp">
+    <ClCompile Include="engine\graphics\texture\TextureUploader.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -323,10 +323,10 @@
     <ClInclude Include="engine\gameplay\Enemy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Skybox.h">
+    <ClInclude Include="engine\render\skybox\Skybox.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="TextureUploader.h">
+    <ClInclude Include="engine\graphics\texture\TextureUploader.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
