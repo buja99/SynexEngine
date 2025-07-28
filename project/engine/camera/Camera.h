@@ -65,7 +65,7 @@ private:
 
 	float fov_ = 0.45f * float(M_PI);
 	float aspectRatio_ = 16.0f / 9.0f;
-	float nearZ_ = 0.1f;
+	float nearZ_ = 1.0f;
 	float farZ_ = 1000.0f;
 
 	// LookAt 기반

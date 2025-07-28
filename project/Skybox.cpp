@@ -97,7 +97,7 @@ void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     
-    Matrix4x4 world = MyMath::MakeScaleMatrix({ 100.0f, 100.0f, 100.0f });
+    Matrix4x4 world = MyMath::MakeIdentity4x4();
     mappedMatrix_->world = world;
     Matrix4x4 viewNoPos = view;
     viewNoPos.m[3][0] = 0.0f;
@@ -105,10 +105,10 @@ void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
     viewNoPos.m[3][2] = 0.0f;
 
     // ViewProjection 역행렬 계산 후 상수 버퍼에 기록
-    Matrix4x4 vp = MyMath::Multiply(viewNoPos, projection);
-    Matrix4x4 wvp = MyMath::Multiply(world, vp);
+    /*Matrix4x4 vp = MyMath::Multiply(viewNoPos, projection);
+    Matrix4x4 wvp = MyMath::Multiply(world, vp);*/
 
-    mappedMatrix_->viewProjectionInverse = MyMath::Inverse(vp);
+    mappedMatrix_->viewProjectionInverse = MyMath::Inverse(viewNoPos);
 
     // 루트 파라미터 설정
     cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
