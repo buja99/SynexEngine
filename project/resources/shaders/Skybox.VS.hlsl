@@ -5,9 +5,9 @@ VertexShaderOutput main(VertexInput input)
     VertexShaderOutput output;
 
     float4 worldPos = mul(input.position, world);
-    float4 clipPos = mul(worldPos, viewProjectionInverse);
-    output.position = clipPos.xyww;
+    float4 viewDir = mul(worldPos, viewProjectionInverse);
+    output.position = viewDir.xyww;
 
-    output.texcoord = worldPos.xyz;
+    output.texcoord = viewDir.xyz;
     return output;
 }
