@@ -51,18 +51,8 @@ public:
 	void PreDraw();
 	void PostDraw();
 
-	IDxcBlob* CompileShader(
-
-		const std::wstring& filePath,
-
-		const wchar_t* profile,
-
-		IDxcUtils* dxcUtils,
-		IDxcCompiler3* dxcCompiler,
-		IDxcIncludeHandler* includeHandler);
-
-	
-	
+	IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,
+		IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);
 
 	ComPtr<ID3D12Device> GetDevice() const { return device; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
@@ -87,8 +77,7 @@ public:
 	DXGI_FORMAT GetDSVFormat() const { return DXGI_FORMAT_D24_UNORM_S8_UINT; }
 
 	// OffscreenRendering
-		ComPtr<ID3D12Resource> CreateRenderTextureResource
-		(ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4 & clearColor);
+	ComPtr<ID3D12Resource> CreateRenderTextureResource(ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4 & clearColor);
 	void InitializeOffscreenRenderTarget();
 	void InitializeCopyPipeline();
 	void CopyRenderTextureToSwapChain();
@@ -97,12 +86,35 @@ public:
 	void InitializeGrayscalePipeline();
 	void DrawGrayscaleToSwapChain();
 	void SetGrayscaleStrength(float strength);
+	bool IsGrayscaleEnabled() const { return useGrayscale_; }
+	void SetGrayscaleEnabled(bool enabled);
+	float GetGrayscaleStrength() const { return grayscaleSettings_.strength; }
+
+	//Vignette
+	void InitializeVignettePipeline(); 
+	void DrawVignetteToSwapChain();  
+	void SetVignetteEnabled(bool enabled);
+	bool IsVignetteEnabled() const { return useVignette_; }
+	void SetVignetteStrength(float strength);
+	float GetVignetteStrength() const { return vignetteSettings_.vignetteStrength; }
+
+	//RadialBlur
+	void InitializeRadialBlurPipeline();
+	void DrawRadialBlurToSwapChain();
+	void SetRadialBlurEnabled(bool enabled);
+	bool IsRadialBlurEnabled() const { return useRadialBlur_; }
+	void SetRadialBlurStrength(float strength);
+	float GetRadialBlurStrength() const { return radialBlurSettings_.blurStrength; }
+
+	int GetRadialBlurNumSamples() const;
+	void SetRadialBlurNumSamples(int);
+
+	float GetRadialBlurCenterX() const;
+	float GetRadialBlurCenterY() const;
+	void SetRadialBlurCenter(float x, float y);
 
 	void SetViewport(float x, float y, float width, float height);
 	void SetScissorRect(int left, int top, int right, int bottom);
-
-	
-
 private:
 
 	DirectXCommon() = default;
@@ -161,12 +173,21 @@ private:
 	ComPtr<ID3D12RootSignature> grayscaleRootSignature_;
 	ComPtr<ID3D12PipelineState> grayscalePipelineState_;
 	ComPtr<ID3D12Resource> grayscaleConstBuffer_;
-	GrayscaleSettings grayscaleSettings_ = { 1.0f }; // 초기값 100%
-	D3D12_GPU_DESCRIPTOR_HANDLE grayscaleCbvHandle_;
-	
-
-
-	
+	GrayscaleSettings grayscaleSettings_ = { 1.0f }; 
+	D3D12_GPU_DESCRIPTOR_HANDLE grayscaleCbvHandle_;\
+	bool useGrayscale_ = true;
+	//Vignette
+	ComPtr<ID3D12RootSignature> vignetteRootSignature_;
+	ComPtr<ID3D12PipelineState> vignettePipelineState_;
+	bool useVignette_ = false;
+	VignetteSettings vignetteSettings_ = { 1.0f };
+	ComPtr<ID3D12Resource> vignetteConstBuffer_;
+	//RadialBlur
+	ComPtr<ID3D12RootSignature> radialBlurRootSignature_;
+	ComPtr<ID3D12PipelineState> radialBlurPipelineState_;
+	ComPtr<ID3D12Resource> radialBlurConstBuffer_;
+	RadialBlurSettings radialBlurSettings_; 
+	bool useRadialBlur_ = false;
 
 };
 

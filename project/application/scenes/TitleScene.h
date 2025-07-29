@@ -52,7 +52,10 @@ private:
 	Emitter primitiveEmit_{};
 	Emitter ringEmit_{};
 
+	//postEffect
 	bool useGrayscale_ = true;
+	bool useVignette_ = false;
+	bool useRadialBlur_ = false;
 
 	std::unique_ptr<ParticleEffectLibrary> effectLibrary_;
 

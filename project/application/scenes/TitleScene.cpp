@@ -203,9 +203,82 @@ void TitleScene::Update() {
 	//ImGui::DragFloat3();
 	ImGui::End();
 
+
+	ImGui::Begin("PostEffect");
+
+	// === Grayscale ===
+	if (ImGui::Checkbox("Use Grayscale", &useGrayscale_)) {
+		if (useGrayscale_) {
+			useVignette_ = false;
+			useRadialBlur_ = false;
+			DirectXCommon::GetInstance()->SetVignetteEnabled(false);
+			DirectXCommon::GetInstance()->SetRadialBlurEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetGrayscaleEnabled(useGrayscale_);
+	}
+
+	float grayscaleStrength = DirectXCommon::GetInstance()->GetGrayscaleStrength();
+	if (ImGui::SliderFloat("Grayscale Strength", &grayscaleStrength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetGrayscaleStrength(grayscaleStrength);
+	}
+
+	// === Vignette ===
+	if (ImGui::Checkbox("Use Vignette", &useVignette_)) {
+		if (useVignette_) {
+			useGrayscale_ = false;
+			useRadialBlur_ = false;
+			DirectXCommon::GetInstance()->SetGrayscaleEnabled(false);
+			DirectXCommon::GetInstance()->SetRadialBlurEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetVignetteEnabled(useVignette_);
+	}
+
+	float vignetteStrength = DirectXCommon::GetInstance()->GetVignetteStrength();
+	if (ImGui::SliderFloat("Vignette Strength", &vignetteStrength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetVignetteStrength(vignetteStrength);
+	}
+
+	// === Radial Blur ===
+	if (ImGui::Checkbox("Use RadialBlur", &useRadialBlur_)) {
+		if (useRadialBlur_) {
+			useGrayscale_ = false;
+			useVignette_ = false;
+			DirectXCommon::GetInstance()->SetGrayscaleEnabled(false);
+			DirectXCommon::GetInstance()->SetVignetteEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetRadialBlurEnabled(useRadialBlur_);
+	}
+
+	// 샘플 수 조절
+	int sampleCount = DirectXCommon::GetInstance()->GetRadialBlurNumSamples();
+	if (ImGui::SliderInt("Samples", &sampleCount, 2, 64)) {
+		DirectXCommon::GetInstance()->SetRadialBlurNumSamples(sampleCount);
+	}
+
+	// 블러 강도
+	float strength = DirectXCommon::GetInstance()->GetRadialBlurStrength();
+	if (ImGui::SliderFloat("Strength", &strength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetRadialBlurStrength(strength);
+	}
+
+	// 중심 위치
+	float center[2] = {
+	DirectXCommon::GetInstance()->GetRadialBlurCenterX(),
+	DirectXCommon::GetInstance()->GetRadialBlurCenterY()
+	};
+	if (ImGui::SliderFloat2("Center", center, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetRadialBlurCenter(center[0], center[1]);
+	}
+
+	ImGui::End();
+
+
 #endif
 
-	
+	if (input_->TriggerKey(DIK_V)) {
+		useVignette_ = !useVignette_;
+		DirectXCommon::GetInstance()->SetVignetteEnabled(useVignette_);
+	}
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
@@ -226,13 +299,13 @@ void TitleScene::Draw() {
 	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
-	/*model_->Draw();
-	testModel_->Draw();*/
+	//model_->Draw();
+	testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	
 	//effectLibrary_->GetPrimitiveManager()->Draw();
 	//effectLibrary_->GetRingManager()->Draw();
-	effectLibrary_->GetCylinderManager()->Draw();
+	//effectLibrary_->GetCylinderManager()->Draw();
 }
 
 void TitleScene::Finalize() {
