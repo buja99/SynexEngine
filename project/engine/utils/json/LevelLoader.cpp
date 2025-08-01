@@ -40,6 +40,12 @@ void LevelLoader::DeserializeObjectRecursive(nlohmann::json& object, LevelData* 
             objectData.fileName = object["file_name"];
         }
 
+        if (object.contains("Disabled option")) {
+            objectData.disabled = object["Disabled option"].get<bool>();
+        } else {
+            objectData.disabled = false;
+        }
+
         auto& transform = object["transform"];
 
         constexpr float Deg2Rad = 3.1415926535f / 360.0f;

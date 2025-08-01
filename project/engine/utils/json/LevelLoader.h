@@ -11,6 +11,7 @@ struct LevelData {
         Vector3 translation;
         Vector3 rotation;
         Vector3 scaling;
+        bool disabled = false;
     };
     std::vector<ObjectData> objects;
 };

@@ -13,10 +13,15 @@ void LevelObjectBuilder::BuildFromJson(
 
     for (const auto& obj : levelData->objects) {
 
-        // 💥 문제 추적용 로그 출력
+        if (obj.disabled) {
+            std::cout << "[DEBUG] Skipping disabled object: " << obj.name << std::endl;
+            continue;
+        }
+
+        //  문제 추적용 로그 출력
         std::cout << "[DEBUG] checking name: " << obj.name << std::endl;
 
-        // 💥 진단용 복사 검사
+        //  진단용 복사 검사
         std::unordered_map<std::string, WorldTransform*> mapCopy = registry.GetTransformMap();
         if (mapCopy.find(obj.name) != mapCopy.end()) {
             throw std::runtime_error("Duplicate object name detected: " + obj.name);

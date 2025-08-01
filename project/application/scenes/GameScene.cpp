@@ -41,7 +41,7 @@ TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 TextureManager::GetInstance()->LoadTexture("resources/circle.png");
 
 LevelObjectBuilder::BuildFromJson(
-	"resources/json/test4.json",
+	"resources/json/test6.json",
 	registry,
 	levelObjects_,
 	levelTransforms_,
@@ -114,8 +114,8 @@ void GameScene::Update() {
 	for (auto& wt : levelTransforms_) {
 		std::string label = "Object " + std::to_string(index) + " Rotation";
 		ImGui::Text("%s", label.c_str());
-		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->rotate_.x, wt->rotate_.y, wt->rotate_.z);
-		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->rotate_.x, wt->rotate_.y, wt->rotate_.z);
+		//ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->rotate_.x, wt->rotate_.y, wt->rotate_.z);
+		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->translate_.x, wt->translate_.y, wt->translate_.z);
 		index++;
 	}
 
