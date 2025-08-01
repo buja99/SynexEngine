@@ -65,6 +65,7 @@ enemy_ = std::make_unique<Enemy>();
 enemy_->Initialize();
 enemy_-> SetCamera(camera_.get());
 
+
 effectLibrary_ = std::make_unique<ParticleEffectLibrary>();
 effectLibrary_->Initialize(DirectXCommon::GetInstance(), SrvManager::GetInstance(), camera_.get());
 
@@ -140,12 +141,7 @@ void GameScene::Draw() {
 	SpriteCommon::GetInstance()->SetUIPipeline();
 	
 	//back_->Draw();
-
-
-	SrvManager::GetInstance()->PreDraw();
-
 	
-
 	left = centerX - halfW;
 	right = centerX + halfW;
 	top = centerY + halfH;
@@ -187,6 +183,7 @@ void GameScene::Draw() {
 
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
+	SrvManager::GetInstance()->PreDraw();
 
 	//ground_->Draw();
 

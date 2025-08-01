@@ -15,6 +15,7 @@ struct Material
     int useSpotLight; // 스팟광 사용 여부
     int useAmbientLight; // 앰비언트광 사용 여부
     int useAreaLight; // 면광원 사용 여부
+    int useEnvironmentMap;
 };
 
 
@@ -82,6 +83,7 @@ cbuffer PlayerRange : register(b7)
 };
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+TextureCube<float4> gEnvironmentTexture : register(t1);
 struct PixelShaderOutput
 {
     float4 color : SV_TARGET0;
@@ -237,6 +239,15 @@ PixelShaderOutput main(VertexShaderOutput input)
         }
         output.color.rgb = totalDiffuse + totalSpecular + ambient;
         output.color.a = gMaterial.color.a * textureColor.a;
+        
+        if (gMaterial.useEnvironmentMap != 0)
+        {
+            float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+            float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+            float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+
+            output.color.rgb += environmentColor.rgb;
+        }
     }
     else
     {

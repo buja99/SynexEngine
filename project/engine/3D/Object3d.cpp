@@ -4,7 +4,9 @@
 #ifdef _DEBUG
 #include "imgui.h"
 #endif // _DEBUG
-
+#include "TextureUploader.h"
+#include "StringUtility.h"
+using namespace StringUtility;
 
 Object3d::~Object3d() {
 	//OutputDebugStringA("Object3d Destructor Called\n");
@@ -19,22 +21,16 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldT
 	this->object3dCommon_ = object3dCommon;
 	worldTransform_ = worldTransform;
 
-	//modelData = LoadobjFile("resources", "plane.obj");
-
-	//TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
-	//modelData.material.textureIndex =
-	//	TextureManager::GetInstance()->GetTextureIndexByFilepath(modelData.material.textureFilePath);
-
 	transform = { {1.0f,1.0f,1.0f},{0.0f,3.14f,0.0f},{0.0f,0.0f,10.0f} };
 	cameraTransform = { {1.0f,1.0f,1.0f},{0.3f,0.0f,0.0f},{0.0f,4.0f,-10.0f} };
 
 	cameraResource_ = CreateBufferResource(object3dCommon_->GetDxCommon()->GetDevice(), sizeof(CameraForGPU));
 	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
 
-	//CreateVertexBuffer();
 	InitializeTransformationMatrix();
 	InitializeLights();
 	InitializeMaterial();
+	//materialData_->useEnvironmentMap = 0;
 
 	this->camera = object3dCommon->GetDefaultCamera();
 }
@@ -44,12 +40,6 @@ void Object3d::Update()
 	if (!worldTransform_) {
 		return;
 	}
-
-	/*if (worldTransform_) {
-		worldTransform_->scale_ = transform.scale;
-		worldTransform_->rotate_ = transform.rotate;
-		worldTransform_->translate_ = transform.translate;
-	}*/
 
 	// WorldTransform에서 행렬 계산
 	worldTransform_->UpdateMatrix();
@@ -96,6 +86,11 @@ void Object3d::Draw()
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, ambientLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, areaLightResource_->GetGPUVirtualAddress());
 	
+	// === 환경맵 바인딩 (t1, RootParameter[10]) ===
+	/*if (materialData_ && materialData_->useEnvironmentMap != 0) {
+		object3dCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(10, envMapSrvHandle_);
+	}*/
+	// 모델 그리기
 	const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 	model_->DrawRecursive(model_->GetModelData().rootNode, worldTransform_->matWorld_, viewProj, transformationMatrixData);
 }
@@ -137,11 +132,7 @@ void Object3d::Cleanup()
 		materialResource_.Reset();             
 		materialData_ = nullptr;               
 	}
-	//model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
-	//if (worldTransform_) {
-	//	worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
-	//	worldTransform_.reset();     // unique_ptr 해제
-	//}
+	
 	object3dCommon_ = nullptr;
 	camera = nullptr;
 	defaultCamera = nullptr;
@@ -205,6 +196,49 @@ void Object3d::SetModel(const std::string& filePath)
 	if (!model_) {
 		OutputDebugStringA(("Model not found: " + filePath + "\n").c_str());
 	}
+}
+
+void Object3d::SetEnvironmentMap(const std::string& filePath) {
+	DirectX::TexMetadata metadata{};
+	DirectX::ScratchImage mipImages{};
+	HRESULT hr = DirectX::LoadFromDDSFile(
+		ConvertString(filePath).c_str(),
+		DirectX::DDS_FLAGS_NONE, &metadata, mipImages);
+	if (FAILED(hr)) {
+		OutputDebugStringA("Failed to load EnvironmentMap DDS!\n");
+		return;
+	}
+
+	envMapTexture_ = TextureUploader::UploadAndWait(
+		object3dCommon_->GetDxCommon()->GetDevice().Get(),
+		object3dCommon_->GetDxCommon()->GetCommandQueue().Get(),
+		mipImages
+	);
+
+	UINT index = SrvManager::GetInstance()->Allocate();
+	if (index == UINT_MAX) {
+		OutputDebugStringA("SRV Allocate failed!\n");
+		return;
+	}
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = UINT(metadata.mipLevels);
+
+	object3dCommon_->GetDxCommon()->GetDevice()->CreateShaderResourceView(
+		envMapTexture_.Get(), &srvDesc,
+		SrvManager::GetInstance()->GetCPUDescriptorHandle(index));
+
+	envMapSrvHandle_ = SrvManager::GetInstance()->GetGPUDescriptorHandle(index);
+
+	OutputDebugStringA(("SetEnvironmentMap handle = " +
+		std::to_string(envMapSrvHandle_.ptr) + "\n").c_str());
+
+	hasEnvMap_ = true;
+	if (materialData_) materialData_->useEnvironmentMap = 1;
 }
 
 void Object3d::SetPointLight(const Vector3& position, float intensity, float radius, float decay) {
@@ -294,6 +328,16 @@ void Object3d::SetUseAreaLight(bool use) {
 
 bool Object3d::GetUseAreaLight() const {
 	return materialData_ ? materialData_->useAreaLight != 0 : false;
+}
+
+void Object3d::SetUseEnvironmentMap(bool use) {
+	if (materialData_) {
+		materialData_->useEnvironmentMap = use ? 1 : 0;
+	}
+}
+
+bool Object3d::GetUseEnvironmentMap() const {
+	return materialData_ ? (materialData_->useEnvironmentMap != 0) : false;
 }
 
 

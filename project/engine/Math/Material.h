@@ -6,7 +6,7 @@
 struct  Material
 {
 	Vector4 color;               // 16B
-	int32_t enableLighting;		 // 4B	
+	int32_t enableLighting;		 // 4B
 	float padding[3];            // 12B
 	Matrix4x4 uvTransform;       // 64B
 	float shininess;             // 4B
@@ -16,7 +16,8 @@ struct  Material
 	int32_t usePointLight;       // 4B
 	int32_t useSpotLight;        // 4B
 	int32_t useAmbientLight;     // 4B
-	int32_t useAreaLight;     // 4B
+	int32_t useAreaLight;        // 4B
+	int32_t useEnvironmentMap;
 };
 
 struct MaterialData

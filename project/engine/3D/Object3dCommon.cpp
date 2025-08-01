@@ -16,11 +16,7 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 	commandList = dxCommon_->GetCommandList();
 
 	CreateGraphicsPipeline();
-	/*CreateStencilWritePipeline();
-	CreateStencilTestPipeline();*/
-
 	
-
 	SimpleVertex quadVertices[] = {
 		{{-1.0f, -1.0f, 0.5f}},
 		{{-1.0f,  1.0f, 0.5f}},
@@ -30,69 +26,7 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 		{{ 1.0f,  1.0f, 0.5f}},
 	};
 
-	//size_t vbSize = sizeof(quadVertices);
-
-	//D3D12_HEAP_PROPERTIES heapProp = {};
-	//heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-	//D3D12_RESOURCE_DESC resDesc = {};
-	//resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	//resDesc.Width = vbSize;
-	//resDesc.Height = 1;
-	//resDesc.DepthOrArraySize = 1;
-	//resDesc.MipLevels = 1;
-	//resDesc.SampleDesc.Count = 1;
-	//resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	//device->CreateCommittedResource(
-	//	&heapProp,
-	//	D3D12_HEAP_FLAG_NONE,
-	//	&resDesc,
-	//	D3D12_RESOURCE_STATE_GENERIC_READ,
-	//	nullptr,
-	//	IID_PPV_ARGS(&stencilMaskVertexBuffer_)
-	//);
-
-	//void* mapped = nullptr;
-	//stencilMaskVertexBuffer_->Map(0, nullptr, &mapped);
-	//memcpy(mapped, quadVertices, vbSize);
-	//stencilMaskVertexBuffer_->Unmap(0, nullptr);
-
-	//// 뷰 생성
-	//stencilMaskVBView_.BufferLocation = stencilMaskVertexBuffer_->GetGPUVirtualAddress();
-	//stencilMaskVBView_.SizeInBytes = static_cast<UINT>(vbSize);
-	//stencilMaskVBView_.StrideInBytes = sizeof(SimpleVertex);
-
-	/*size_t vbSize = sizeof(quadVertices);
-
-	D3D12_HEAP_PROPERTIES heapProp{};
-	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-	D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer(vbSize);
-
-	device->CreateCommittedResource(
-		&heapProp, D3D12_HEAP_FLAG_NONE,
-		&resDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr, IID_PPV_ARGS(&stencilMaskVertexBuffer_)
-	);
-
-	void* mapped = nullptr;
-	stencilMaskVertexBuffer_->Map(0, nullptr, &mapped);
-	memcpy(mapped, quadVertices, vbSize);
-	stencilMaskVertexBuffer_->Unmap(0, nullptr);
-
-	stencilMaskVBView_.BufferLocation = stencilMaskVertexBuffer_->GetGPUVirtualAddress();
-	stencilMaskVBView_.SizeInBytes = static_cast<UINT>(vbSize);
-	stencilMaskVBView_.StrideInBytes = sizeof(SimpleVertex);*/
-
-	//D3D12_HEAP_PROPERTIES heapProp = {};
-	//heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
-	//D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(Vector3) + sizeof(float) + 255) & ~255); // 256바이트 정렬
-
-	//device->CreateCommittedResource(
-	//	&heapProp, D3D12_HEAP_FLAG_NONE,
-	//	&resDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-	//	nullptr, IID_PPV_ARGS(&playerRangeCB_));
+	
 }
 
 void Object3dCommon::Finalize() {
@@ -232,18 +166,23 @@ void Object3dCommon::CreateRootSignature()
 	HRESULT hr;
 
 	//DescriptorRange
-	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	D3D12_DESCRIPTOR_RANGE descriptorRange[2] = {};
 	descriptorRange[0].BaseShaderRegister = 0;
 	descriptorRange[0].NumDescriptors = 1;
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	//cubemap用
+	descriptorRange[1].BaseShaderRegister = 1; // t1
+	descriptorRange[1].NumDescriptors = 1;
+	descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	//複数設定できるので配列。今回は結果１つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[10] = {};
+	D3D12_ROOT_PARAMETER rootParameters[11] = {};
 	// b0: Material Constant Buffer
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
@@ -255,8 +194,8 @@ void Object3dCommon::CreateRootSignature()
 
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //DescriptorTableを使う
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
-	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange; //Tableの中身の配列の指定
-	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange); //Tableで利用する数
+	rootParameters[2].DescriptorTable.pDescriptorRanges = &descriptorRange[0]; //Tableの中身の配列の指定
+	rootParameters[2].DescriptorTable.NumDescriptorRanges =1; //Tableで利用する数
 
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
@@ -285,6 +224,11 @@ void Object3dCommon::CreateRootSignature()
 	rootParameters[9].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[9].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[9].Descriptor.ShaderRegister = 7;
+
+	rootParameters[10].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[10].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[10].DescriptorTable.pDescriptorRanges = &descriptorRange[1];
+	rootParameters[10].DescriptorTable.NumDescriptorRanges = 1;
 
 	descriptionRootSignature.pParameters = rootParameters; //rootParameters配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters); //配列の長さ

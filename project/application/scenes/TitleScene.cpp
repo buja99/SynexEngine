@@ -296,8 +296,8 @@ void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->SetUIPipeline();
 	//title->Draw();
-	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
+	SrvManager::GetInstance()->PreDraw();
 
 	//model_->Draw();
 	testModel_->Draw();

@@ -45,7 +45,7 @@ class Object3d
 
 	void SetModel(const std::string& filePath);
 
-	
+	void SetEnvironmentMap(const std::string& filePath);
 
 	// setter
 	void SetScale(const Vector3& scale) { transform.scale = scale; }
@@ -84,6 +84,9 @@ class Object3d
 
 	void SetUseAreaLight(bool use);
 	bool GetUseAreaLight() const;
+
+	void SetUseEnvironmentMap(bool use);
+	bool GetUseEnvironmentMap() const;
 
 private:
 
@@ -130,7 +133,10 @@ private:
 	ComPtr<ID3D12Resource> materialResource_;
 	Material* materialData_ = nullptr;
 
-	
+	D3D12_GPU_DESCRIPTOR_HANDLE envMapSrvHandle_{};
+	bool hasEnvMap_ = false;
+
+	ComPtr<ID3D12Resource> envMapTexture_;
 
 };
 
