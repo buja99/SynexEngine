@@ -79,7 +79,7 @@ private:
 	std::unique_ptr<Skybox> skybox_ = nullptr;
 	
 	//json
-	//ModelRegistry registry;
+	ModelRegistry registry;
 
 
 	Vector3 cameraOffset_;

@@ -40,13 +40,13 @@ ModelManager::GetInstance()->LoadModel("resources/obj/weeds", "weeds.obj");
 TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 TextureManager::GetInstance()->LoadTexture("resources/circle.png");
 
-//LevelObjectBuilder::BuildFromJson(
-//	"resources/json/test3.json",
-//	registry,
-//	levelObjects_,
-//	levelTransforms_,
-//	camera_.get()
-//);
+LevelObjectBuilder::BuildFromJson(
+	"resources/json/test4.json",
+	registry,
+	levelObjects_,
+	levelTransforms_,
+	camera_.get()
+);
 
 
 ground_->SetCamera(camera_.get());
@@ -106,6 +106,21 @@ void GameScene::Update() {
 	ImGui::SliderFloat("Half Height", &halfH, 0.0f, 10.0f);
 
 	ImGui::End();
+
+
+	ImGui::Begin("Level Objects Rotation");
+
+	int index = 0;
+	for (auto& wt : levelTransforms_) {
+		std::string label = "Object " + std::to_string(index) + " Rotation";
+		ImGui::Text("%s", label.c_str());
+		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->rotate_.x, wt->rotate_.y, wt->rotate_.z);
+		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->rotate_.x, wt->rotate_.y, wt->rotate_.z);
+		index++;
+	}
+
+	ImGui::End();
+
 #endif
 
 
@@ -119,14 +134,14 @@ void GameScene::Update() {
 	camera_->Update();
 	
 	
-	/*for (auto& wt : levelTransforms_) {
+	for (auto& wt : levelTransforms_) {
 		wt->UpdateMatrix();
 		wt->TransferMatrix();
 	}
 
 	for (auto& obj : levelObjects_) {
 		obj->Update();
-	}*/
+	}
 
 	
 	if (input_->TriggerKey(DIK_R)) {
@@ -188,13 +203,13 @@ void GameScene::Draw() {
 	//ground_->Draw();
 
 	
-	/*for (auto& obj : levelObjects_) {
+	for (auto& obj : levelObjects_) {
 		obj->Draw();
-	}*/
+	}
 
 	
-	player_->Draw();
-	enemy_->Draw();
+	//player_->Draw();
+	//enemy_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	//effectLibrary_->DrawCylinder();
 	player_->HitEffectDraw();

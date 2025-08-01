@@ -41,20 +41,23 @@ void LevelLoader::DeserializeObjectRecursive(nlohmann::json& object, LevelData* 
         }
 
         auto& transform = object["transform"];
+
+        constexpr float Deg2Rad = 3.1415926535f / 360.0f;
+
         objectData.translation = {
             (float)transform["translation"][0],
-            (float)transform["translation"][2],
             (float)transform["translation"][1],
+            (float)transform["translation"][2],
         };
         objectData.rotation = {
-            -(float)transform["rotation"][0],
-            -(float)transform["rotation"][2],
-            -(float)transform["rotation"][1],
+            (float)transform["rotation"][0] * Deg2Rad,
+            (float)transform["rotation"][1] * Deg2Rad,
+            (float)transform["rotation"][2] * Deg2Rad,
         };
         objectData.scaling = {
             (float)transform["scaling"][0],
-            (float)transform["scaling"][2],
             (float)transform["scaling"][1],
+            (float)transform["scaling"][2],
         };
     }
 

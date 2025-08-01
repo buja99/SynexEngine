@@ -29,7 +29,15 @@ void LevelObjectBuilder::BuildFromJson(
         // 모델 생성
         auto model = std::make_unique<Object3d>();
         model->Initialize(Object3dCommon::GetInstance(), transform.get());
-        model->SetModel(obj.fileName);
+        std::string modelPath;
+        if (obj.fileName == "tree") {
+            modelPath = "tree.obj";
+        } else if (obj.fileName == "weeds") {
+            modelPath = "weeds.obj";
+        } else {
+            modelPath = obj.fileName; // 그 외는 그대로 사용
+        }
+        model->SetModel(modelPath);
         if (camera) model->SetCamera(camera);
 
         if (obj.name.empty()) {
