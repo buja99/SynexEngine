@@ -83,7 +83,31 @@ player_->SetEnemies(rawEnemies);
 
 // Load and apply level data
 
+test_plyerTransforms_ = std::make_unique<WorldTransform>();
+test_plyerTransforms_->Initialize();
+test_plyer = std::make_unique<Object3d>();
+test_plyer->Initialize(Object3dCommon::GetInstance(), test_plyerTransforms_.get());
 
+ModelManager::GetInstance()->LoadModel("resources/test_player", "player01.gltf");
+test_plyer->SetModel("player01.gltf");
+
+test_plyer->SetRotate({ 1.6f, 0.0f, 3.14f });
+test_plyer->SetTranslate({ 0.0f, 0.0f, 0.0f });
+test_plyer->SetCamera(camera_.get());
+
+
+blockTransforms_ = std::make_unique<WorldTransform>();
+blockTransforms_->Initialize();
+block_ = std::make_unique<Object3d>();
+block_->Initialize(Object3dCommon::GetInstance(), blockTransforms_.get());
+
+ModelManager::GetInstance()->LoadModel("resources/enemy", "enemyTest.obj");
+block_->SetModel("enemyTest.obj");
+block_->SetCamera(camera_.get());
+block_->SetScale({ 12.0f, 3.0f, 3.0f });
+block_->SetUseEnvironmentMap(true);
+block_->SetEnvironmentMap("resources/rostock_laage_airport_4k.dds");
+camera_->SetTranslate({ 0.0f, 5.0f, -14.0f });
 
 DirectXCommon::GetInstance()->SetGrayscaleStrength(0.0f);
 
@@ -121,8 +145,29 @@ void GameScene::Update() {
 
 	ImGui::End();
 
-#endif
+	ImGui::Begin("Model Transform");
 
+	Vector3 scale = test_plyer->GetScale();
+	Vector3 rotate = test_plyer->GetRotate();
+	Vector3 translate = test_plyer->GetTranslate();
+
+	// 슬라이더로 값 수정
+	ImGui::DragFloat3("Scale", &scale.x, 0.1f);
+	ImGui::DragFloat3("Rotate", &rotate.x, 0.1f);
+	ImGui::DragFloat3("Translate", &translate.x, 0.1f);
+
+	test_plyer->SetScale(scale);
+	test_plyer->SetRotate(rotate);
+	test_plyer->SetTranslate(translate);
+
+	ImGui::End();
+
+#endif
+	test_plyer->Update();
+	test_plyerTransforms_->UpdateMatrix();
+
+	block_->Update();
+	blockTransforms_->UpdateMatrix();
 
 	back_->Update();
 
@@ -203,11 +248,13 @@ void GameScene::Draw() {
 	//ground_->Draw();
 
 	
-	for (auto& obj : levelObjects_) {
+	/*for (auto& obj : levelObjects_) {
 		obj->Draw();
-	}
+	}*/
 
-	
+	//test_plyer->Draw();
+	block_->Draw();
+
 	//player_->Draw();
 	//enemy_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();

@@ -242,8 +242,8 @@ PixelShaderOutput main(VertexShaderOutput input)
         
         if (gMaterial.useEnvironmentMap != 0)
         {
-            float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
-            float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+            float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
+            float3 reflectedVector = reflect(-toEye, normalize(input.normal));
             float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
 
             output.color.rgb += environmentColor.rgb;

@@ -3,7 +3,7 @@
 #include <cassert>
 
 ComPtr<ID3D12Resource> TextureUploader::UploadTexture(
-    ID3D12Device* device,
+    ComPtr<ID3D12Device> device,
     ID3D12GraphicsCommandList* commandList,
     const DirectX::ScratchImage& mipImages,
     ComPtr<ID3D12Resource>& intermediateOut
@@ -56,7 +56,7 @@ ComPtr<ID3D12Resource> TextureUploader::UploadTexture(
     // Subresource 데이터 준비
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
     HRESULT result = DirectX::PrepareUpload(
-        device,
+        device.Get(),
         mipImages.GetImages(),
         mipImages.GetImageCount(),
         mipImages.GetMetadata(),
@@ -183,7 +183,7 @@ UploadResult TextureUploader::UploadAndDescribe(ID3D12Device* device, ID3D12Grap
     return result;
 }
 
-ComPtr<ID3D12Resource> TextureUploader::UploadAndWait(ID3D12Device* device, ID3D12CommandQueue* commandQueue, const DirectX::ScratchImage& mipImages) {
+ComPtr<ID3D12Resource> TextureUploader::UploadAndWait(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue> commandQueue, const DirectX::ScratchImage& mipImages) {
     ComPtr<ID3D12GraphicsCommandList> commandList;
     ComPtr<ID3D12CommandAllocator> allocator;
 

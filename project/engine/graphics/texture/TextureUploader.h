@@ -18,7 +18,7 @@ struct UploadResult {
 class TextureUploader {
 public:
     static ComPtr<ID3D12Resource> UploadTexture(
-        ID3D12Device* device,
+        ComPtr<ID3D12Device> device,
         ID3D12GraphicsCommandList* commandList,
         const DirectX::ScratchImage& mipImages,
         ComPtr<ID3D12Resource>& intermediateBufferOut // 중간버퍼 반환
@@ -33,8 +33,8 @@ public:
     );
 
     static ComPtr<ID3D12Resource> UploadAndWait(
-        ID3D12Device* device,
-        ID3D12CommandQueue* commandQueue,
+        ComPtr<ID3D12Device> device,
+        ComPtr<ID3D12CommandQueue> commandQueue,
         const DirectX::ScratchImage& mipImages
     );
 };

@@ -12,8 +12,8 @@ void Enemy::Initialize() {
 	enemyModel_ = std::make_unique<Object3d>();
 	enemyModel_->Initialize(Object3dCommon::GetInstance(), enemyWorldTransform_.get());
     enemyModel_->SetModel("enemyTest.obj");
-   /* enemyModel_->SetUseEnvironmentMap(true);
-    enemyModel_->SetEnvironmentMap("resources/rostock_large_airport_4k.dds");*/
+    enemyModel_->SetUseEnvironmentMap(true);
+    enemyModel_->SetEnvironmentMap("resources/rostock_laage_airport_4k.dds");
 
 	enemyWorldTransform_->scale_ = { 12.0f, 3.0f, 3.0f };
     isHit_ = false;

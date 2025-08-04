@@ -134,9 +134,6 @@ private:
 	Material* materialData_ = nullptr;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE envMapSrvHandle_{};
-	bool hasEnvMap_ = false;
-
-	ComPtr<ID3D12Resource> envMapTexture_;
 
 };
 
