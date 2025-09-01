@@ -22,14 +22,64 @@ LevelData* LevelLoader::LoadLevelData(const std::string& filePath) {
     return levelData;
 }
 
+std::unique_ptr<LevelData> LevelLoader::LoadJsonFile(const std::string& directoryPath, const std::string& filename) {
+    std::unique_ptr<LevelData> levelData = std::make_unique<LevelData>();
+
+    std::ifstream file(directoryPath + "/" + filename);
+    assert(file.is_open());
+
+    nlohmann::json root;
+    file >> root;
+
+    for (const auto& object : root["objects"]) {
+        std::string type = object.value("type", "");
+
+        if (type == "EnemySpawn") {
+            EnemySpawnData enemy;
+            enemy.fileName = object.value("file_name", "enemy");
+
+            auto trans = object["transform"]["translation"];
+            enemy.translation = { trans[0], trans[1], trans[2] };
+
+            auto rot = object["transform"]["rotation"];
+            enemy.rotation = { rot[0], rot[1], rot[2] };
+
+            levelData->enemies.push_back(enemy);
+        } else if (type == "PlayerSpawn") {
+            PlayerSpawnData player;
+
+            auto trans = object["transform"]["translation"];
+            player.translation = { trans[0], trans[1], trans[2] };
+
+            auto rot = object["transform"]["rotation"];
+            player.rotation = { rot[0], rot[1], rot[2] };
+
+            levelData->players.push_back(player);
+        } else {
+            ObjectData obj;
+            obj.name = object.value("name", "");
+            obj.fileName = object.value("file_name", "");
+            auto trans = object["transform"]["translation"];
+            auto rot = object["transform"]["rotation"];
+            auto scale = object["transform"]["scaling"];
+            obj.translation = { trans[0], trans[1], trans[2] };
+            obj.rotation = { rot[0], rot[1], rot[2] };
+            obj.scaling = { scale[0], scale[1], scale[2] };
+            levelData->objects.push_back(obj);
+        }
+    }
+
+    return levelData;
+}
+
 void LevelLoader::DeserializeObjectRecursive(nlohmann::json& object, LevelData* levelData) {
     if (!object.contains("type")) return;
 
     std::string type = object["type"].get<std::string>();
 
     if (type == "MESH") {
-        levelData->objects.emplace_back(LevelData::ObjectData{});
-        LevelData::ObjectData& objectData = levelData->objects.back();
+        levelData->objects.emplace_back(ObjectData{});
+        ObjectData& objectData = levelData->objects.back();
 
         if (object.contains("name")) {
             objectData.name = object["name"];

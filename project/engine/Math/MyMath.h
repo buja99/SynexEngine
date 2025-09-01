@@ -7,6 +7,7 @@
 #include <math.h>
 #include "Geo.h"
 #include <assimp/scene.h>
+#include "WorldTransform.h"
 
 namespace  MyMath
 {
@@ -50,5 +51,7 @@ namespace  MyMath
 	Matrix4x4 ConvertMatrix( aiMatrix4x4& aiMat);
 	float Distance(const Vector3& a, const Vector3& b);
 	Vector3 GetTranslate(const Matrix4x4& m);
+	OBB MakeOBB(const WorldTransform& wt, const Vector3& modelSize);
+	bool IsOBBCollision(const OBB& a, const OBB& b);
 };
 

@@ -154,7 +154,7 @@ void Object3d::InitializeMaterial() {
 
 	// 조명 및 머티리얼 초기 설정
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->enableLighting = true;
+	materialData_->enableLighting = false;
 	materialData_->uvTransform = MyMath::MakeIdentity4x4();
 	materialData_->shininess = 32.0f;
 	materialData_->isBlinnPhong = 0;

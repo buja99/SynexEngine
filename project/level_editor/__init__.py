@@ -8,6 +8,12 @@ bl_info = {
     "category": "Object",
 }
 
+from .spawn import (
+    MYADDON_OT_spawn_create_symbol,
+    MYADDON_OT_spawn_create_player_symbol,
+    MYADDON_OT_spawn_create_enemy_symbol,
+)
+
 import bpy
 
 from .collider import MYADDON_OT_add_collider, OBJECT_PT_collider, add_draw_handler, remove_draw_handler
@@ -17,6 +23,7 @@ from .file_name_panel import MYADDON_OT_add_filename, OBJECT_PT_file_name
 from .my_menu import TOPBAR_MT_my_menu, draw_my_menu
 from .stretch_vertex import MYADDON_OT_stretch_vertex
 from .disabled import MYADDON_OT_add_disabled_flag, OBJECT_PT_disabled_flag
+
 
 classes = [
     MYADDON_OT_add_collider,
@@ -29,6 +36,9 @@ classes = [
     TOPBAR_MT_my_menu,
     MYADDON_OT_add_disabled_flag,
     OBJECT_PT_disabled_flag,
+    MYADDON_OT_spawn_create_symbol,
+    MYADDON_OT_spawn_create_player_symbol,
+    MYADDON_OT_spawn_create_enemy_symbol,
 ]
 
 def register():

@@ -394,6 +394,69 @@ namespace MyMath {
 		return { m.m[3][0], m.m[3][1], m.m[3][2] };
 	}
 
+	OBB MakeOBB(const WorldTransform& wt, const Vector3& modelSize) {
+		OBB obb;
+		obb.center = MyMath::GetTranslate(wt.matWorld_);
+		obb.halfSize = MyMath::Multiply(modelSize, 0.5f);
+
+		// 로컬 축을 world 회전으로 변환
+		Matrix4x4 rotMat = MyMath::MakeRotateZMatrix(wt.rotate_.z);
+		rotMat = MyMath::Multiply(rotMat, MyMath::MakeRotateYMatrix(wt.rotate_.y));
+		rotMat = MyMath::Multiply(rotMat, MyMath::MakeRotateXMatrix(wt.rotate_.x));
+
+		obb.axis[0] = { rotMat.m[0][0], rotMat.m[0][1], rotMat.m[0][2] }; // X축
+		obb.axis[1] = { rotMat.m[1][0], rotMat.m[1][1], rotMat.m[1][2] }; // Y축
+		obb.axis[2] = { rotMat.m[2][0], rotMat.m[2][1], rotMat.m[2][2] }; // Z축
+
+		return obb;
+	}
+
+	bool MyMath::IsOBBCollision(const OBB& a, const OBB& b) {
+		const float EPSILON = 1e-6f;
+		float ra, rb;
+		float R[3][3], AbsR[3][3];
+
+		// 1. 두 박스의 축 내적 (회전행렬 R)
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				R[i][j] = MyMath::Dot(a.axis[i], b.axis[j]);
+				AbsR[i][j] = std::fabs(R[i][j]) + EPSILON;
+			}
+		}
+
+		// 2. 두 중심의 벡터를 A 좌표계로 변환
+		Vector3 t = MyMath::Subtract(b.center, a.center);
+		t = { MyMath::Dot(t, a.axis[0]), MyMath::Dot(t, a.axis[1]), MyMath::Dot(t, a.axis[2]) };
+
+		// 3. A의 세 축에 대해 검사
+		for (int i = 0; i < 3; i++) {
+			ra = a.halfSize[i];
+			rb = b.halfSize[0] * AbsR[i][0] + b.halfSize[1] * AbsR[i][1] + b.halfSize[2] * AbsR[i][2];
+			if (std::fabs(t[i]) > ra + rb) return false;
+		}
+
+		// 4. B의 세 축에 대해 검사
+		for (int i = 0; i < 3; i++) {
+			ra = a.halfSize[0] * AbsR[0][i] + a.halfSize[1] * AbsR[1][i] + a.halfSize[2] * AbsR[2][i];
+			rb = b.halfSize[i];
+			float proj = std::fabs(t[0] * R[0][i] + t[1] * R[1][i] + t[2] * R[2][i]);
+			if (proj > ra + rb) return false;
+		}
+
+		// 5. 외적 축 9개 검사
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				ra = a.halfSize[(i + 1) % 3] * AbsR[(i + 2) % 3][j] + a.halfSize[(i + 2) % 3] * AbsR[(i + 1) % 3][j];
+				rb = b.halfSize[(j + 1) % 3] * AbsR[i][(j + 2) % 3] + b.halfSize[(j + 2) % 3] * AbsR[i][(j + 1) % 3];
+				float proj = std::fabs(t[(i + 2) % 3] * R[(i + 1) % 3][j] - t[(i + 1) % 3] * R[(i + 2) % 3][j]);
+				if (proj > ra + rb) return false;
+			}
+		}
+
+		// 모든 축에서 분리가 없으면 충돌
+		return true;
+	}
+
 	
 
 }

@@ -3,64 +3,65 @@
 #include <iostream>
 
 void LevelObjectBuilder::BuildFromJson(
-    const std::string& jsonPath,
-    ModelRegistry& registry,
+    const LevelData* levelData,
     std::vector<std::unique_ptr<Object3d>>& objects,
     std::vector<std::unique_ptr<WorldTransform>>& transforms,
-    Camera* camera
-) {
-    LevelData* levelData = LevelLoader::LoadLevelData(jsonPath);
+    Camera* camera)
+{
+    assert(levelData);
 
+    // === 일반 오브젝트 처리 ===
     for (const auto& obj : levelData->objects) {
-
         if (obj.disabled) {
-            std::cout << "[DEBUG] Skipping disabled object: " << obj.name << std::endl;
             continue;
         }
 
-        //  문제 추적용 로그 출력
-        std::cout << "[DEBUG] checking name: " << obj.name << std::endl;
-
-        //  진단용 복사 검사
-        std::unordered_map<std::string, WorldTransform*> mapCopy = registry.GetTransformMap();
-        if (mapCopy.find(obj.name) != mapCopy.end()) {
-            throw std::runtime_error("Duplicate object name detected: " + obj.name);
-        }
-
-        // 트랜스폼 생성
         auto transform = std::make_unique<WorldTransform>();
         transform->Initialize();
+        transform->translate_ = obj.translation;
+        transform->rotate_ = obj.rotation;
+        transform->scale_ = obj.scaling;
 
-        // 모델 생성
         auto model = std::make_unique<Object3d>();
         model->Initialize(Object3dCommon::GetInstance(), transform.get());
-        std::string modelPath;
-        if (obj.fileName == "tree") {
-            modelPath = "tree.obj";
-        } else if (obj.fileName == "weeds") {
-            modelPath = "weeds.obj";
-        } else {
-            modelPath = obj.fileName; // 그 외는 그대로 사용
-        }
-        model->SetModel(modelPath);
+        model->SetModel(obj.fileName);
         if (camera) model->SetCamera(camera);
 
-        if (obj.name.empty()) {
-            throw std::runtime_error("Object name is empty. Each object must have a unique 'name'.");
-        }
-
-        if (registry.GetTransformMap().find(obj.name) != registry.GetTransformMap().end()) {
-            throw std::runtime_error("Duplicate object name detected: " + obj.name);
-        }
-
-        // 등록
-        registry.Register(obj.name, model.get(), transform.get());
-
-        // 리스트에 추가
         transforms.push_back(std::move(transform));
         objects.push_back(std::move(model));
     }
 
-    // 트랜스폼 적용
-    LevelApplier::ApplyLevelTransforms(levelData, registry.GetTransformMap());
+    // === 적 스폰 포인트 처리 ===
+    for (const auto& enemy : levelData->enemies) {
+        auto transform = std::make_unique<WorldTransform>();
+        transform->Initialize();
+        transform->translate_ = enemy.translation;
+        transform->rotate_ = enemy.rotation;
+        transform->scale_ = { 1.0f, 1.0f, 1.0f };  // 기본 스케일
+
+        auto model = std::make_unique<Object3d>();
+        model->Initialize(Object3dCommon::GetInstance(), transform.get());
+        model->SetModel(enemy.fileName); // 예: "enemy.obj"
+        if (camera) model->SetCamera(camera);
+
+        transforms.push_back(std::move(transform));
+        objects.push_back(std::move(model));
+    }
+
+    // === 플레이어 스폰 포인트 처리 ===
+    for (const auto& player : levelData->players) {
+        auto transform = std::make_unique<WorldTransform>();
+        transform->Initialize();
+        transform->translate_ = player.translation;
+        transform->rotate_ = player.rotation;
+        transform->scale_ = { 1.0f, 1.0f, 1.0f };
+
+        auto model = std::make_unique<Object3d>();
+        model->Initialize(Object3dCommon::GetInstance(), transform.get());
+        model->SetModel("player"); // 고정된 player 모델 이름
+        if (camera) model->SetCamera(camera);
+
+        transforms.push_back(std::move(transform));
+        objects.push_back(std::move(model));
+    }
 }

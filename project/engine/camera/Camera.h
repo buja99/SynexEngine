@@ -63,7 +63,7 @@ private:
 	Matrix4x4 projectionMatrix_;
 	Matrix4x4 viewProjectionMatrix_;
 
-	float fov_ = 0.45f * float(M_PI);
+	float fov_ = 0.3f * float(M_PI);
 	float aspectRatio_ = 16.0f / 9.0f;
 	float nearZ_ = 1.0f;
 	float farZ_ = 1000.0f;

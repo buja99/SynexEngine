@@ -37,12 +37,15 @@ ModelManager::GetInstance()->Initialize(DirectXCommon::GetInstance());
 
 ModelManager::GetInstance()->LoadModel("resources/obj/tree", "tree.obj");
 ModelManager::GetInstance()->LoadModel("resources/obj/weeds", "weeds.obj");
+ModelManager::GetInstance()->LoadModel("resources/player", "player.obj");
+ModelManager::GetInstance()->LoadModel("resources/enemy", "enemy.obj");
 TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 TextureManager::GetInstance()->LoadTexture("resources/circle.png");
 
+std::unique_ptr<LevelData> levelData = LevelLoader::LoadJsonFile("resources/json", "Untitled3.json");
+
 LevelObjectBuilder::BuildFromJson(
-	"resources/json/test6.json",
-	registry,
+	levelData.get(),
 	levelObjects_,
 	levelTransforms_,
 	camera_.get()
@@ -134,31 +137,33 @@ void GameScene::Update() {
 
 	ImGui::Begin("Level Objects Rotation");
 
-	int index = 0;
-	for (auto& wt : levelTransforms_) {
-		std::string label = "Object " + std::to_string(index) + " Rotation";
-		ImGui::Text("%s", label.c_str());
-		//ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->rotate_.x, wt->rotate_.y, wt->rotate_.z);
-		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", wt->translate_.x, wt->translate_.y, wt->translate_.z);
-		index++;
+	for (int i = 0; i < levelTransforms_.size(); ++i) {
+		ImGui::Text("Obj %d: pos(%.1f, %.1f, %.1f) scale(%.2f, %.2f, %.2f)",
+			i,
+			levelTransforms_[i]->translate_.x,
+			levelTransforms_[i]->translate_.y,
+			levelTransforms_[i]->translate_.z,
+			levelTransforms_[i]->scale_.x,
+			levelTransforms_[i]->scale_.y,
+			levelTransforms_[i]->scale_.z);
 	}
 
 	ImGui::End();
 
 	ImGui::Begin("Model Transform");
 
-	Vector3 scale = test_plyer->GetScale();
-	Vector3 rotate = test_plyer->GetRotate();
-	Vector3 translate = test_plyer->GetTranslate();
+	Vector3 scale = block_->GetScale();
+	Vector3 rotate = block_->GetRotate();
+	Vector3 translate = block_->GetTranslate();
 
 	// 슬라이더로 값 수정
 	ImGui::DragFloat3("Scale", &scale.x, 0.1f);
 	ImGui::DragFloat3("Rotate", &rotate.x, 0.1f);
 	ImGui::DragFloat3("Translate", &translate.x, 0.1f);
 
-	test_plyer->SetScale(scale);
-	test_plyer->SetRotate(rotate);
-	test_plyer->SetTranslate(translate);
+	block_->SetScale(scale);
+	block_->SetRotate(rotate);
+	block_->SetTranslate(translate);
 
 	ImGui::End();
 
@@ -181,7 +186,6 @@ void GameScene::Update() {
 	
 	for (auto& wt : levelTransforms_) {
 		wt->UpdateMatrix();
-		wt->TransferMatrix();
 	}
 
 	for (auto& obj : levelObjects_) {
@@ -239,7 +243,7 @@ void GameScene::Draw() {
 	//mapped->range = visibleRange;
 	//Object3dCommon::GetInstance()->GetPlayerRangeCB()->Unmap(0, nullptr);
 
-	skybox_->Draw(camera_->GetViewMatrix(), camera_->GetProjectionMatrix());
+	//skybox_->Draw(camera_->GetViewMatrix(), camera_->GetProjectionMatrix());
 
 	Object3dCommon::GetInstance()->CommonDrawSettings();
 
@@ -248,18 +252,18 @@ void GameScene::Draw() {
 	//ground_->Draw();
 
 	
-	/*for (auto& obj : levelObjects_) {
+	for (auto& obj : levelObjects_) {
 		obj->Draw();
-	}*/
+	}
 
 	//test_plyer->Draw();
-	block_->Draw();
+	//block_->Draw();
 
-	//player_->Draw();
-	//enemy_->Draw();
+	/*player_->Draw();
+	enemy_->Draw();*/
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	//effectLibrary_->DrawCylinder();
-	player_->HitEffectDraw();
+	//player_->HitEffectDraw();
 }
 
 

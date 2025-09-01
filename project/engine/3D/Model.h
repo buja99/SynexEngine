@@ -23,6 +23,25 @@ struct ModelData
 	std::vector<VertexData> vertices;
 	MaterialData material;
 	Node rootNode;
+	std::vector<AnimationData> animations;
+};
+
+struct Keyframe {
+	float time;
+	Vector3 position;
+	Quaternion rotation;
+	Vector3 scale;
+};
+
+struct AnimationChannel {
+	std::string nodeName; // 대상 본 이름
+	std::vector<Keyframe> keyframes;
+};
+
+struct AnimationData {
+	std::string name;
+	float duration = 0.0f;
+	std::vector<AnimationChannel> channels;
 };
 
 class Model

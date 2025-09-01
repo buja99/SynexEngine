@@ -1,6 +1,6 @@
 # Blender 4.4.1
 # www.blender.org
-mtllib enemyTest.mtl
+mtllib enemy.mtl
 o Cube
 v 1.840000 2.920000 -1.810000
 v 1.840000 0.000000 -1.810000

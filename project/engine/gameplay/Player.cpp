@@ -179,47 +179,34 @@ void Player::SetCamera(Camera* camera) {
 }
 
 bool Player::HitCheck() {
-	// 1. 무기의 AABB 계산
-	Vector3 weaponPos = playerTransforms_[WEAPON]->translate_;
-	Vector3 weaponHalfSize = playerTransforms_[WEAPON]->scale_; // 크기는 무기 사이즈에 맞게 조정
+	// 1. 무기 OBB 생성
+	// 무기 모델 크기(원본 bounding box 크기)는 직접 지정해줘야 합니다.
+	// 예시: playerWeapon.obj 의 대략적인 크기를 (1, 4.5, 1) 로 가정
+	Vector3 weaponModelSize = { 1.0f, 4.5f, 1.0f };
 
-	Vector3 weaponMin = MyMath::Subtract(weaponPos,weaponHalfSize);
-	Vector3 weaponMax = MyMath::Add(weaponPos,weaponHalfSize);
+	OBB weaponOBB = MyMath::MakeOBB(*playerTransforms_[WEAPON], weaponModelSize);
 
 	bool didHit = false;
 
-	// 2. 각 적의 AABB와 비교
+	// 2. 적들과 OBB 충돌 검사
 	for (auto& enemy : enemies_) {
-		Vector3 enemyPos = enemy->GetWorldTransform().translate_;
-		Vector3 enemyHalfSize = enemy->GetWorldTransform().scale_; // 적 사이즈도 설정
+		// 적 모델 크기(원본 bounding box 크기). enemyTest.obj 가 (12,3,3)으로 스케일된 상태.
+		Vector3 enemyModelSize = { 12.0f, 3.0f, 3.0f };
 
-		Vector3 enemyMin = MyMath::Subtract(enemyPos,enemyHalfSize);
-		Vector3 enemyMax = MyMath::Add(enemyPos,enemyHalfSize);
-		
-		// 3. AABB 충돌 판정
-		if (MyMath::IsAABBCollision(weaponMin, weaponMax, enemyMin, enemyMax)) {
+		OBB enemyOBB = MyMath::MakeOBB(enemy->GetWorldTransform(), enemyModelSize);
 
- 			enemy->OnHit(10.0f);
+		// 3. OBB 충돌 판정
+		if (MyMath::IsOBBCollision(weaponOBB, enemyOBB)) {
+			enemy->OnHit(10.0f);
 
-			// 충돌 지점 계산
-			Vector3 hitMin = {
-				(std::max)(weaponMin.x, enemyMin.x),
-				(std::max)(weaponMin.y, enemyMin.y),
-				(std::max)(weaponMin.z, enemyMin.z)
-			};
-			Vector3 hitMax = {
-				(std::min)(weaponMax.x, enemyMax.x),
-				(std::min)(weaponMax.y, enemyMax.y),
-				(std::min)(weaponMax.z, enemyMax.z)
-			};
-			Vector3 hitCenter = MyMath::Multiply(MyMath::Add(hitMin, hitMax), 0.5f);
-			//hitCenter.x -= 4.0f; // 무기 위치 조정
-			//hitCenter.y += 4.0f;
-			effectLibrary_->EmitPrimitive(hitCenter, *randomEngine_);
+			// 충돌 지점은 간단히 enemy 중심을 사용 (정밀 계산하려면 SAT 축별 penetration depth 필요)
+			Vector3 hitPos = enemyOBB.center;
 
+			effectLibrary_->EmitPrimitive(hitPos, *randomEngine_);
 			didHit = true;
 		}
 	}
+
 	return didHit;
 }
 
