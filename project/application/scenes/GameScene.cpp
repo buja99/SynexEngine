@@ -166,6 +166,8 @@ void GameScene::Update() {
 	test_plyer->Update();
 	test_plyerTransforms_->UpdateMatrix();
 
+
+
 	block_->Update();
 	blockTransforms_->UpdateMatrix();
 
@@ -178,7 +180,10 @@ void GameScene::Update() {
 	effectLibrary_->Update();
 	camera_->Update();
 	
-	
+	Vector3 blockRotate = block_->GetRotate();
+	blockRotate.y += 0.01f;
+	block_->SetRotate(blockRotate);
+
 	for (auto& wt : levelTransforms_) {
 		wt->UpdateMatrix();
 		wt->TransferMatrix();
