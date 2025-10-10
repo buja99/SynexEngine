@@ -1,3 +1,5 @@
+#define NOMINMAX
+#include <Windows.h>
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include <fstream>
@@ -40,22 +42,63 @@ void Object3d::Update()
 	if (!worldTransform_) {
 		return;
 	}
-	if (worldTransform_) {
-		worldTransform_->scale_ = transform.scale;
-		worldTransform_->rotate_ = transform.rotate;
-		worldTransform_->translate_ = transform.translate;
+
+	// 애니메이션 적용 시작
+	if (model_ && !model_->GetModelData().animations.empty()) {
+		static float time = 0.0f;
+		time += 1.0f / 60.0f; // 간단한 시간 증가 (60FPS 기준)
+
+		const auto& anim = model_->GetModelData().animations[0]; // 첫 번째 애니메이션만 사용
+
+		for (const auto& channel : anim.channels) {
+			const auto& keyframes = channel.keyframes;
+			if (keyframes.size() < 2) continue;
+
+			float localTime = fmodf(time, anim.duration);
+
+			// 보간할 키프레임 찾기
+			size_t index = 0;
+			while (index + 1 < keyframes.size() && keyframes[index + 1].time < localTime) {
+				++index;
+			}
+
+			const Keyframe& k0 = keyframes[index];
+			const Keyframe& k1 = keyframes[std::min(index + 1, keyframes.size() - 1)];
+
+			float t = (localTime - k0.time) / (k1.time - k0.time + 0.0001f);
+
+			// 보간 처리
+			Vector3 pos = MyMath::Lerp(k0.position, k1.position, t);
+			Vector3 scl = MyMath::Lerp(k0.scale, k1.scale, t);
+			Quaternion rot = MyMath::Slerp(k0.rotation, k1.rotation, t);
+			Vector3 euler = MyMath::QuaternionToEuler(rot); // 쿼터니언 → 오일러
+
+			// transform에 적용
+			transform.translate = pos;
+			transform.scale = scl;
+			transform.rotate = euler;
+		}
 	}
-	// WorldTransform에서 행렬 계산
+	// 애니메이션 적용 끝 
+
+	// 애니메이션을 반영한 transform 값을 worldTransform에 전달
+	worldTransform_->scale_ = transform.scale;
+	worldTransform_->rotate_ = transform.rotate;
+	worldTransform_->translate_ = transform.translate;
+
+	// 행렬 계산
 	worldTransform_->UpdateMatrix();
 
 	// WVP 계산
-	
 	if (camera) {
 		const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 
 		if (model_) {
-			//  glTF 계층 구조 반영한 최종 모델 행렬
-			Matrix4x4 modelMatrix = MyMath::Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform_->matWorld_);
+			// 계층 노드가 있을 경우 localMatrix 포함
+			Matrix4x4 modelMatrix = MyMath::Multiply(
+				model_->GetModelData().rootNode.localMatrix,
+				worldTransform_->matWorld_
+			);
 			transformationMatrixData->WVP = MyMath::Multiply(modelMatrix, viewProj);
 			transformationMatrixData->World = modelMatrix;
 			transformationMatrixData->WorldInverseTranspose = MyMath::Transpose(MyMath::Inverse(modelMatrix));

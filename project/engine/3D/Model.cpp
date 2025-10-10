@@ -99,6 +99,48 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 
 	modelData.rootNode = ReadNode(scene->mRootNode);
 
+	// 애니메이션 로딩 추가 
+	if (scene->HasAnimations()) {
+		for (uint32_t i = 0; i < scene->mNumAnimations; ++i) {
+			aiAnimation* aiAnim = scene->mAnimations[i];
+
+			AnimationData animData;
+			animData.name = aiAnim->mName.C_Str();
+			animData.duration = static_cast<float>(aiAnim->mDuration);
+
+			for (uint32_t j = 0; j < aiAnim->mNumChannels; ++j) {
+				aiNodeAnim* channel = aiAnim->mChannels[j];
+
+				AnimationChannel animChannel;
+				animChannel.nodeName = channel->mNodeName.C_Str();
+
+				uint32_t keyCount = std::min({
+					channel->mNumPositionKeys,
+					channel->mNumRotationKeys,
+					channel->mNumScalingKeys
+					});
+
+				for (uint32_t k = 0; k < keyCount; ++k) {
+					Keyframe key;
+					key.time = static_cast<float>(channel->mPositionKeys[k].mTime);
+
+					aiVector3D p = channel->mPositionKeys[k].mValue;
+					aiVector3D s = channel->mScalingKeys[k].mValue;
+					aiQuaternion r = channel->mRotationKeys[k].mValue;
+
+					key.position = { p.x, p.y, p.z };
+					key.scale = { s.x, s.y, s.z };
+					key.rotation = { r.x, r.y, r.z, r.w };
+
+					animChannel.keyframes.push_back(key);
+				}
+
+				animData.channels.push_back(animChannel);
+			}
+
+			modelData.animations.push_back(animData);
+		}
+	}
 	return modelData;
 }
 

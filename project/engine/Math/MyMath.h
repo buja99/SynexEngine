@@ -18,6 +18,9 @@ namespace  MyMath
 	Vector3 divide(const Vector3& v, float s);
 	Vector3 AddVector2AndVector3(const Vector2& vec2, const Vector3& vec3);
 	Vector3 Multiply(const Vector3& vec, float scalar);
+	inline Vector3 Multiply(float scalar, const Vector3& vec) {
+		return Multiply(vec, scalar);
+	}
 	float length(Vector3 distance);
 	Vector3 normalize(Vector3 distance);
 	float Dot(Vector3 c, Vector3 d);
@@ -53,5 +56,21 @@ namespace  MyMath
 	Vector3 GetTranslate(const Matrix4x4& m);
 	OBB MakeOBB(const WorldTransform& wt, const Vector3& modelSize);
 	bool IsOBBCollision(const OBB& a, const OBB& b);
+	Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
+	Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
+	Quaternion Add(const Quaternion& lns, const Quaternion& rhs);
+	Quaternion Subtract(const Quaternion& q1, const Quaternion& q2);
+	Quaternion Multiply(float a, const Quaternion& q);
+	Quaternion Multiply(const Quaternion& lns, const Quaternion& rhs);
+	Quaternion IdentiyQuaternion();
+	Quaternion Conjugate(const Quaternion& quaternion);
+	float Norm(const Quaternion& quaternion);
+	Quaternion Normalize(const Quaternion& quaternion);
+	Quaternion Inverse(const Quaternion& quaternion);
+	Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle);
+	Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion);
+	Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
+	Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t);
+	Vector3 QuaternionToEuler(const Quaternion& q);
 };
 

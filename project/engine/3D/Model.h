@@ -12,20 +12,6 @@
 
 class Object3dCommon;
 
-struct Node {
-	Matrix4x4 localMatrix;
-	std::string name;
-	std::vector<Node> children;
-};
-
-struct ModelData
-{
-	std::vector<VertexData> vertices;
-	MaterialData material;
-	Node rootNode;
-	std::vector<AnimationData> animations;
-};
-
 struct Keyframe {
 	float time;
 	Vector3 position;
@@ -43,6 +29,21 @@ struct AnimationData {
 	float duration = 0.0f;
 	std::vector<AnimationChannel> channels;
 };
+
+struct Node {
+	Matrix4x4 localMatrix;
+	std::string name;
+	std::vector<Node> children;
+};
+
+struct ModelData
+{
+	std::vector<VertexData> vertices;
+	MaterialData material;
+	Node rootNode;
+	std::vector<AnimationData> animations;
+};
+
 
 class Model
 {
