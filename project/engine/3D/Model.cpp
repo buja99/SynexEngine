@@ -15,6 +15,8 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 	InitializeVertexBuffer();
 
+	InitializeIndexBuffer(modelData);
+
 	InitializeMaterial();
 
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
@@ -68,23 +70,28 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 	ModelData modelData;
 
 	aiMesh* mesh = scene->mMeshes[0]; // 첫 번째 메시만 로딩
-	for (uint32_t i = 0; i < mesh->mNumFaces; ++i) {
-		aiFace face = mesh->mFaces[i];
+	modelData.vertices.resize(mesh->mNumVertices);
+	for (uint32_t v = 0; v < mesh->mNumVertices; ++v) {
+		aiVector3D pos = mesh->mVertices[v];
+		aiVector3D norm = mesh->HasNormals() ? mesh->mNormals[v] : aiVector3D(0, 1, 0);
+		aiVector3D tex = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][v] : aiVector3D(0, 0, 0);
+
+		VertexData out{};
+		out.position = { pos.x,  pos.y,  pos.z, 1.0f };
+		out.normal = { norm.x, norm.y, norm.z };
+		out.texCoord = { tex.x,  tex.y };
+
+		modelData.vertices[v] = out;
+	}
+
+	modelData.indices.clear();
+	modelData.indices.reserve(mesh->mNumFaces * 3);
+	for (uint32_t f = 0; f < mesh->mNumFaces; ++f) {
+		const aiFace& face = mesh->mFaces[f];
 		assert(face.mNumIndices == 3);
-
-		for (uint32_t j = 0; j < 3; ++j) {
-			uint32_t index = face.mIndices[j];
-			aiVector3D pos = mesh->mVertices[index];
-			aiVector3D norm = mesh->mNormals[index];
-			aiVector3D tex = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][index] : aiVector3D();
-
-			VertexData vtx;
-			vtx.position = { pos.x, pos.y, pos.z, 1.0f }; // 좌우반전
-			vtx.normal = { norm.x, norm.y, norm.z };     // 좌우반전
-			vtx.texCoord = { tex.x, tex.y };
-
-			modelData.vertices.push_back(vtx);
-		}
+		modelData.indices.push_back(face.mIndices[0]);
+		modelData.indices.push_back(face.mIndices[1]);
+		modelData.indices.push_back(face.mIndices[2]);
 	}
 
 	// 머티리얼 처리
@@ -99,6 +106,24 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 
 	modelData.rootNode = ReadNode(scene->mRootNode);
 
+	for (uint32_t m = 0; m < scene->mNumMeshes; ++m) {
+		aiMesh* mesh = scene->mMeshes[m];
+		for (uint32_t b = 0; b < mesh->mNumBones; ++b) {
+			aiBone* aibone = mesh->mBones[b];
+			std::string boneName = aibone->mName.C_Str();
+
+			aiMatrix4x4 offset = aibone->mOffsetMatrix; // inverse bind
+			offset.Transpose();
+			Matrix4x4 converted = MyMath::ConvertMatrix(offset);
+
+			/*auto it = skeleton.boneIndexMap.find(boneName);
+			if (it != skeleton.boneIndexMap.end()) {
+				skeleton.bones[it->second].offsetMatrix = converted;
+			}*/
+
+		}
+	}
+
 	// 애니메이션 로딩 추가 
 	if (scene->HasAnimations()) {
 		for (uint32_t i = 0; i < scene->mNumAnimations; ++i) {
@@ -106,7 +131,8 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 
 			AnimationData animData;
 			animData.name = aiAnim->mName.C_Str();
-			animData.duration = static_cast<float>(aiAnim->mDuration);
+			double tps = (aiAnim->mTicksPerSecond != 0.0) ? aiAnim->mTicksPerSecond : 60.0;
+			animData.duration = static_cast<float>(aiAnim->mDuration / tps);
 
 			for (uint32_t j = 0; j < aiAnim->mNumChannels; ++j) {
 				aiNodeAnim* channel = aiAnim->mChannels[j];
@@ -114,25 +140,31 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 				AnimationChannel animChannel;
 				animChannel.nodeName = channel->mNodeName.C_Str();
 
-				uint32_t keyCount = std::min({
-					channel->mNumPositionKeys,
-					channel->mNumRotationKeys,
-					channel->mNumScalingKeys
-					});
-
-				for (uint32_t k = 0; k < keyCount; ++k) {
-					Keyframe key;
-					key.time = static_cast<float>(channel->mPositionKeys[k].mTime);
-
+				// --- 위치 키 (translation) ---
+				for (uint32_t k = 0; k < channel->mNumPositionKeys; ++k) {
+					KeyframeVector3 key;
+					key.time = static_cast<float>(channel->mPositionKeys[k].mTime / tps);
 					aiVector3D p = channel->mPositionKeys[k].mValue;
-					aiVector3D s = channel->mScalingKeys[k].mValue;
+					key.value = { p.x, p.y, p.z };
+					animChannel.translate.keyframes.push_back(key);
+				}
+
+				// --- 회전 키 (rotation) ---
+				for (uint32_t k = 0; k < channel->mNumRotationKeys; ++k) {
+					KeyframeQuaternion key;
+					key.time = static_cast<float>(channel->mRotationKeys[k].mTime / tps);
 					aiQuaternion r = channel->mRotationKeys[k].mValue;
+					key.value = { r.x, r.y, r.z, r.w };
+					animChannel.rotate.keyframes.push_back(key);
+				}
 
-					key.position = { p.x, p.y, p.z };
-					key.scale = { s.x, s.y, s.z };
-					key.rotation = { r.x, r.y, r.z, r.w };
-
-					animChannel.keyframes.push_back(key);
+				// --- 스케일 키 (scale) ---
+				for (uint32_t k = 0; k < channel->mNumScalingKeys; ++k) {
+					KeyframeVector3 key;
+					key.time = static_cast<float>(channel->mScalingKeys[k].mTime / tps);
+					aiVector3D s = channel->mScalingKeys[k].mValue;
+					key.value = { s.x, s.y, s.z };
+					animChannel.scale.keyframes.push_back(key);
 				}
 
 				animData.channels.push_back(animChannel);
@@ -231,6 +263,9 @@ void Model::DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const
 	for (const Node& child : node.children) {
 		DrawRecursive(child, currentMatrix, viewProj, transformData); // 재귀 호출 시 transformData도 그대로 전달
 	}
+}
+
+void Model::InitializeIndexBuffer(const ModelData& modelData) {
 }
 
 

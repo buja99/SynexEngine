@@ -12,16 +12,19 @@
 
 class Object3dCommon;
 
-struct Keyframe {
-	float time;
-	Vector3 position;
-	Quaternion rotation;
-	Vector3 scale;
-};
+struct KeyframeVector3 { Vector3 value;    float time; };
+struct KeyframeQuaternion { Quaternion value; float time; };
+
+struct AnimationCurveVector3 { std::vector<KeyframeVector3>    keyframes; };
+struct AnimationCurveQuaternion { std::vector<KeyframeQuaternion> keyframes; };
+
+//struct Skeleton;
 
 struct AnimationChannel {
-	std::string nodeName; // 대상 본 이름
-	std::vector<Keyframe> keyframes;
+	std::string nodeName;
+	AnimationCurveVector3    translate;
+	AnimationCurveQuaternion rotate;
+	AnimationCurveVector3    scale;
 };
 
 struct AnimationData {
@@ -39,6 +42,7 @@ struct Node {
 struct ModelData
 {
 	std::vector<VertexData> vertices;
+	std::vector<uint32_t> indices;
 	MaterialData material;
 	Node rootNode;
 	std::vector<AnimationData> animations;
@@ -69,6 +73,8 @@ public:
 
 	void DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const Matrix4x4& viewProj, TransformationMatrix* transformData);
 
+	void InitializeIndexBuffer(const ModelData& modelData);
+
 private:
 	ModelCommon* modelCommon_ = nullptr;
 	// Obj file
@@ -87,6 +93,9 @@ private:
 	void InitializeMaterial();
 
 	Object3dCommon* object3dCommon_ = nullptr;
+
+	ComPtr<ID3D12Resource>      indexResource_;    
+	D3D12_INDEX_BUFFER_VIEW     indexBufferView_{};
 
 };
 

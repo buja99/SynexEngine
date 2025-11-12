@@ -1,6 +1,8 @@
 #include "GameScene.h"
 #include "SceneManager.h"
+#ifdef _DEBUG
 #include "ImGuiManager.h"
+#endif // _DEBUG
 #include "MyMath.h"
 #include "LevelObjectBuilder.h"
 GameScene::~GameScene() {
@@ -249,7 +251,7 @@ void GameScene::Draw() {
 
 	SrvManager::GetInstance()->PreDraw();
 
-	//ground_->Draw();
+	ground_->Draw();
 
 	
 	for (auto& obj : levelObjects_) {

@@ -46,37 +46,52 @@ void Object3d::Update()
 	// 애니메이션 적용 시작
 	if (model_ && !model_->GetModelData().animations.empty()) {
 		static float time = 0.0f;
-		time += 1.0f / 60.0f; // 간단한 시간 증가 (60FPS 기준)
+		time += 1.0f / 60.0f; // 60fps 가정
 
-		const auto& anim = model_->GetModelData().animations[0]; // 첫 번째 애니메이션만 사용
+		const auto& anim = model_->GetModelData().animations[0];
+		if (anim.duration > 0.0f) {
+			const float localTime = fmodf(time, anim.duration);
 
-		for (const auto& channel : anim.channels) {
-			const auto& keyframes = channel.keyframes;
-			if (keyframes.size() < 2) continue;
-
-			float localTime = fmodf(time, anim.duration);
-
-			// 보간할 키프레임 찾기
-			size_t index = 0;
-			while (index + 1 < keyframes.size() && keyframes[index + 1].time < localTime) {
-				++index;
+			// 1) 사용할 채널 선택: rootNode 이름 우선, 없으면 첫 채널
+			const std::string& rootName = model_->GetModelData().rootNode.name;
+			const AnimationChannel* useCh = nullptr;
+			for (const auto& ch : anim.channels) {
+				if (ch.nodeName == rootName) { useCh = &ch; break; }
 			}
+			if (!useCh && !anim.channels.empty()) useCh = &anim.channels[0];
+			if (useCh) {
+				// 2) 보간 유틸
+				auto sampleVec3 = [&](const std::vector<KeyframeVector3>& keys, float t, const Vector3& def) {
+					if (keys.empty()) return def;
+					if (keys.size() == 1) return keys[0].value;
+					size_t idx = 0;
+					while (idx + 1 < keys.size() && keys[idx + 1].time < t) ++idx;
+					const auto& k0 = keys[idx];
+					const auto& k1 = keys[std::min(idx + 1, keys.size() - 1)];
+					const float u = (t - k0.time) / (k1.time - k0.time + 0.0001f);
+					return MyMath::Lerp(k0.value, k1.value, u);
+					};
+				auto sampleQuat = [&](const std::vector<KeyframeQuaternion>& keys, float t, const Quaternion& def) {
+					if (keys.empty()) return def;
+					if (keys.size() == 1) return keys[0].value;
+					size_t idx = 0;
+					while (idx + 1 < keys.size() && keys[idx + 1].time < t) ++idx;
+					const auto& k0 = keys[idx];
+					const auto& k1 = keys[std::min(idx + 1, keys.size() - 1)];
+					const float u = (t - k0.time) / (k1.time - k0.time + 0.0001f);
+					return MyMath::Slerp(k0.value, k1.value, u);
+					};
 
-			const Keyframe& k0 = keyframes[index];
-			const Keyframe& k1 = keyframes[std::min(index + 1, keyframes.size() - 1)];
+				// 3) 현재 값(기본값)에서 키가 있는 트랙만 덮어쓰기
+				Vector3    pos = sampleVec3(useCh->translate.keyframes, localTime, transform.translate);
+				Vector3    scl = sampleVec3(useCh->scale.keyframes, localTime, transform.scale);
+				Quaternion rot = sampleQuat(useCh->rotate.keyframes, localTime, MyMath::EulerToQuaternion(transform.rotate));
 
-			float t = (localTime - k0.time) / (k1.time - k0.time + 0.0001f);
-
-			// 보간 처리
-			Vector3 pos = MyMath::Lerp(k0.position, k1.position, t);
-			Vector3 scl = MyMath::Lerp(k0.scale, k1.scale, t);
-			Quaternion rot = MyMath::Slerp(k0.rotation, k1.rotation, t);
-			Vector3 euler = MyMath::QuaternionToEuler(rot); // 쿼터니언 → 오일러
-
-			// transform에 적용
-			transform.translate = pos;
-			transform.scale = scl;
-			transform.rotate = euler;
+				// 4) transform에 반영
+				transform.translate = pos;
+				transform.scale = scl;
+				transform.rotate = MyMath::QuaternionToEuler(rot);
+			}
 		}
 	}
 	// 애니메이션 적용 끝 

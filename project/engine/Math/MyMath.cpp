@@ -559,7 +559,7 @@ namespace MyMath {
 
 	}
 
-	Quaternion IdentiyQuaternion() {
+	Quaternion MakeIdentityQuaternion() {
 		return Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 
@@ -662,6 +662,22 @@ namespace MyMath {
 		euler.x = asin(2.0f * (q.w * q.x - q.z * q.y));
 		euler.z = atan2(2.0f * (q.w * q.z + q.x * q.y), 1.0f - 2.0f * (q.x * q.x + q.z * q.z));
 		return euler;
+	}
+
+	Quaternion EulerToQuaternion(const Vector3& euler) {
+		float cx = cosf(euler.x * 0.5f);
+		float sx = sinf(euler.x * 0.5f);
+		float cy = cosf(euler.y * 0.5f);
+		float sy = sinf(euler.y * 0.5f);
+		float cz = cosf(euler.z * 0.5f);
+		float sz = sinf(euler.z * 0.5f);
+
+		Quaternion q;
+		q.w = cx * cy * cz + sx * sy * sz;
+		q.x = sx * cy * cz - cx * sy * sz;
+		q.y = cx * sy * cz + sx * cy * sz;
+		q.z = cx * cy * sz - sx * sy * cz;
+		return q;
 	}
 	
 

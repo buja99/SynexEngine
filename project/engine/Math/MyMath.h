@@ -62,7 +62,7 @@ namespace  MyMath
 	Quaternion Subtract(const Quaternion& q1, const Quaternion& q2);
 	Quaternion Multiply(float a, const Quaternion& q);
 	Quaternion Multiply(const Quaternion& lns, const Quaternion& rhs);
-	Quaternion IdentiyQuaternion();
+	Quaternion MakeIdentityQuaternion();
 	Quaternion Conjugate(const Quaternion& quaternion);
 	float Norm(const Quaternion& quaternion);
 	Quaternion Normalize(const Quaternion& quaternion);
@@ -72,5 +72,6 @@ namespace  MyMath
 	Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
 	Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t);
 	Vector3 QuaternionToEuler(const Quaternion& q);
+	Quaternion EulerToQuaternion(const Vector3& euler);
 };
 

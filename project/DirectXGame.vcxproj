@@ -89,7 +89,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -116,6 +116,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\3D\Animator.cpp" />
     <ClCompile Include="application\Base\DirectXCommon.cpp" />
     <ClCompile Include="application\Base\FPSLimiter.cpp" />
     <ClCompile Include="application\Base\Logger.cpp" />
@@ -159,8 +160,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\particle\ParticleEffectLibrary.cpp" />
     <ClCompile Include="engine\render\skybox\Skybox.cpp" />
     <ClCompile Include="engine\graphics\texture\TextureUploader.cpp" />
+    <ClCompile Include="engine\3D\Skeleton.cpp" />
+    <ClCompile Include="engine\3D\SkinCluster.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\3D\Animator.h" />
     <ClInclude Include="application\sceneSystem\AbstractSceneFactory.h" />
     <ClInclude Include="application\Base\DirectXCommon.h" />
     <ClInclude Include="application\Base\FPSLimiter.h" />
@@ -170,6 +174,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Base\WinApp.h" />
     <ClInclude Include="application\Input\Input.h" />
     <ClInclude Include="application\sceneSystem\BaseScene.h" />
+    <ClInclude Include="engine\3D\Bone.h" />
     <ClInclude Include="engine\gameplay\BaseEnemy.h" />
     <ClInclude Include="engine\gameplay\Enemy.h" />
     <ClInclude Include="engine\camera\Camera.h" />
@@ -212,6 +217,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\particle\ParticleEffectLibrary.h" />
     <ClInclude Include="engine\render\skybox\Skybox.h" />
     <ClInclude Include="engine\graphics\texture\TextureUploader.h" />
+    <ClInclude Include="engine\3D\Skeleton.h" />
+    <ClInclude Include="engine\3D\SkinCluster.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
