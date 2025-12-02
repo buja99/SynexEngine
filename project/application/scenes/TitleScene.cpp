@@ -30,19 +30,20 @@ void TitleScene::Initialize() {
 	testModel_->Initialize(Object3dCommon::GetInstance(), testWorldTransform_.get());
 
 	ModelManager::GetInstance()->LoadModel("resources/test", "terrain.gltf");
-	testModel_->SetModel("terrain.gltf");
+	ModelManager::GetInstance()->LoadModel("resources/test_player", "walk.gltf");
+	testModel_->SetModel("walk.gltf");
 
-	testModel_->SetEnableLighting(true);
-	testModel_->SetIsBlinnPhong(true);          // Phong
-	testModel_->SetUsePointLight(false);        // Point Light 
-	testModel_->SetUseDirectionalLight(false);  // Directional Light 
-	testModel_->SetUseSpotLight(false);	        // Spot Light
-	testModel_->SetUseAmbientLight(false);      // Ambient Light
-	testModel_->SetUseAreaLight(true);         
+	//testModel_->SetEnableLighting(true);
+	//testModel_->SetIsBlinnPhong(true);          // Phong
+	//testModel_->SetUsePointLight(false);        // Point Light 
+	//testModel_->SetUseDirectionalLight(false);  // Directional Light 
+	//testModel_->SetUseSpotLight(false);	        // Spot Light
+	//testModel_->SetUseAmbientLight(false);      // Ambient Light
+	//testModel_->SetUseAreaLight(true);         
 	
-	//testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
+	testModel_->SetScale({ 10.0f, 10.0f, 10.0f });
 	
-	
+
 	
 	
 	// Area Light
@@ -272,7 +273,25 @@ void TitleScene::Update() {
 
 	ImGui::End();
 
+	ImGui::Begin("testModel_ Transform");
 
+	Vector3 testscale = testModel_->GetScale();
+	Vector3 testrotate = testModel_->GetRotate();
+	Vector3 testtranslate = testModel_->GetTranslate();
+
+	ImGui::DragFloat3("testScale", &testscale.x, 0.1f);
+	ImGui::DragFloat3("testRotate", &testrotate.x, 0.1f);
+	ImGui::DragFloat3("testTranslate", &testtranslate.x, 0.1f);
+	/*ImGui::DragFloat3("testWorldScale", &testWorldTransform_.get()->scale_.x, 0.1f);
+	ImGui::DragFloat3("testWorldRotate", &testWorldTransform_.get()->rotate_.x, 0.1f);
+	ImGui::DragFloat3("testWorldTranslate", &testWorldTransform_.get()->translate_.x, 0.1f);*/
+
+
+	testModel_->SetScale(testscale);
+	testModel_->SetRotate(testrotate);
+	testModel_->SetTranslate(testtranslate);
+
+	ImGui::End();
 #endif
 
 	if (input_->TriggerKey(DIK_V)) {
@@ -312,6 +331,10 @@ void TitleScene::Finalize() {
 	if (model_) {
 		model_->Cleanup(); 
 		model_.reset();
+	}
+	if (testModel_) {
+		testModel_->Cleanup();
+		testModel_.reset();
 	}
 	if (worldTransform_) {
 		worldTransform_->Cleanup(); 

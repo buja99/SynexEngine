@@ -82,8 +82,19 @@ void Object3d::Update()
 					return MyMath::Slerp(k0.value, k1.value, u);
 					};
 
-				// 3) 현재 값(기본값)에서 키가 있는 트랙만 덮어쓰기
-				Vector3    pos = sampleVec3(useCh->translate.keyframes, localTime, transform.translate);
+				//// 3) 현재 값(기본값)에서 키가 있는 트랙만 덮어쓰기
+				//Vector3    pos = sampleVec3(useCh->translate.keyframes, localTime, transform.translate);
+				//Vector3    scl = sampleVec3(useCh->scale.keyframes, localTime, transform.scale);
+				//Quaternion rot = sampleQuat(useCh->rotate.keyframes, localTime, MyMath::EulerToQuaternion(transform.rotate));
+
+				//// 4) transform에 반영
+				//transform.translate = pos;
+				//transform.scale = scl;
+				//transform.rotate = MyMath::QuaternionToEuler(rot);
+
+				Vector3    pos = transform.translate;
+
+				// 스케일과 회전만 애니에서 샘플링
 				Vector3    scl = sampleVec3(useCh->scale.keyframes, localTime, transform.scale);
 				Quaternion rot = sampleQuat(useCh->rotate.keyframes, localTime, MyMath::EulerToQuaternion(transform.rotate));
 

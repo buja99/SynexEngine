@@ -37,6 +37,13 @@ struct Node {
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
+	std::vector<uint32_t> meshIndices;
+};
+
+struct SubMesh {
+	uint32_t indexStart = 0;   // modelData.indices 기준 시작 위치
+	uint32_t indexCount = 0;   // 그릴 인덱스 개수
+	uint32_t materialIndex = 0; // 지금은 0 고정(머티리얼 1개만 사용)
 };
 
 struct ModelData
@@ -46,6 +53,7 @@ struct ModelData
 	MaterialData material;
 	Node rootNode;
 	std::vector<AnimationData> animations;
+	std::vector<SubMesh>    subMeshes;
 };
 
 
@@ -73,6 +81,7 @@ public:
 
 	void DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const Matrix4x4& viewProj, TransformationMatrix* transformData);
 
+	
 	void InitializeIndexBuffer(const ModelData& modelData);
 
 private:

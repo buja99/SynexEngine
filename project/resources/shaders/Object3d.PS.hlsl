@@ -101,7 +101,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-
+    //clip(textureColor.a - 0.5f);
     float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
 
     float3 totalDiffuse = float3(0, 0, 0);

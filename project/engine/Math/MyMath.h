@@ -73,5 +73,6 @@ namespace  MyMath
 	Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t);
 	Vector3 QuaternionToEuler(const Quaternion& q);
 	Quaternion EulerToQuaternion(const Vector3& euler);
+	bool DecomposeMatrix(const Matrix4x4& m, Vector3& outScale, Vector3& outRotationEuler, Vector3& outTranslation);
 };
 

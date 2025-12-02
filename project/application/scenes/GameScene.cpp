@@ -261,8 +261,8 @@ void GameScene::Draw() {
 	//test_plyer->Draw();
 	//block_->Draw();
 
-	/*player_->Draw();
-	enemy_->Draw();*/
+	player_->Draw();
+	enemy_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 	//effectLibrary_->DrawCylinder();
 	//player_->HitEffectDraw();

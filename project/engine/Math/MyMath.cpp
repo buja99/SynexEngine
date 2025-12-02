@@ -679,6 +679,37 @@ namespace MyMath {
 		q.z = cx * cy * sz - sx * sy * cz;
 		return q;
 	}
+
+	bool DecomposeMatrix(const Matrix4x4& m, Vector3& outScale, Vector3& outRotationEuler, Vector3& outTranslation) {
+		// 1. translation
+		outTranslation.x = m.m[3][0];
+		outTranslation.y = m.m[3][1];
+		outTranslation.z = m.m[3][2];
+
+		// 2. scale (각 basis vector의 길이)
+		outScale.x = sqrtf(m.m[0][0] * m.m[0][0] + m.m[0][1] * m.m[0][1] + m.m[0][2] * m.m[0][2]);
+		outScale.y = sqrtf(m.m[1][0] * m.m[1][0] + m.m[1][1] * m.m[1][1] + m.m[1][2] * m.m[1][2]);
+		outScale.z = sqrtf(m.m[2][0] * m.m[2][0] + m.m[2][1] * m.m[2][1] + m.m[2][2] * m.m[2][2]);
+
+		if (outScale.x == 0 || outScale.y == 0 || outScale.z == 0) {
+			return false;
+		}
+
+		// 3. rotation (행렬에서 스케일을 제거하고 Euler 추출)
+		Matrix4x4 rotM = m;
+
+		rotM.m[0][0] /= outScale.x;  rotM.m[0][1] /= outScale.x;  rotM.m[0][2] /= outScale.x;
+		rotM.m[1][0] /= outScale.y;  rotM.m[1][1] /= outScale.y;  rotM.m[1][2] /= outScale.y;
+		rotM.m[2][0] /= outScale.z;  rotM.m[2][1] /= outScale.z;  rotM.m[2][2] /= outScale.z;
+
+		// rotation from rotation matrix (YXZ or XYZ 등 엔진 기준에 따라 수정)
+		outRotationEuler.x = atan2f(rotM.m[2][1], rotM.m[2][2]);
+		outRotationEuler.y = atan2f(-rotM.m[2][0],
+			sqrtf(rotM.m[2][1] * rotM.m[2][1] + rotM.m[2][2] * rotM.m[2][2]));
+		outRotationEuler.z = atan2f(rotM.m[1][0], rotM.m[0][0]);
+
+		return true;
+	}
 	
 
 }
