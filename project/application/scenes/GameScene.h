@@ -58,8 +58,13 @@ private:
 
 
 	//model
-	std::unique_ptr<Ground> ground_ = nullptr;
+	std::unique_ptr<Object3d> test_plyer = nullptr;
+	std::unique_ptr<WorldTransform> test_plyerTransforms_;
 
+	std::unique_ptr<Object3d> block_ = nullptr;
+	std::unique_ptr<WorldTransform> blockTransforms_;
+
+	std::unique_ptr<Ground> ground_ = nullptr;
 
 
 	std::vector<std::unique_ptr<Object3d>> levelObjects_;
@@ -79,7 +84,7 @@ private:
 	std::unique_ptr<Skybox> skybox_ = nullptr;
 	
 	//json
-	//ModelRegistry registry;
+	ModelRegistry registry;
 
 
 	Vector3 cameraOffset_;

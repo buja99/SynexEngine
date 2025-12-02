@@ -7,7 +7,7 @@
 #include <map>
 #include "SrvManager.h"
 #include <unordered_map>
-
+#include "TextureUploader.h"
 using Microsoft::WRL::ComPtr;
 
 class TextureManager
@@ -21,6 +21,10 @@ public:
 	void Initialize(DirectXCommon* dxCommon,SrvManager* srvManager);
 
 	void LoadTexture(const std::string& filePath);
+
+	void LoadTextureDDS(const std::string& filePath, bool isCubeMap = false);
+
+	uint32_t LoadCubemap(const std::wstring& filePath);
 
 	void Finalize();
 
@@ -59,7 +63,7 @@ private:
 	std::map<std::string, uint32_t> textureIndexMap;
 
 
-	DirectXCommon* dxCommon_ = nullptr;
+	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
 	SrvManager* srvManager_ = nullptr;
 	ID3D12DescriptorHeap* srvDescriptorHeap_;
 	uint32_t descriptorSize_ = 0;

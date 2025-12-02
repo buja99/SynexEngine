@@ -12,18 +12,50 @@
 
 class Object3dCommon;
 
+struct KeyframeVector3 { Vector3 value;    float time; };
+struct KeyframeQuaternion { Quaternion value; float time; };
+
+struct AnimationCurveVector3 { std::vector<KeyframeVector3>    keyframes; };
+struct AnimationCurveQuaternion { std::vector<KeyframeQuaternion> keyframes; };
+
+//struct Skeleton;
+
+struct AnimationChannel {
+	std::string nodeName;
+	AnimationCurveVector3    translate;
+	AnimationCurveQuaternion rotate;
+	AnimationCurveVector3    scale;
+};
+
+struct AnimationData {
+	std::string name;
+	float duration = 0.0f;
+	std::vector<AnimationChannel> channels;
+};
+
 struct Node {
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
+	std::vector<uint32_t> meshIndices;
+};
+
+struct SubMesh {
+	uint32_t indexStart = 0;   // modelData.indices 기준 시작 위치
+	uint32_t indexCount = 0;   // 그릴 인덱스 개수
+	uint32_t materialIndex = 0; // 지금은 0 고정(머티리얼 1개만 사용)
 };
 
 struct ModelData
 {
 	std::vector<VertexData> vertices;
+	std::vector<uint32_t> indices;
 	MaterialData material;
 	Node rootNode;
+	std::vector<AnimationData> animations;
+	std::vector<SubMesh>    subMeshes;
 };
+
 
 class Model
 {
@@ -49,6 +81,9 @@ public:
 
 	void DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const Matrix4x4& viewProj, TransformationMatrix* transformData);
 
+	
+	void InitializeIndexBuffer(const ModelData& modelData);
+
 private:
 	ModelCommon* modelCommon_ = nullptr;
 	// Obj file
@@ -67,6 +102,9 @@ private:
 	void InitializeMaterial();
 
 	Object3dCommon* object3dCommon_ = nullptr;
+
+	ComPtr<ID3D12Resource>      indexResource_;    
+	D3D12_INDEX_BUFFER_VIEW     indexBufferView_{};
 
 };
 

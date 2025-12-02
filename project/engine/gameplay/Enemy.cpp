@@ -1,5 +1,5 @@
 #include "Enemy.h"
-
+#include "ImGuiManager.h"
 Enemy::Enemy() {
 }
 void Enemy::Initialize() {
@@ -12,15 +12,41 @@ void Enemy::Initialize() {
 	enemyModel_ = std::make_unique<Object3d>();
 	enemyModel_->Initialize(Object3dCommon::GetInstance(), enemyWorldTransform_.get());
     enemyModel_->SetModel("enemyTest.obj");
-
-	enemyWorldTransform_->scale_ = { 12.0f, 3.0f, 3.0f };
+    enemyModel_->SetUseEnvironmentMap(true);
+    enemyModel_->SetEnvironmentMap("resources/rostock_laage_airport_4k.dds");
+	enemyWorldTransform_->translate_ = { 0.0f,5.0f,0.0f };
+	//enemyWorldTransform_->scale_ = { 12.0f, 3.0f, 3.0f };
     isHit_ = false;
 }
 
 void Enemy::Update() {
+
+
+	Input* input = Input::GetInstance();
+	Vector3 move = { 0.0f, 0.0f, 0.0f };
+	float speed = 0.5f;
+	if (input->PushKey(DIK_LEFT)) {
+		move.x -= 1.0f;
+	}
+	if (input->PushKey(DIK_RIGHT)) {
+		move.x += 1.0f;
+	}
+	if (input->PushKey(DIK_UP)) {
+		move.z += 1.0f;
+	}
+	if (input->PushKey(DIK_DOWN)) {
+		move.z -= 1.0f;
+	}
+	if (move.x != 0.0f || move.z != 0.0f) {
+		move = MyMath::normalize(move);  // ← Vector3에 Normalize 함수가 있어야 함
+		move = MyMath::Multiply(move, speed);
+	}
+
+	enemyWorldTransform_->translate_ = MyMath::Add(enemyWorldTransform_->translate_, move);
+
 	enemyWorldTransform_->UpdateMatrix();
     enemyWorldTransform_->TransferMatrix();
-    
+
 }
 
 void Enemy::Draw() {

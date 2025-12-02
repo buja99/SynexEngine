@@ -30,21 +30,22 @@ void TitleScene::Initialize() {
 	testModel_->Initialize(Object3dCommon::GetInstance(), testWorldTransform_.get());
 
 	ModelManager::GetInstance()->LoadModel("resources/test", "terrain.gltf");
-	testModel_->SetModel("terrain.gltf");
+	ModelManager::GetInstance()->LoadModel("resources/test_player", "walk.gltf");
+	testModel_->SetModel("walk.gltf");
 
-	testModel_->SetEnableLighting(true);
-	testModel_->SetIsBlinnPhong(true);          // Phong
-	testModel_->SetUsePointLight(false);        // Point Light 
-	testModel_->SetUseDirectionalLight(false);  // Directional Light 
-	testModel_->SetUseSpotLight(false);	        // Spot Light
-	testModel_->SetUseAmbientLight(false);      // Ambient Light
-	testModel_->SetUseAreaLight(true);
+	//testModel_->SetEnableLighting(true);
+	//testModel_->SetIsBlinnPhong(true);          // Phong
+	//testModel_->SetUsePointLight(false);        // Point Light 
+	//testModel_->SetUseDirectionalLight(false);  // Directional Light 
+	//testModel_->SetUseSpotLight(false);	        // Spot Light
+	//testModel_->SetUseAmbientLight(false);      // Ambient Light
+	//testModel_->SetUseAreaLight(true);         
+	
+	testModel_->SetScale({ 10.0f, 10.0f, 10.0f });
+	
 
-	//testModel_->SetScale({ 14.0f, 1.0f, 9.0f });
-
-
-
-
+	
+	
 	// Area Light
 	// 카메라 생성
 	camera_ = std::make_unique<Camera>();
@@ -203,9 +204,100 @@ void TitleScene::Update() {
 	//ImGui::DragFloat3();
 	ImGui::End();
 
+
+	ImGui::Begin("PostEffect");
+
+	// === Grayscale ===
+	if (ImGui::Checkbox("Use Grayscale", &useGrayscale_)) {
+		if (useGrayscale_) {
+			useVignette_ = false;
+			useRadialBlur_ = false;
+			DirectXCommon::GetInstance()->SetVignetteEnabled(false);
+			DirectXCommon::GetInstance()->SetRadialBlurEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetGrayscaleEnabled(useGrayscale_);
+	}
+
+	float grayscaleStrength = DirectXCommon::GetInstance()->GetGrayscaleStrength();
+	if (ImGui::SliderFloat("Grayscale Strength", &grayscaleStrength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetGrayscaleStrength(grayscaleStrength);
+	}
+
+	// === Vignette ===
+	if (ImGui::Checkbox("Use Vignette", &useVignette_)) {
+		if (useVignette_) {
+			useGrayscale_ = false;
+			useRadialBlur_ = false;
+			DirectXCommon::GetInstance()->SetGrayscaleEnabled(false);
+			DirectXCommon::GetInstance()->SetRadialBlurEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetVignetteEnabled(useVignette_);
+	}
+
+	float vignetteStrength = DirectXCommon::GetInstance()->GetVignetteStrength();
+	if (ImGui::SliderFloat("Vignette Strength", &vignetteStrength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetVignetteStrength(vignetteStrength);
+	}
+
+	// === Radial Blur ===
+	if (ImGui::Checkbox("Use RadialBlur", &useRadialBlur_)) {
+		if (useRadialBlur_) {
+			useGrayscale_ = false;
+			useVignette_ = false;
+			DirectXCommon::GetInstance()->SetGrayscaleEnabled(false);
+			DirectXCommon::GetInstance()->SetVignetteEnabled(false);
+		}
+		DirectXCommon::GetInstance()->SetRadialBlurEnabled(useRadialBlur_);
+	}
+
+	// 샘플 수 조절
+	int sampleCount = DirectXCommon::GetInstance()->GetRadialBlurNumSamples();
+	if (ImGui::SliderInt("Samples", &sampleCount, 2, 64)) {
+		DirectXCommon::GetInstance()->SetRadialBlurNumSamples(sampleCount);
+	}
+
+	// 블러 강도
+	float strength = DirectXCommon::GetInstance()->GetRadialBlurStrength();
+	if (ImGui::SliderFloat("Strength", &strength, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetRadialBlurStrength(strength);
+	}
+
+	// 중심 위치
+	float center[2] = {
+	DirectXCommon::GetInstance()->GetRadialBlurCenterX(),
+	DirectXCommon::GetInstance()->GetRadialBlurCenterY()
+	};
+	if (ImGui::SliderFloat2("Center", center, 0.0f, 1.0f)) {
+		DirectXCommon::GetInstance()->SetRadialBlurCenter(center[0], center[1]);
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("testModel_ Transform");
+
+	Vector3 testscale = testModel_->GetScale();
+	Vector3 testrotate = testModel_->GetRotate();
+	Vector3 testtranslate = testModel_->GetTranslate();
+
+	ImGui::DragFloat3("testScale", &testscale.x, 0.1f);
+	ImGui::DragFloat3("testRotate", &testrotate.x, 0.1f);
+	ImGui::DragFloat3("testTranslate", &testtranslate.x, 0.1f);
+	/*ImGui::DragFloat3("testWorldScale", &testWorldTransform_.get()->scale_.x, 0.1f);
+	ImGui::DragFloat3("testWorldRotate", &testWorldTransform_.get()->rotate_.x, 0.1f);
+	ImGui::DragFloat3("testWorldTranslate", &testWorldTransform_.get()->translate_.x, 0.1f);*/
+
+
+	testModel_->SetScale(testscale);
+	testModel_->SetRotate(testrotate);
+	testModel_->SetTranslate(testtranslate);
+
+	ImGui::End();
 #endif
 
-
+	if (input_->TriggerKey(DIK_V)) {
+		useVignette_ = !useVignette_;
+		DirectXCommon::GetInstance()->SetVignetteEnabled(useVignette_);
+	}
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->ChangeScene("GAME");
@@ -223,22 +315,26 @@ void TitleScene::Draw() {
 
 	SpriteCommon::GetInstance()->SetUIPipeline();
 	//title->Draw();
-	SrvManager::GetInstance()->PreDraw();
 	Object3dCommon::GetInstance()->CommonDrawSettings();
+	SrvManager::GetInstance()->PreDraw();
 
-	/*model_->Draw();
-	testModel_->Draw();*/
+	//model_->Draw();
+	testModel_->Draw();
 	SpriteCommon::GetInstance()->Set3DOverlayPipeline();
 
 	//effectLibrary_->GetPrimitiveManager()->Draw();
 	//effectLibrary_->GetRingManager()->Draw();
-	effectLibrary_->GetCylinderManager()->Draw();
+	//effectLibrary_->GetCylinderManager()->Draw();
 }
 
 void TitleScene::Finalize() {
 	if (model_) {
 		model_->Cleanup();
 		model_.reset();
+	}
+	if (testModel_) {
+		testModel_->Cleanup();
+		testModel_.reset();
 	}
 	if (worldTransform_) {
 		worldTransform_->Cleanup();

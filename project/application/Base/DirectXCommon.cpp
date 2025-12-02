@@ -55,6 +55,8 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	InitializeScissor();
 	InitializeCopyPipeline();
 	InitializeGrayscalePipeline();
+	InitializeVignettePipeline();
+	InitializeRadialBlurPipeline();
 }
 
 void DirectXCommon::Device() {
@@ -559,9 +561,22 @@ void DirectXCommon::Cleanup() {
 	if (offscreenRenderTarget_) { offscreenRenderTarget_.Reset(); }
 	if (depthStencilBuffer) { depthStencilBuffer.Reset(); }
 
+	grayscaleConstBuffer_.Reset();
+	vignetteConstBuffer_.Reset();
+	radialBlurConstBuffer_.Reset();
+
+	grayscalePipelineState_.Reset();
+	vignettePipelineState_.Reset();
+	radialBlurPipelineState_.Reset();
+
+	grayscaleRootSignature_.Reset();
+	vignetteRootSignature_.Reset();
+	radialBlurRootSignature_.Reset();
+
 	for (auto& buffer : swapChainResources) {
 		buffer.Reset();
 	}
+
 
 	if (swapChain) { swapChain.Reset(); }
 	if (commandList) { commandList.Reset(); }
@@ -924,6 +939,285 @@ void DirectXCommon::SetGrayscaleStrength(float strength) {
 	grayscaleConstBuffer_->Unmap(0, nullptr);
 }
 
+void DirectXCommon::SetGrayscaleEnabled(bool enabled) {
+	useGrayscale_ = enabled;
+}
+
+
+
+//Vignette
+
+void DirectXCommon::InitializeVignettePipeline() {
+	HRESULT hr;
+
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	auto vs = CompileShader(L"Resources/shaders/Vignette.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"Resources/shaders/Vignette.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	CD3DX12_ROOT_PARAMETER params[2];
+	params[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL); // t0
+	params[1].InitAsConstantBufferView(0);
+
+	CD3DX12_STATIC_SAMPLER_DESC samplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR); // s0
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(
+		_countof(params), params,         // 루트 파라미터
+		1, &samplerDesc,                  // 정적 샘플러(s0)
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
+
+	ComPtr<ID3DBlob> sigBlob;
+	ComPtr<ID3DBlob> errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&vignetteRootSignature_));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = vignetteRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&vignettePipelineState_));
+
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	D3D12_RESOURCE_DESC resDesc = {};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resDesc.Width = sizeof(VignetteSettings);
+	resDesc.Height = 1;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vignetteConstBuffer_)
+	);
+
+}
+
+void DirectXCommon::DrawVignetteToSwapChain() {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// 상태 전환: Present > RenderTarget
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// RTV 설정
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], FALSE, nullptr);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	commandList->SetGraphicsRootSignature(vignetteRootSignature_.Get());
+	commandList->SetPipelineState(vignettePipelineState_.Get());
+	
+	void* mapped = nullptr;
+	if (SUCCEEDED(vignetteConstBuffer_->Map(0, nullptr, &mapped))) {
+		memcpy(mapped, &vignetteSettings_, sizeof(VignetteSettings));
+		vignetteConstBuffer_->Unmap(0, nullptr);
+	}
+
+	SrvManager::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_);
+
+
+	commandList->SetGraphicsRootConstantBufferView(1, vignetteConstBuffer_->GetGPUVirtualAddress());
+	
+
+	commandList->DrawInstanced(3, 1, 0, 0);
+}
+
+void DirectXCommon::SetVignetteEnabled(bool enabled) {
+	useVignette_ = enabled;
+}
+
+void DirectXCommon::SetVignetteStrength(float strength) {
+	vignetteSettings_.vignetteStrength = strength;
+
+	// GPU 상수 버퍼에 복사
+	D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(VignetteSettings) + 255) & ~255);
+
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vignetteConstBuffer_)
+	);
+	assert(SUCCEEDED(hr));
+	vignetteConstBuffer_->SetName(L"VignetteConstBuffer");
+
+	void* mapped = nullptr;
+	vignetteConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &vignetteSettings_, sizeof(VignetteSettings));
+	vignetteConstBuffer_->Unmap(0, nullptr);
+}
+
+// Radial Blur 
+
+void DirectXCommon::InitializeRadialBlurPipeline() {
+	HRESULT hr;
+	ComPtr<IDxcUtils> dxcUtils;
+	ComPtr<IDxcCompiler3> dxcCompiler;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+
+	auto vs = CompileShader(L"Resources/shaders/CopyImage.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+	auto ps = CompileShader(L"Resources/shaders/RadialBlur.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0
+
+	CD3DX12_ROOT_PARAMETER params[2];
+	params[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL); // t0
+	params[1].InitAsConstantBufferView(0); // b0
+
+	CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Init(_countof(params), params, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ComPtr<ID3DBlob> sigBlob, errBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+	hr = device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(), IID_PPV_ARGS(&radialBlurRootSignature_));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = radialBlurRootSignature_.Get();
+	psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+	psoDesc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.InputLayout = { nullptr, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&radialBlurPipelineState_));
+
+	radialBlurSettings_.centerX = 0.5f;
+	radialBlurSettings_.centerY = 0.5f;
+	radialBlurSettings_.blurStrength = 0.5f;
+	radialBlurSettings_.numSamples = 8;
+
+	// ConstantBuffer 초기화
+	radialBlurSettings_.blurStrength = 0.5f;
+	D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(RadialBlurSettings) + 255) & ~255);
+	hr = device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&radialBlurConstBuffer_));
+	radialBlurConstBuffer_->SetName(L"RadialBlurConstBuffer");
+
+	void* mapped = nullptr;
+	radialBlurConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &radialBlurSettings_, sizeof(RadialBlurSettings));
+	radialBlurConstBuffer_->Unmap(0, nullptr);
+
+}
+
+void DirectXCommon::DrawRadialBlurToSwapChain() {
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// 상태 전환: Present → RenderTarget
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(1, &barrier);
+
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], FALSE, nullptr);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	commandList->SetGraphicsRootSignature(radialBlurRootSignature_.Get());
+	commandList->SetPipelineState(radialBlurPipelineState_.Get());
+
+	void* mapped = nullptr;
+	if (SUCCEEDED(radialBlurConstBuffer_->Map(0, nullptr, &mapped))) {
+		memcpy(mapped, &radialBlurSettings_, sizeof(RadialBlurSettings));
+		radialBlurConstBuffer_->Unmap(0, nullptr);
+	}
+
+	SrvManager::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->SetGraphicsRootDesciptorTable(0, offscreenSRVIndex_);
+	commandList->SetGraphicsRootConstantBufferView(1, radialBlurConstBuffer_->GetGPUVirtualAddress());
+
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+
+}
+
+void DirectXCommon::SetRadialBlurEnabled(bool enabled) {
+	useRadialBlur_ = enabled;
+}
+
+void DirectXCommon::SetRadialBlurStrength(float strength) {
+	radialBlurSettings_.blurStrength = strength;
+
+	void* mapped = nullptr;
+	radialBlurConstBuffer_->Map(0, nullptr, &mapped);
+	memcpy(mapped, &radialBlurSettings_, sizeof(RadialBlurSettings));
+	radialBlurConstBuffer_->Unmap(0, nullptr);
+}
+
+int DirectXCommon::GetRadialBlurNumSamples() const {
+	return radialBlurSettings_.numSamples;
+}
+void DirectXCommon::SetRadialBlurNumSamples(int samples) {
+	radialBlurSettings_.numSamples = samples;
+}
+
+float DirectXCommon::GetRadialBlurCenterX() const {
+	return radialBlurSettings_.centerX;
+}
+
+float DirectXCommon::GetRadialBlurCenterY() const {
+	return radialBlurSettings_.centerY;
+}
+
+void DirectXCommon::SetRadialBlurCenter(float x, float y) {
+	radialBlurSettings_.centerX = x;
+	radialBlurSettings_.centerY = y;
+}
+
+	
 void DirectXCommon::SetViewport(float x, float y, float width, float height) {
 	viewport.TopLeftX = x;
 	viewport.TopLeftY = y;

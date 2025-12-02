@@ -15,6 +15,7 @@ struct Material
     int useSpotLight; // 스팟광 사용 여부
     int useAmbientLight; // 앰비언트광 사용 여부
     int useAreaLight; // 면광원 사용 여부
+    int useEnvironmentMap;
 };
 
 
@@ -82,6 +83,7 @@ cbuffer PlayerRange : register(b7)
 };
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+TextureCube<float4> gEnvironmentTexture : register(t1);
 struct PixelShaderOutput
 {
     float4 color : SV_TARGET0;
@@ -99,7 +101,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-
+    //clip(textureColor.a - 0.5f);
     float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
 
     float3 totalDiffuse = float3(0, 0, 0);
@@ -237,6 +239,15 @@ PixelShaderOutput main(VertexShaderOutput input)
         }
         output.color.rgb = totalDiffuse + totalSpecular + ambient;
         output.color.a = gMaterial.color.a * textureColor.a;
+        
+        if (gMaterial.useEnvironmentMap != 0)
+        {
+            float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
+            float3 reflectedVector = reflect(-toEye, normalize(input.normal));
+            float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+
+            output.color.rgb += environmentColor.rgb;
+        }
     }
     else
     {

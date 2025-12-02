@@ -12,8 +12,7 @@
 class LevelObjectBuilder {
 public:
     static void BuildFromJson(
-        const std::string& jsonPath,
-        ModelRegistry& registry,
+        const LevelData* levelData,
         std::vector<std::unique_ptr<Object3d>>& objects,
         std::vector<std::unique_ptr<WorldTransform>>& transforms,
         Camera* camera

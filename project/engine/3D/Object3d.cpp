@@ -1,10 +1,14 @@
+#define NOMINMAX
+#include <Windows.h>
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include <fstream>
 #ifdef _DEBUG
 #include "imgui.h"
 #endif // _DEBUG
-
+#include "TextureUploader.h"
+#include "StringUtility.h"
+using namespace StringUtility;
 
 Object3d::~Object3d() {
 	//OutputDebugStringA("Object3d Destructor Called\n");
@@ -19,22 +23,16 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldT
 	this->object3dCommon_ = object3dCommon;
 	worldTransform_ = worldTransform;
 
-	//modelData = LoadobjFile("resources", "plane.obj");
-
-	//TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
-	//modelData.material.textureIndex =
-	//	TextureManager::GetInstance()->GetTextureIndexByFilepath(modelData.material.textureFilePath);
-
 	transform = { {1.0f,1.0f,1.0f},{0.0f,3.14f,0.0f},{0.0f,0.0f,10.0f} };
 	cameraTransform = { {1.0f,1.0f,1.0f},{0.3f,0.0f,0.0f},{0.0f,4.0f,-10.0f} };
 
 	cameraResource_ = CreateBufferResource(object3dCommon_->GetDxCommon()->GetDevice(), sizeof(CameraForGPU));
 	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
 
-	//CreateVertexBuffer();
 	InitializeTransformationMatrix();
 	InitializeLights();
 	InitializeMaterial();
+	//materialData_->useEnvironmentMap = 0;
 
 	this->camera = object3dCommon->GetDefaultCamera();
 }
@@ -45,23 +43,88 @@ void Object3d::Update()
 		return;
 	}
 
-	/*if (worldTransform_) {
-		worldTransform_->scale_ = transform.scale;
-		worldTransform_->rotate_ = transform.rotate;
-		worldTransform_->translate_ = transform.translate;
-	}*/
+	// 애니메이션 적용 시작
+	if (model_ && !model_->GetModelData().animations.empty()) {
+		static float time = 0.0f;
+		time += 1.0f / 60.0f; // 60fps 가정
 
-	// WorldTransform에서 행렬 계산
+		const auto& anim = model_->GetModelData().animations[0];
+		if (anim.duration > 0.0f) {
+			const float localTime = fmodf(time, anim.duration);
+
+			// 1) 사용할 채널 선택: rootNode 이름 우선, 없으면 첫 채널
+			const std::string& rootName = model_->GetModelData().rootNode.name;
+			const AnimationChannel* useCh = nullptr;
+			for (const auto& ch : anim.channels) {
+				if (ch.nodeName == rootName) { useCh = &ch; break; }
+			}
+			if (!useCh && !anim.channels.empty()) useCh = &anim.channels[0];
+			if (useCh) {
+				// 2) 보간 유틸
+				auto sampleVec3 = [&](const std::vector<KeyframeVector3>& keys, float t, const Vector3& def) {
+					if (keys.empty()) return def;
+					if (keys.size() == 1) return keys[0].value;
+					size_t idx = 0;
+					while (idx + 1 < keys.size() && keys[idx + 1].time < t) ++idx;
+					const auto& k0 = keys[idx];
+					const auto& k1 = keys[std::min(idx + 1, keys.size() - 1)];
+					const float u = (t - k0.time) / (k1.time - k0.time + 0.0001f);
+					return MyMath::Lerp(k0.value, k1.value, u);
+					};
+				auto sampleQuat = [&](const std::vector<KeyframeQuaternion>& keys, float t, const Quaternion& def) {
+					if (keys.empty()) return def;
+					if (keys.size() == 1) return keys[0].value;
+					size_t idx = 0;
+					while (idx + 1 < keys.size() && keys[idx + 1].time < t) ++idx;
+					const auto& k0 = keys[idx];
+					const auto& k1 = keys[std::min(idx + 1, keys.size() - 1)];
+					const float u = (t - k0.time) / (k1.time - k0.time + 0.0001f);
+					return MyMath::Slerp(k0.value, k1.value, u);
+					};
+
+				//// 3) 현재 값(기본값)에서 키가 있는 트랙만 덮어쓰기
+				//Vector3    pos = sampleVec3(useCh->translate.keyframes, localTime, transform.translate);
+				//Vector3    scl = sampleVec3(useCh->scale.keyframes, localTime, transform.scale);
+				//Quaternion rot = sampleQuat(useCh->rotate.keyframes, localTime, MyMath::EulerToQuaternion(transform.rotate));
+
+				//// 4) transform에 반영
+				//transform.translate = pos;
+				//transform.scale = scl;
+				//transform.rotate = MyMath::QuaternionToEuler(rot);
+
+				Vector3    pos = transform.translate;
+
+				// 스케일과 회전만 애니에서 샘플링
+				Vector3    scl = sampleVec3(useCh->scale.keyframes, localTime, transform.scale);
+				Quaternion rot = sampleQuat(useCh->rotate.keyframes, localTime, MyMath::EulerToQuaternion(transform.rotate));
+
+				// 4) transform에 반영
+				transform.translate = pos;
+				transform.scale = scl;
+				transform.rotate = MyMath::QuaternionToEuler(rot);
+			}
+		}
+	}
+	// 애니메이션 적용 끝 
+
+	// 애니메이션을 반영한 transform 값을 worldTransform에 전달
+	worldTransform_->scale_ = transform.scale;
+	worldTransform_->rotate_ = transform.rotate;
+	worldTransform_->translate_ = transform.translate;
+
+	// 행렬 계산
 	worldTransform_->UpdateMatrix();
 
 	// WVP 계산
-	
 	if (camera) {
 		const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 
 		if (model_) {
-			//  glTF 계층 구조 반영한 최종 모델 행렬
-			Matrix4x4 modelMatrix = MyMath::Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform_->matWorld_);
+			// 계층 노드가 있을 경우 localMatrix 포함
+			Matrix4x4 modelMatrix = MyMath::Multiply(
+				model_->GetModelData().rootNode.localMatrix,
+				worldTransform_->matWorld_
+			);
 			transformationMatrixData->WVP = MyMath::Multiply(modelMatrix, viewProj);
 			transformationMatrixData->World = modelMatrix;
 			transformationMatrixData->WorldInverseTranspose = MyMath::Transpose(MyMath::Inverse(modelMatrix));
@@ -96,6 +159,11 @@ void Object3d::Draw()
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, ambientLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, areaLightResource_->GetGPUVirtualAddress());
 	
+	if (materialData_ && materialData_->useEnvironmentMap != 0) {
+		object3dCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(10, envMapSrvHandle_);
+	}
+
+	// 모델 그리기
 	const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 	model_->DrawRecursive(model_->GetModelData().rootNode, worldTransform_->matWorld_, viewProj, transformationMatrixData);
 }
@@ -137,11 +205,7 @@ void Object3d::Cleanup()
 		materialResource_.Reset();             
 		materialData_ = nullptr;               
 	}
-	//model_ = nullptr; // ModelManager가 관리 중이므로 해제하지 않음
-	//if (worldTransform_) {
-	//	worldTransform_->Cleanup();   // 또는 worldTransform_->Cleanup()
-	//	worldTransform_.reset();     // unique_ptr 해제
-	//}
+	
 	object3dCommon_ = nullptr;
 	camera = nullptr;
 	defaultCamera = nullptr;
@@ -206,6 +270,27 @@ void Object3d::SetModel(const std::string& filePath)
 		OutputDebugStringA(("Model not found: " + filePath + "\n").c_str());
 	}
 }
+
+void Object3d::SetEnvironmentMap(const std::string& filePath) {
+	// DDS 큐브맵 로드
+	TextureManager::GetInstance()->LoadTextureDDS(filePath, true);
+
+	// GPU 핸들 얻기
+	D3D12_GPU_DESCRIPTOR_HANDLE handle =
+		TextureManager::GetInstance()->GetSrvHandleGPU(filePath);
+
+	// 핸들 보관
+	envMapSrvHandle_ = handle;
+
+	// Material 플래그 켜기
+	if (materialData_) {
+		materialData_->useEnvironmentMap = 1;
+	}
+
+	
+}
+
+
 
 void Object3d::SetPointLight(const Vector3& position, float intensity, float radius, float decay) {
 	if (pointLightData_) {
@@ -294,6 +379,16 @@ void Object3d::SetUseAreaLight(bool use) {
 
 bool Object3d::GetUseAreaLight() const {
 	return materialData_ ? materialData_->useAreaLight != 0 : false;
+}
+
+void Object3d::SetUseEnvironmentMap(bool use) {
+	if (materialData_) {
+		materialData_->useEnvironmentMap = use ? 1 : 0;
+	}
+}
+
+bool Object3d::GetUseEnvironmentMap() const {
+	return materialData_ ? (materialData_->useEnvironmentMap != 0) : false;
 }
 
 
