@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 
+/// <summary>レベルデータからObject3dとWorldTransformを生成するビルダー。</summary>
 class LevelObjectBuilder {
 public:
     static void BuildFromJson(

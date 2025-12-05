@@ -15,6 +15,11 @@
 
 using Microsoft::WRL::ComPtr;
 
+/// <summary>
+/// DirectX12 の初期化、描画前後処理、RTV/DSV 管理を行う中核クラス。
+/// オフスクリーン描画および各種ポストエフェクトも制御する。
+/// </summary>
+
 class DirectXCommon
 {
 

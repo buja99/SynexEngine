@@ -29,6 +29,8 @@ struct LoopSoundData {
 
 	IXAudio2SourceVoice* pSourceVoice = nullptr;
 };
+
+/// <summary>スキニング用に最終ボーン行列を計算しGPUへ転送するクラス。</summary>
 class Sound {
 public:
 	//シングルトンインスタンスの取得

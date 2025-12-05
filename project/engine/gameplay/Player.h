@@ -14,6 +14,8 @@
 #include "BaseEnemy.h"
 #include "Enemy.h"
 #include "ParticleEffectLibrary.h"
+
+/// <summary>移動・攻撃・パーツ描画と当たり判定を行うプレイヤーキャラクター。</summary>
 class Player {
 
 

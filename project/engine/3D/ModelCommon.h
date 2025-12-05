@@ -1,6 +1,8 @@
 #pragma once
 #include "DirectXCommon.h"
 #include <memory>
+
+/// <summary>モデル処理で使用する共通のDirectXコンテキストを提供するクラス。</summary>
 class ModelCommon
 {
 

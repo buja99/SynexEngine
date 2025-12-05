@@ -28,6 +28,7 @@ struct LevelData {
     std::vector<PlayerSpawnData> players;
 };
 
+/// <summary>レベルJSONを読み込み、オブジェクトやスポーン情報をLevelDataに変換するローダー。</summary>
 class LevelLoader {
 public:
     static LevelData* LoadLevelData(const std::string& filePath);

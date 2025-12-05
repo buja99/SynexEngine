@@ -12,8 +12,9 @@
 
 class SpriteCommon;
 
-using Microsoft::WRL::ComPtr;
+using Microsoft::WRL::ComPtr; 
 
+/// <summary>2Dスプライトの変換・描画処理を行うクラス。</summary>
 class Sprite
 {
 

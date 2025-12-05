@@ -1,3 +1,4 @@
+
 #pragma once
 #include "Transform.h"
 #include "Matrix4x4.h"
@@ -14,6 +15,7 @@ enum class CameraMode {
 	LookAt     // Eye, Target, Up 기반
 };
 
+/// <summary>ビュー・プロジェクション行列を生成し3Dシーンの視点を管理するカメラクラス。</summary>
 class Camera
 {
 

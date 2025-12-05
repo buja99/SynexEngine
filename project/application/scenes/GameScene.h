@@ -22,6 +22,7 @@
 #include "ParticleEffectLibrary.h"
 #include "Skybox.h"
 
+/// <summary>ゲーム内のプレイシーンを構成し、プレイヤー・敵・カメラ・レベル等を管理するシーン。</summary>
 class GameScene : public BaseScene {
 public:
 

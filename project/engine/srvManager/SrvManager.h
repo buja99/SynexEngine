@@ -4,6 +4,8 @@
 #include "MyMath.h"
 #include <math.h>
 using Microsoft::WRL::ComPtr;
+
+/// <summary>SRVディスクリプタヒープの確保・管理とビュー登録を行う管理クラス。</summary>
 class SrvManager {
 
 public:

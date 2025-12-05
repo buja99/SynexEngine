@@ -59,6 +59,7 @@ const int32_t initialInstanceCount = 100;
 
 using ParticleGenerator = std::function<Particle(std::mt19937&, const Vector3&)>;
 
+/// <summary>複数のパーティクルグループを生成・更新・描画する管理クラス。</summary>
 class ParticleManager {
 public:
     void Initialize(DirectXCommon* directXCommon, SrvManager* srvManager);

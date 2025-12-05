@@ -4,6 +4,8 @@
 #include <string>
 #include <DirectXTex.h>
 using Microsoft::WRL::ComPtr;
+
+/// <summary>GPUバッファやテクスチャの生成・読み込み・アップロードを行うユーティリティ。</summary>
 namespace ResourceUtils {
 
 

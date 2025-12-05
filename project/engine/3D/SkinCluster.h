@@ -8,6 +8,7 @@ using Microsoft::WRL::ComPtr;
 
 class Skeleton;
 
+/// <summary>スキニング用に最終ボーン行列を計算しGPUへ転送するクラス。</summary>
 class SkinCluster {
 
 public:

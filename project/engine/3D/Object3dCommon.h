@@ -7,7 +7,7 @@
 using Microsoft::WRL::ComPtr;
 
 
-
+/// <summary>3D描画に必要な共通パイプラインとステンシル処理を管理する基盤クラス。</summary>
 class Object3dCommon
 {
 

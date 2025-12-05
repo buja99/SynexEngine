@@ -8,6 +8,10 @@
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 
+/// <summary>
+/// ImGui の初期化、フレーム管理、描画処理を行うデバッグ用マネージャークラス。
+/// _DEBUG ビルド時のみ有効になり、DirectX12 と Win32 の ImGui 実装を制御する。
+/// </summary>
 class ImGuiManager {
 public:
 	void Initialize(WinApp* winApp, DirectXCommon* dxCommon);

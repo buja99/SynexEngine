@@ -11,6 +11,7 @@ using Microsoft::WRL::ComPtr;
 
 enum class DrawMode { Background, Foreground };
 
+/// <summary>スプライト描画のための共通パイプラインやルートシグネチャを管理する基盤クラス。</summary>
 class SpriteCommon
 {
 

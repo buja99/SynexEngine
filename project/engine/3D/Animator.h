@@ -3,7 +3,9 @@
 #include "Skeleton.h"
 
 
-
+/// <summary>
+///  アニメーション再生と骨格(Skeleton)の各ボーン変換を更新するクラス。
+/// </summary>
 class Animator {
 
 public:

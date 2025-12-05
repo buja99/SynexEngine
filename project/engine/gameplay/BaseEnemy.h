@@ -12,6 +12,7 @@
 #include "WorldTransform.h"
 #include "MyMath.h"
 
+/// <summary>敵キャラクターの共通インターフェースを定義する抽象基底クラス。</summary>
 class BaseEnemy {
 
 public:

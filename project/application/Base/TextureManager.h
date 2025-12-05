@@ -10,6 +10,11 @@
 #include "TextureUploader.h"
 using Microsoft::WRL::ComPtr;
 
+
+/// <summary>
+/// テクスチャの読み込み、SRV 作成、メタデータ管理を一括で行うマネージャークラス。
+/// 同じファイルの重複読み込みを防ぎ、GPU リソースと SRV を自動的に管理する。
+/// </summary>
 class TextureManager
 {
 public:

@@ -5,6 +5,10 @@
 #include <dinput.h>
 #include "WinApp.h"
 
+/// <summary>
+/// DirectInput を用いてキーボード入力を取得し、押下状態・トリガー状態を管理するシングルトンクラス。
+/// 毎フレーム現在のキー状態と前フレームの状態を更新し、入力判定を提供する。
+/// </summary>
 class Input
 {
 

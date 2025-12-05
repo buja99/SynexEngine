@@ -3,6 +3,7 @@
 #include "BaseScene.h"
 #include "AbstractSceneFactory.h"
 
+/// <summary>シーン切り替えと現在シーンの更新・描画を管理するシングルトンクラス。</summary>
 class SceneManager {
 
 public:

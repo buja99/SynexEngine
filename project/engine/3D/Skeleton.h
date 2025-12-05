@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <assimp/scene.h>
+
+/// <summary>ボーン階層の構築と各ボーンの行列更新を行うスケルトン管理クラス。</summary>
 class Skeleton {
 
 

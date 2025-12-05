@@ -42,7 +42,7 @@ void TitleScene::Initialize() {
 	//testModel_->SetUseAreaLight(true);         
 	
 	testModel_->SetScale({ 10.0f, 10.0f, 10.0f });
-	
+	testWorldTransform_->scale_ = { 10.0f,10.0f,10.0f };
 
 	
 	

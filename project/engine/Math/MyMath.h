@@ -9,6 +9,8 @@
 #include <assimp/scene.h>
 #include "WorldTransform.h"
 
+
+/// <summary>3D計算に必要なベクトル・行列・クォータニオン演算を提供する数学ユーティリティ。</summary>
 namespace  MyMath
 {
 

@@ -18,6 +18,8 @@ struct ConstBufferData {
     Matrix4x4 world;
     Matrix4x4 viewProjectionInverse;
 };
+
+/// <summary>キューブマップを用いてスカイボックスを描画するクラス。</summary>
 class Skybox {
 public:
     void Initialize(DirectXCommon* dxCommon, const std::wstring& ddsFilePath);

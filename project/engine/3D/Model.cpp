@@ -292,23 +292,23 @@ void Model::DrawRecursive(
 	const Matrix4x4& viewProj,
 	TransformationMatrix* transformData) {
 
-#ifdef _DEBUG
-	if (node.name == "Root" || node.name == "Armature" || node.name == "mixamorig:Hips") {
-		Vector3 s, r, t;
-		MyMath::DecomposeMatrix(node.localMatrix, s, r, t);
-
-		char buf[256];
-		sprintf_s(
-			buf,
-			"Node %s  S(%.3f, %.3f, %.3f)  T(%.3f, %.3f, %.3f)  R(%.3f, %.3f, %.3f)\n",
-			node.name.c_str(),
-			s.x, s.y, s.z,
-			t.x, t.y, t.z,
-			r.x, r.y, r.z
-		);
-		OutputDebugStringA(buf);
-	}
-#endif
+//#ifdef _DEBUG
+//	if (node.name == "Root" || node.name == "Armature" || node.name == "mixamorig:Hips") {
+//		Vector3 s, r, t;
+//		MyMath::DecomposeMatrix(node.localMatrix, s, r, t);
+//
+//		char buf[256];
+//		sprintf_s(
+//			buf,
+//			"Node %s  S(%.3f, %.3f, %.3f)  T(%.3f, %.3f, %.3f)  R(%.3f, %.3f, %.3f)\n",
+//			node.name.c_str(),
+//			s.x, s.y, s.z,
+//			t.x, t.y, t.z,
+//			r.x, r.y, r.z
+//		);
+//		OutputDebugStringA(buf);
+//	}
+//#endif
 
 	// ─────────────────────────────
 	// 1. 루트 노드 판정

@@ -26,6 +26,7 @@ class Object3dCommon;
 
 using Microsoft::WRL::ComPtr;
 
+/// <summary>3Dモデルの変換・ライティング・描画処理を管理するクラス。</summary>
 class Object3d
 {
 	public:

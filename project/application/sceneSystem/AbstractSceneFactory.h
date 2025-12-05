@@ -4,10 +4,7 @@
 #include <string>
 #include <memory>
 
-/// <sumary>
-/// シーン工場(概念)
-/// </summary>
-
+/// <summary>シーン生成を抽象化するためのファクトリ基底クラス。</summary>
 class AbstractSceneFactory {
 public:
 	/// 仮想デストラクタ

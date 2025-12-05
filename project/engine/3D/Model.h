@@ -56,7 +56,7 @@ struct ModelData
 	std::vector<SubMesh>    subMeshes;
 };
 
-
+/// <summary>モデルデータの読み込みとGPUリソース生成・描画処理を行うクラス。</summary>
 class Model
 {
 

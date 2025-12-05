@@ -9,6 +9,7 @@ class DirectXCommon;
 class ModelCommon;
 class Object3dCommon;
 
+/// <summary>モデルの読み込みとインスタンス管理を行うシングルトンクラス。</summary>
 class ModelManager
 {
 

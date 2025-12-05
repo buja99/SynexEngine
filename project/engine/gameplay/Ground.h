@@ -12,7 +12,7 @@
 #include "WorldTransform.h"
 #include "ParticleManager.h"
 
-
+/// <summary>地面モデルの生成・更新・描画を行うシンプルなオブジェクト。</summary>
 class Ground{
 
 

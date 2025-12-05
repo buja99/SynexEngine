@@ -6,9 +6,8 @@
 
 using Microsoft::WRL::ComPtr;
 
-/// <summary>
-/// ワールド変換データ
-/// </summary>
+
+/// <summary>オブジェクトのスケール・回転・平行移動からワールド行列を生成しGPUへ転送するクラス。</summary>
 class WorldTransform {
 public:
     WorldTransform();

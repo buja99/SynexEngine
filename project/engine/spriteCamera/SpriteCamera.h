@@ -1,5 +1,7 @@
 #pragma once
 #include "Matrix4x4.h"
+
+/// <summary>2Dスプライト描画のための固定ビューと正射影行列を提供するカメラクラス。</summary>
 class SpriteCamera {
 public:
     void Initialize(float width, float height, float nearZ = 0.0f, float farZ = 1.0f);

@@ -15,6 +15,8 @@ struct UploadResult {
     bool isCubemap = false;                       // Cubemap 여부
 };
 
+
+/// <summary>DirectX12向けにテクスチャデータをGPUへアップロードし必要なリソースを生成するユーティリティ。</summary>
 class TextureUploader {
 public:
     static ComPtr<ID3D12Resource> UploadTexture(

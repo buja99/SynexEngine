@@ -21,6 +21,11 @@
 #include "imgui_impl_win32.h"
 #endif // _DEBUG
 #include <crtdbg.h>
+
+/// <summary>
+/// ゲームアプリケーション全体の初期化・更新・描画・終了処理を管理する基盤クラス。
+/// 派生クラスが「Draw()」を実装することで、統一されたゲームループを提供する。
+/// </summary>
 class Framework {
 public:
 	virtual ~Framework() = default;

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 
+/// <summary>名前をキーにObject3dとWorldTransformを登録・参照するレジストリ。</summary>
 class ModelRegistry {
 public:
     void Register(const std::string& name, Object3d* model, WorldTransform* transform);

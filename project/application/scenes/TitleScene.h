@@ -13,7 +13,7 @@
 #include "WorldTransform.h"
 #include "ParticleEffectLibrary.h"
 
-
+/// <summary>タイトル画面の表示とシーン遷移を管理するシーン。</summary>
 class TitleScene : public BaseScene {
 
 public:
