@@ -1,6 +1,6 @@
 #include "Object3d.hlsli"
 
-
+/// ワールド変換用定数バッファ
 struct TransformationMatrix
 {
     float4x4 WVP;

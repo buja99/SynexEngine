@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <string>
 
-/// <summary>レベルデータの位置・回転・スケールをワールドトランスフォームへ適用するユーティリティ。</summary>
+/// <summary>レベルデータの位置・回転・スケールをワールドトランスフォームへ適用するユーティリティ </summary>
 class LevelApplier {
 public:
     static void ApplyLevelTransforms(

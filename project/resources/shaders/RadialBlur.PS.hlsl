@@ -7,7 +7,7 @@ struct CopyPSInput
 };
 
 // ------------------------------
-// Constant Buffer: RadialBlur 설정값
+//  ラジアルブラー設定
 // ------------------------------
 cbuffer RadialBlurSettings : register(b0)
 {

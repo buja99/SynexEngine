@@ -12,40 +12,44 @@
 
 class Object3dCommon;
 
+/// <summary>位置アニメーション用キーフレーム</summary>
 struct KeyframeVector3 { Vector3 value;    float time; };
+/// <summary>位置アニメーション用キーフレーム</summary>
 struct KeyframeQuaternion { Quaternion value; float time; };
 
+/// <summary>Vector3アニメーションカーブ</summary>
 struct AnimationCurveVector3 { std::vector<KeyframeVector3>    keyframes; };
+/// <summary>Quaternionアニメーションカーブ</summary>
 struct AnimationCurveQuaternion { std::vector<KeyframeQuaternion> keyframes; };
 
 //struct Skeleton;
-
+/// <summary>ノード単位アニメーションチャンネル</summary>
 struct AnimationChannel {
 	std::string nodeName;
 	AnimationCurveVector3    translate;
 	AnimationCurveQuaternion rotate;
 	AnimationCurveVector3    scale;
 };
-
+/// <summary>アニメーションクリップ定義</summary>
 struct AnimationData {
 	std::string name;
 	float duration = 0.0f;
 	std::vector<AnimationChannel> channels;
 };
-
+/// <summary>モデル階層ノード</summary>
 struct Node {
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
 	std::vector<uint32_t> meshIndices;
 };
-
+/// <summary>サブメッシュ定義</summary>
 struct SubMesh {
 	uint32_t indexStart = 0;   // modelData.indices 기준 시작 위치
 	uint32_t indexCount = 0;   // 그릴 인덱스 개수
 	uint32_t materialIndex = 0; // 지금은 0 고정(머티리얼 1개만 사용)
 };
-
+/// <summary>モデルデータ一式</summary>
 struct ModelData
 {
 	std::vector<VertexData> vertices;
@@ -56,17 +60,21 @@ struct ModelData
 	std::vector<SubMesh>    subMeshes;
 };
 
-/// <summary>モデルデータの読み込みとGPUリソース生成・描画処理を行うクラス。</summary>
+/// <summary>モデルデータ読み込みとGPUリソース管理および描画</summary>
 class Model
 {
 
 public:
+
+	/// <summary>モデルデータ読み込みと頂点・インデックス・マテリアル初期化</summary>
 	void Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon ,const std::string& directorypath, const std::string& filename);
 
+	/// <summary>モデル描画</summary>
 	void Draw();
 
 	void Cleanup();
 
+	/// <summary>Assimpを用いたモデルファイル読み込み</summary>
 	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
 
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
@@ -79,6 +87,7 @@ public:
 
 	const ModelData& GetModelData() const { return modelData; }
 
+	/// <summary>ノード階層に基づく再帰描画</summary>
 	void DrawRecursive(const Node& node, const Matrix4x4& parentMatrix, const Matrix4x4& viewProj, TransformationMatrix* transformData);
 
 	

@@ -22,16 +22,18 @@
 #include "ParticleEffectLibrary.h"
 #include "Skybox.h"
 
-/// <summary>ゲーム内のプレイシーンを構成し、プレイヤー・敵・カメラ・レベル等を管理するシーン。</summary>
+/// <summary>ゲーム内のプレイシーンを構成し、プレイヤー・敵・カメラ・レベル等を管理するシーン </summary>
 class GameScene : public BaseScene {
 public:
 
 	~GameScene() override;
 
+	/// <summary> ゲームプレイに必要なリソースを読み込み,プレイヤー・敵・レベル・カメラ・エフェクトを初期化 </summary>
 	void Initialize() override;
 
 	void Update() override;
 
+	/// <summary> ゲームシーンの描画処理,スプライト、3Dオブジェクト、エフェクトを順序通りに描画 </summary>
 	void Draw() override;
 
 	void Finalize() override;

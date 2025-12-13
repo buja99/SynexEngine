@@ -2,7 +2,7 @@
 
 class SceneManager;
 
-/// <summary>ゲーム内シーンの共通インターフェースを定義する基底クラス。</summary>
+/// <summary>ゲーム内シーンの共通インターフェースを定義する基底クラス </summary>
 class BaseScene {
 public:
 	virtual ~BaseScene() = default;

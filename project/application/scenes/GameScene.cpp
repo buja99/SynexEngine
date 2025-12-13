@@ -180,7 +180,7 @@ void GameScene::Update() {
 
 	ground_->Update();
 
-	player_->Updata();
+	player_->Update();
 	enemy_->Update();
 	effectLibrary_->Update();
 	camera_->Update();

@@ -2,7 +2,7 @@
 #include "DirectXCommon.h"
 #include <memory>
 
-/// <summary>モデル処理で使用する共通のDirectXコンテキストを提供するクラス。</summary>
+/// <summary>モデル処理用の共通DirectXコンテキスト管理</summary>
 class ModelCommon
 {
 

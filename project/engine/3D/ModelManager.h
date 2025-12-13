@@ -9,7 +9,7 @@ class DirectXCommon;
 class ModelCommon;
 class Object3dCommon;
 
-/// <summary>モデルの読み込みとインスタンス管理を行うシングルトンクラス。</summary>
+/// <summary>モデル読み込みとインスタンス管理のシングルトン</summary>
 class ModelManager
 {
 
@@ -19,11 +19,13 @@ public:
 
 
 
-
+    /// <summary>モデル共通リソース初期化</summary>
     void Initialize(DirectXCommon* dxCommon);
 
+    /// <summary>モデル読み込みと登録</summary>
     void LoadModel(const std::string& directorypath, const std::string& filePath);
 
+    /// <summary>登録済みモデル取得</summary>
     Model* FindModel(const std::string& filePath);
 
     void Finalize();

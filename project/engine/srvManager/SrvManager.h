@@ -5,7 +5,7 @@
 #include <math.h>
 using Microsoft::WRL::ComPtr;
 
-/// <summary>SRVディスクリプタヒープの確保・管理とビュー登録を行う管理クラス。</summary>
+/// <summary>SRVディスクリプタヒープ管理とビュー登録</summary>
 class SrvManager {
 
 public:

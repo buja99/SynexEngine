@@ -3,7 +3,7 @@
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 
-
+/// ビネットエフェクト設定
 cbuffer VignetteSettings : register(b0)
 {
     float vignetteStrength;

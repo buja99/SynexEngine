@@ -5,7 +5,7 @@
 #include <string>
 #include <random>
 
-/// <summary>複数のパーティクル効果を管理し生成・描画を一元化するライブラリクラス。</summary>
+/// <summary>複数パーティクル効果管理と生成・描画集約</summary>
 class ParticleEffectLibrary {
 public:
     void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera);

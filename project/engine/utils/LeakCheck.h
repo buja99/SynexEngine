@@ -15,6 +15,7 @@
 
 using Microsoft::WRL::ComPtr;
 
+/// <summary>DirectXリーク検出用RAIIクラス</summary>
 class LeakCheck {
 public:
 

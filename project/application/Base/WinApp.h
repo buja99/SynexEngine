@@ -4,8 +4,8 @@
 #pragma comment(lib, "winmm.lib")
 
 /// <summary>
-/// Windows アプリケーションのウィンドウ生成とメッセージ処理を行う基盤クラス。
-/// HWND / HINSTANCE の管理および Win32 メッセージループを提供する。
+/// Windows アプリケーションのウィンドウ生成とメッセージ処理を行う基盤クラス
+/// HWND / HINSTANCE の管理および Win32 メッセージループを提供
 /// </summary>
 
 class WinApp {

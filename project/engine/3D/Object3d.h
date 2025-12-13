@@ -26,14 +26,16 @@ class Object3dCommon;
 
 using Microsoft::WRL::ComPtr;
 
-/// <summary>3Dモデルの変換・ライティング・描画処理を管理するクラス。</summary>
+/// <summary>3Dモデルの変換・ライティング・描画管理</summary>
 class Object3d
 {
 	public:
 		~Object3d();
 
+	/// <summary>Object3d基本リソース初期化</summary>
 	void Initialize(Object3dCommon* object3dCommon, WorldTransform* worldTransform);
 	
+	/// <summary>Transform・アニメーション・行列更新</summary>
 	void Update();
 	void Draw();
 	void Cleanup();

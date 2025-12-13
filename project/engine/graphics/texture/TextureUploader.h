@@ -6,7 +6,7 @@
 using Microsoft::WRL::ComPtr;
 
 
-// SRV 생성 정보까지 포함한 업로드
+/// <summary>テクスチャアップロード結果一式</summary>
 struct UploadResult {
     ComPtr<ID3D12Resource> texture;               // 업로드된 텍스처
     ComPtr<ID3D12Resource> intermediate;          // 중간 버퍼
@@ -16,9 +16,12 @@ struct UploadResult {
 };
 
 
-/// <summary>DirectX12向けにテクスチャデータをGPUへアップロードし必要なリソースを生成するユーティリティ。</summary>
+/// <summary>DirectX12テクスチャアップロードと関連リソース生成</summary>
 class TextureUploader {
+
 public:
+
+    /// <summary>コマンドリストへ転送コマンド登録とGPUテクスチャ生成</summary>
     static ComPtr<ID3D12Resource> UploadTexture(
         ComPtr<ID3D12Device> device,
         ID3D12GraphicsCommandList* commandList,
@@ -27,13 +30,14 @@ public:
     );
     
 
-    // Skybox 등에서 사용할 Upload + SRV 정보 제공
+    /// <summary>アップロード結果とSRV定義生成</summary>
     static UploadResult UploadAndDescribe(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* commandList,
         const DirectX::ScratchImage& mipImages
     );
 
+    /// <summary>アップロード実行とフェンス待機</summary>
     static ComPtr<ID3D12Resource> UploadAndWait(
         ComPtr<ID3D12Device> device,
         ComPtr<ID3D12CommandQueue> commandQueue,

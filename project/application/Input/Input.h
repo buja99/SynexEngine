@@ -6,8 +6,8 @@
 #include "WinApp.h"
 
 /// <summary>
-/// DirectInput を用いてキーボード入力を取得し、押下状態・トリガー状態を管理するシングルトンクラス。
-/// 毎フレーム現在のキー状態と前フレームの状態を更新し、入力判定を提供する。
+/// DirectInput を用いてキーボード入力を取得し、押下状態・トリガー状態を管理するシングルトンクラス
+/// 毎フレーム現在のキー状態と前フレームの状態を更新し、入力判定を提供
 /// </summary>
 class Input
 {
@@ -21,8 +21,13 @@ public:
 
 	void Finalize();
 
+	/// <summary>
+	/// DirectInput を初期化し、キーボードデバイスを生成
+	/// </summary>
+	/// <param name="winApp">ウィンドウ管理クラス </param>
 	void Initialize(WinApp* winApp);
 
+	/// <summary> 毎フレーム呼び出し、現在のキー状態と前フレームの状態を更新 </summary>
 	void Update();
 
 	bool PushKey(BYTE keyNumber);

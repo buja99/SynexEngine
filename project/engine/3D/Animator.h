@@ -3,16 +3,14 @@
 #include "Skeleton.h"
 
 
-/// <summary>
-///  アニメーション再生と骨格(Skeleton)の各ボーン変換を更新するクラス。
-/// </summary>
+/// <summary> アニメーション再生と骨格(Skeleton)の各ボーン変換を更新クラス </summary>
 class Animator {
 
 public:
-    // 애니메이션 시작
+    /// <summary>アニメーション再生開始</summary>
     void Play(const AnimationData& anim, bool loop = true, float startTime = 0.0f);
 
-    // 매 프레임 갱신 (Skeleton의 각 본 localMatrix를 갱신)
+    /// <summary>再生中アニメーションをSkeletonへ反映</summary>
     void Update(float deltaTime, Skeleton& skeleton);
 
     // 상태/제어

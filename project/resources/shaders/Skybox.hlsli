@@ -1,8 +1,9 @@
+/// スカイボックス用頂点入力
 struct VertexInput
 {
     float4 position : POSITION;
 };
-
+/// スカイボックス用VS出力
 struct VertexShaderOutput
 {
     float4 position : SV_POSITION;

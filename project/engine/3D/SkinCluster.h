@@ -8,7 +8,7 @@ using Microsoft::WRL::ComPtr;
 
 class Skeleton;
 
-/// <summary>スキニング用に最終ボーン行列を計算しGPUへ転送するクラス。</summary>
+/// <summary>スキニング用最終ボーン行列計算とGPU転送</summary>
 class SkinCluster {
 
 public:
@@ -17,7 +17,10 @@ public:
     SkinCluster(const SkinCluster&) = delete;
     SkinCluster& operator=(const SkinCluster&) = delete;
 
+    /// <summary>スキニング用ボーン行列バッファ初期化</summary>
     void Initialize(DirectXCommon* dxCommon, size_t boneCount);
+
+    /// <summary>Skeletonから最終ボーン行列更新</summary>
     void Update(const Skeleton& skeleton);
 	// GPU 주소 / 리소스 반환
     D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const;

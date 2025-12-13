@@ -11,15 +11,18 @@
 
 using Microsoft::WRL::ComPtr;
 
+/// <summary>スカイボックス用頂点フォーマット</summary>
 struct VertexPos {
     Vector4 position;
 };
+
+/// <summary>スカイボックス用定数バッファ</summary>
 struct ConstBufferData {
     Matrix4x4 world;
     Matrix4x4 viewProjectionInverse;
 };
 
-/// <summary>キューブマップを用いてスカイボックスを描画するクラス。</summary>
+/// <summary>キューブマップによるスカイボックス描画</summary>
 class Skybox {
 public:
     void Initialize(DirectXCommon* dxCommon, const std::wstring& ddsFilePath);

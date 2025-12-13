@@ -11,7 +11,7 @@ using Microsoft::WRL::ComPtr;
 
 enum class DrawMode { Background, Foreground };
 
-/// <summary>スプライト描画のための共通パイプラインやルートシグネチャを管理する基盤クラス。</summary>
+/// <summary>スプライト描画のための共通パイプラインやルートシグネチャを管理する基盤クラス </summary>
 class SpriteCommon
 {
 
@@ -22,7 +22,8 @@ public:
 		static SpriteCommon instance;
 		return &instance;
 	}
-
+	/// <summary>スプライト共通のルートシグネチャ/PSOを生成し初期化 </summary>
+	/// <param name="dxCommon">DirectX共通管理クラス </param>
 	void Initialize(DirectXCommon* dxCommon);
 	void SetUIPipeline();         // UI용 (DepthWrite 없음)
 	void Set3DOverlayPipeline();  // 3D 위에 Sprite 덮기용 (DepthWrite 있음)

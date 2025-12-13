@@ -23,8 +23,8 @@
 #include <crtdbg.h>
 
 /// <summary>
-/// ゲームアプリケーション全体の初期化・更新・描画・終了処理を管理する基盤クラス。
-/// 派生クラスが「Draw()」を実装することで、統一されたゲームループを提供する。
+/// ゲームアプリケーション全体の初期化・更新・描画・終了処理を管理する基盤クラス
+/// 派生クラスが「Draw()」を実装することで、統一されたゲームループを提供
 /// </summary>
 class Framework {
 public:
@@ -32,6 +32,7 @@ public:
 
 	void CheckHeap();
 
+	/// <summary> DirectX・入力・シーン管理など、ゲーム実行に必要な基盤を初期化 </summary>
 	virtual void Initialize();
 
 	virtual void Finalize();
@@ -40,6 +41,7 @@ public:
 
 	virtual void Draw() = 0;
 
+	/// <summary> 初期化から終了までの統一されたゲームループを実行 </summary>
 	void Run();
 
 	virtual bool GetIsEndReqest() { return isEndReqest_; }

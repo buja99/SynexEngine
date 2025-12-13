@@ -1,7 +1,7 @@
 #ifndef SPRITE_HLSLI
 #define SPRITE_HLSLI
 
-// 정점 셰이더 출력 구조체
+/// スプライト用VS出力
 struct VertexShaderOutput
 {
     float4 position : SV_POSITION;

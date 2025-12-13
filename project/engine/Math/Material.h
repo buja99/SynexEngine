@@ -3,6 +3,7 @@
 #include "Matrix4x4.h"
 #include <string>
 
+/// <summary>3D描画用マテリアル定数</summary>
 struct  Material
 {
 	Vector4 color;               // 16B
@@ -20,12 +21,14 @@ struct  Material
 	int32_t useEnvironmentMap;
 };
 
+/// <summary>マテリアルリソース情報</summary>
 struct MaterialData
 {
 	std::string textureFilePath;
 	uint32_t textureIndex = 0;
 };
 
+/// <summary>スプライト用マテリアル定数</summary>
 struct SpriteMaterial {
 	Vector4 color;
 	Matrix4x4 uvTransform;

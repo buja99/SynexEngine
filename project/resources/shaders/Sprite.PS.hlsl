@@ -1,5 +1,5 @@
 
-
+/// スプライト用マテリアル定数
 cbuffer Material : register(b0)
 {
     float4 color;

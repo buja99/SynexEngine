@@ -17,10 +17,13 @@
 #include <functional>
 #include <unordered_map>
 
+/// <summary>パーティクル用頂点フォーマット</summary>
 struct ParticleVertex {
     Vector4 position;  // 3D 위치
     Vector2 texcoord;
 };
+
+/// <summary>パーティクル基本状態</summary>
 struct Particle //파티클 1개의 상태 (위치, 속도, 색상, 생존시간 등)
 {         
     Transform transform;
@@ -31,12 +34,16 @@ struct Particle //파티클 1개의 상태 (위치, 속도, 색상, 생존시간
     float currentTime;
 
 };
+
+/// <summary>GPUインスタンシング用パーティクル定数</summary>
 struct  ParticleForGPU    //GPU에 넘길 인스턴싱용 데이터 (WVP, 색상 등)
 {
     Matrix4x4 WVP;
     Matrix4x4 World;
     Vector4 color;
 };
+
+/// <summary>パーティクル放出設定</summary>
 struct Emitter          //파티클을 방출하는 발사기(Emitter) 상태 (위치, 속도, 색상, 생존시간 등)
 {
     Transform transform;
@@ -44,6 +51,8 @@ struct Emitter          //파티클을 방출하는 발사기(Emitter) 상태 (�
     float frequency;
     float frequencyTime;
 };
+
+/// <summary>テクスチャ単位パーティクルグループ</summary>
 struct ParticleGroup {         //파티클들의 묶음. 텍스처별로 나눔
     std::string textureFilePath;
     uint32_t textureIndex;
@@ -59,7 +68,7 @@ const int32_t initialInstanceCount = 100;
 
 using ParticleGenerator = std::function<Particle(std::mt19937&, const Vector3&)>;
 
-/// <summary>複数のパーティクルグループを生成・更新・描画する管理クラス。</summary>
+/// <summary>複数パーティクルグループ管理</summary>
 class ParticleManager {
 public:
     void Initialize(DirectXCommon* directXCommon, SrvManager* srvManager);

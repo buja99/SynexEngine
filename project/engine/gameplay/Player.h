@@ -15,7 +15,7 @@
 #include "Enemy.h"
 #include "ParticleEffectLibrary.h"
 
-/// <summary>移動・攻撃・パーツ描画と当たり判定を行うプレイヤーキャラクター。</summary>
+/// <summary>移動・攻撃・パーツ描画・当たり判定を持つプレイヤーキャラクター</summary>
 class Player {
 
 
@@ -23,9 +23,11 @@ public:
 
 	~Player();
 
+	/// <summary>プレイヤー構成パーツ生成と初期配置</summary>
 	void Initialize();
 
-	void Updata();
+	/// <summary>移動・攻撃・当たり判定更新</summary>
+	void Update();
 
 	void Draw();
 
@@ -47,7 +49,7 @@ public:
 private:
 
 	Vector3 position;
-	
+
 	float speed = 0.5f;
 
 	Camera* camera_ = nullptr;
@@ -72,5 +74,6 @@ private:
 	std::vector<BaseEnemy*> enemies_;
 	ParticleEffectLibrary* effectLibrary_ = nullptr;
 	std::mt19937* randomEngine_ = nullptr;
+
 };
 

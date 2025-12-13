@@ -1,5 +1,5 @@
 
-
+/// スプライト用WVP行列
 cbuffer MatrixBuffer : register(b1) // WVP
 {
     float4x4 WVP;

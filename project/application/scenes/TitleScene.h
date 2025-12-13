@@ -13,13 +13,14 @@
 #include "WorldTransform.h"
 #include "ParticleEffectLibrary.h"
 
-/// <summary>タイトル画面の表示とシーン遷移を管理するシーン。</summary>
+/// <summary>タイトル画面の表示とシーン遷移を管理するシーン </summary>
 class TitleScene : public BaseScene {
 
 public:
 
 	~TitleScene() override;
 
+	/// <summary> タイトル画面で使用するモデル・スプライト・カメラ・エフェクトを初期化 </summary>
 	void Initialize() override;
 
 	void Update() override;

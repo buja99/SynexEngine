@@ -6,21 +6,24 @@
 #include "Vector3.h"
 #include <memory>
 
+/// <summary>GPU送信用カメラ位置データ</summary>
 struct CameraForGPU {
 	Vector3 worldPosition;
 };
 
+/// <summary>カメラ制御モード</summary>
 enum class CameraMode {
 	Transform, // 위치+회전 기반
 	LookAt     // Eye, Target, Up 기반
 };
 
-/// <summary>ビュー・プロジェクション行列を生成し3Dシーンの視点を管理するカメラクラス。</summary>
+/// <summary>ビュー・プロジェクション行列と視点管理</summary>
 class Camera
 {
 
 public:
 
+	/// <summary>モード別ビュー行列と投影行列更新</summary>
 	void Update();
 
 	//void UpdateMatrix();

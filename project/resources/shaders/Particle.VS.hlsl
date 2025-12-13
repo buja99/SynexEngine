@@ -1,7 +1,7 @@
 #include "Particle.hlsli"
 
 
-
+/// GPUインスタンシング用パーティクル定数
 struct ParticleForGPU
 {
     float4x4 WVP;

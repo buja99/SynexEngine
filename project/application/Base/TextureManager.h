@@ -12,8 +12,8 @@ using Microsoft::WRL::ComPtr;
 
 
 /// <summary>
-/// テクスチャの読み込み、SRV 作成、メタデータ管理を一括で行うマネージャークラス。
-/// 同じファイルの重複読み込みを防ぎ、GPU リソースと SRV を自動的に管理する。
+/// テクスチャの読み込み、SRV 作成、メタデータ管理を一括で行うマネージャークラス
+/// 同じファイルの重複読み込みを防ぎ、GPU リソースと SRV を自動的に管理
 /// </summary>
 class TextureManager
 {
@@ -77,6 +77,7 @@ private:
 
 private:
 
+	/// <summary>テクスチャGPUリソースとSRV管理データ</summary>
 	struct TextureData {
 		DirectX::TexMetadata metadata;
 		ComPtr<ID3D12Resource> resource;

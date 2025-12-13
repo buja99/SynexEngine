@@ -7,7 +7,7 @@
 using Microsoft::WRL::ComPtr;
 
 
-/// <summary>3D描画に必要な共通パイプラインとステンシル処理を管理する基盤クラス。</summary>
+/// <summary>3D描画用共通パイプラインとステンシル処理管理</summary>
 class Object3dCommon
 {
 
@@ -18,20 +18,26 @@ public:
 		return &instance;
 	}
 
+	/// <summary>Object3D共通パイプライン初期化</summary>
 	void Initialize(DirectXCommon* dxCommon);
 
 	void Finalize();
 
+	/// <summary>Object3D共通描画ステート設定</summary>
 	void CommonDrawSettings();
 
+	/// <summary>ステンシル書き込み描画設定</summary>
 	void stencilMaskSettings();
 
+	/// <summary>ステンシルテスト描画設定</summary>
 	void SetStencilTestDrawSettings();
 
+	/// <summary>ステンシルマスク矩形設定</summary>
 	void SetStencilQuadArea(float left, float right, float top, float bottom,float z);
 
 	void SetStencilWriteMaskValue(uint8_t value);
 
+	/// <summary>ステンシル書き込み用パイプライン設定</summary>
 	void SetStencilWritePipeline();
 
 
@@ -91,6 +97,7 @@ private:
 
 	Camera* defaultCamera = nullptr;
 
+	/// <summary>ステンシルマスク描画用簡易頂点</summary>
 	struct SimpleVertex {
 		Vector3 pos;
 	};

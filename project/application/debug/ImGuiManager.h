@@ -9,8 +9,8 @@
 #include "SrvManager.h"
 
 /// <summary>
-/// ImGui の初期化、フレーム管理、描画処理を行うデバッグ用マネージャークラス。
-/// _DEBUG ビルド時のみ有効になり、DirectX12 と Win32 の ImGui 実装を制御する。
+/// ImGui の初期化、フレーム管理、描画処理を行うデバッグ用マネージャークラス
+/// _DEBUG ビルド時のみ有効になり、DirectX12 と Win32 の ImGui 実装を制御
 /// </summary>
 class ImGuiManager {
 public:

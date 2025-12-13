@@ -7,12 +7,13 @@
 using Microsoft::WRL::ComPtr;
 
 
-/// <summary>オブジェクトのスケール・回転・平行移動からワールド行列を生成しGPUへ転送するクラス。</summary>
+/// <summary>スケール・回転・平行移動によるワールド行列とGPU転送</summary>
 class WorldTransform {
 public:
     WorldTransform();
     ~WorldTransform();
-    // 定数バッファ用データ構造体
+
+    /// <summary>ワールド行列用定数バッファ</summary>
     struct ConstBufferDataWorldTransform {
         Matrix4x4 matWorld;
     };

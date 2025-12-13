@@ -16,8 +16,8 @@
 using Microsoft::WRL::ComPtr;
 
 /// <summary>
-/// DirectX12 の初期化、描画前後処理、RTV/DSV 管理を行う中核クラス。
-/// オフスクリーン描画および各種ポストエフェクトも制御する。
+/// DirectX12 の初期化、描画前後処理、RTV/DSV 管理を行う中核クラス
+/// オフスクリーン描画および各種ポストエフェクトも制御する
 /// </summary>
 
 class DirectXCommon
@@ -29,6 +29,10 @@ public:
 
 	~DirectXCommon();
 
+	/// <summary>
+	/// DirectX12 デバイス、スワップチェイン、各種描画リソースを初期化
+	/// </summary>
+	/// <param name="winApp">ウィンドウ管理クラス</param>
 	void Initialize(WinApp* winApp);
 
 	void Device();
@@ -51,9 +55,15 @@ public:
 	void InitializeViewport();
 	void InitializeScissor();
 
+	/// <summary>オフスクリーンレンダーターゲットへの描画を開始 </summary>
 	void RenderTexturePreDraw();
+
+	/// <summary>オフスクリーンレンダーターゲットへの描画を開始 </summary>
 	void RenderTexturePostDraw();
+
+	/// <summary> オフスクリーン描画終了後、シェーダーリソースとして利用可能に </summary>
 	void PreDraw();
+	/// <summary> フレーム描画終了後の処理を行い、GPU実行と画面表示を行う </summary>
 	void PostDraw();
 
 	IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,
@@ -89,6 +99,7 @@ public:
 	void InitializeOffscreenDSV();
 	//Grayscale
 	void InitializeGrayscalePipeline();
+	/// <summary>グレースケールエフェクトを適用して画面に描画 </summary>
 	void DrawGrayscaleToSwapChain();
 	void SetGrayscaleStrength(float strength);
 	bool IsGrayscaleEnabled() const { return useGrayscale_; }
@@ -97,6 +108,7 @@ public:
 
 	//Vignette
 	void InitializeVignettePipeline(); 
+	/// <summary>ビネットエフェクトを適用して画面に描画 </summary>
 	void DrawVignetteToSwapChain();  
 	void SetVignetteEnabled(bool enabled);
 	bool IsVignetteEnabled() const { return useVignette_; }
@@ -105,6 +117,7 @@ public:
 
 	//RadialBlur
 	void InitializeRadialBlurPipeline();
+	/// <summary>ラジアルブラーエフェクトを適用して画面に描画 </summary>
 	void DrawRadialBlurToSwapChain();
 	void SetRadialBlurEnabled(bool enabled);
 	bool IsRadialBlurEnabled() const { return useRadialBlur_; }

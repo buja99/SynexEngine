@@ -57,7 +57,7 @@ void Player::Initialize() {
 
 }
 
-void Player::Updata() {
+void Player::Update() {
 
 	Input* input = Input::GetInstance();
 	Vector3 move = { 0.0f, 0.0f, 0.0f };

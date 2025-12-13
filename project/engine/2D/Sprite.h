@@ -14,12 +14,16 @@ class SpriteCommon;
 
 using Microsoft::WRL::ComPtr; 
 
-/// <summary>2Dスプライトの変換・描画処理を行うクラス。</summary>
+/// <summary>2Dスプライトの変換・描画処理を行うクラス </summary>
 class Sprite
 {
 
 public:
-
+    /// <summary>
+    /// スプライト描画に必要なGPUリソースを生成し初期化
+    /// </summary>
+    /// <param name="common">スプライト共通描画管理クラス </param>
+    /// <param name="texturePath">使用するテクスチャのパス</param>
 	void Initialize(SpriteCommon* common, const std::string& texturePath);
 	void Update();
 	void Draw();
@@ -43,11 +47,6 @@ private:
 	void UpdateVertices();
 	void UpdateMatrix();
 
-
-    struct TransformationMatrix {
-        Matrix4x4 WVP;
-        Matrix4x4 World;
-    };
 
     // 상태 값
     Vector2 position_ = {};

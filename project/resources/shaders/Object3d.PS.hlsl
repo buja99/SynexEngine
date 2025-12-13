@@ -1,7 +1,7 @@
 #include "Object3d.hlsli"
 
 
-
+/// マテリアル定数
 struct Material
 {
     float4 color;
@@ -18,17 +18,19 @@ struct Material
     int useEnvironmentMap;
 };
 
-
+/// ディレクショナルライト
 struct DirectionalLight
 {
     float4 color;
     float3 direction;
     float intensity;
 };
+/// カメラ定数
 struct Camera
 {
     float3 worldPosition;
 };
+/// ポイントライト
 struct PointLight
 {
     float4 color;
@@ -37,6 +39,7 @@ struct PointLight
     float radius;
     float decay;
 };
+/// スポットライト
 struct SpotLight
 {
     float4 color;      // 16B
@@ -50,12 +53,12 @@ struct SpotLight
     float decay;
     float radius;
 };
-
+/// 環境光
 struct AmbientLight
 {
     float4 color; // ambient 색상 (보통 약간 어두운 색)
 };
-
+/// エリアライト
 struct AreaLight
 {
     float4 color; // 조명 색상

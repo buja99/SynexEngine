@@ -2,7 +2,7 @@
 #include "BaseEnemy.h"
 #include "ParticleEffectLibrary.h"
 
-/// <summary>基本的な移動・描画・被弾処理を行う標準的な敵キャラクター。</summary>
+/// <summary>基本移動・描画・被弾処理の標準敵キャラクター</summary>
 class Enemy : public BaseEnemy {
 public:
     Enemy();

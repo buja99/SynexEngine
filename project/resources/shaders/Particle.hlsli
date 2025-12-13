@@ -1,3 +1,4 @@
+/// ワールド変換用定数バッファ
 struct VertexShaderOutput
 {
     float4 position : SV_POSITION;

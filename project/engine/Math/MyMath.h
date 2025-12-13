@@ -10,7 +10,7 @@
 #include "WorldTransform.h"
 
 
-/// <summary>3D計算に必要なベクトル・行列・クォータニオン演算を提供する数学ユーティリティ。</summary>
+/// <summary>3D計算用ベクトル・行列・クォータニオン演算集</summary>
 namespace  MyMath
 {
 
