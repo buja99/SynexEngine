@@ -295,7 +295,9 @@ void Object3dCommon::CreateGraphicsPipeline()
 		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
 	assert(pixelShaderBlob != nullptr);
 
-
+	ComPtr<IDxcBlob> SkinShaderBlob = CompileShader(L"resources/shaders/Object3D_Skin.VS.hlsl",
+		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+	assert(SkinShaderBlob != nullptr);
 
 
 	// InputLayout
@@ -325,25 +327,57 @@ void Object3dCommon::CreateGraphicsPipeline()
 	inputElementDescs[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 	inputElementDescs[2].InstanceDataStepRate = 0;
 
-	inputElementDescs[3].SemanticName = "BLENDINDICES";
-	inputElementDescs[3].SemanticIndex = 0;
-	inputElementDescs[3].Format = DXGI_FORMAT_R32G32B32A32_UINT;
-	inputElementDescs[3].InputSlot = 0;
-	inputElementDescs[3].AlignedByteOffset = (UINT)offsetof(VertexData, boneIndex);
-	inputElementDescs[3].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-	inputElementDescs[3].InstanceDataStepRate = 0;
-
-	inputElementDescs[4].SemanticName = "BLENDWEIGHT";
-	inputElementDescs[4].SemanticIndex = 0;
-	inputElementDescs[4].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs[4].InputSlot = 0;
-	inputElementDescs[4].AlignedByteOffset = (UINT)offsetof(VertexData, boneWeight);
-	inputElementDescs[4].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-	inputElementDescs[4].InstanceDataStepRate = 0;
-
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
+
+	//skin
+	D3D12_INPUT_ELEMENT_DESC skinInputElementDescs[5] = {};
+
+	skinInputElementDescs[0].SemanticName = "POSITION";
+	skinInputElementDescs[0].SemanticIndex = 0;
+	skinInputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	skinInputElementDescs[0].InputSlot = 0;
+	skinInputElementDescs[0].AlignedByteOffset = (UINT)offsetof(VertexData, position);
+	skinInputElementDescs[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	skinInputElementDescs[0].InstanceDataStepRate = 0;
+
+	skinInputElementDescs[1].SemanticName = "TEXCOORD";
+	skinInputElementDescs[1].SemanticIndex = 0;
+	skinInputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	skinInputElementDescs[1].InputSlot = 0;
+	skinInputElementDescs[1].AlignedByteOffset = (UINT)offsetof(VertexData, texCoord);
+	skinInputElementDescs[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	skinInputElementDescs[1].InstanceDataStepRate = 0;
+
+	skinInputElementDescs[2].SemanticName = "NORMAL";
+	skinInputElementDescs[2].SemanticIndex = 0;
+	skinInputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	skinInputElementDescs[2].InputSlot = 0;
+	skinInputElementDescs[2].AlignedByteOffset = (UINT)offsetof(VertexData, normal);
+	skinInputElementDescs[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	skinInputElementDescs[2].InstanceDataStepRate = 0;
+
+	skinInputElementDescs[3].SemanticName = "BLENDINDICES";
+	skinInputElementDescs[3].SemanticIndex = 0;
+	skinInputElementDescs[3].Format = DXGI_FORMAT_R32G32B32A32_UINT;
+	skinInputElementDescs[3].InputSlot = 0;
+	skinInputElementDescs[3].AlignedByteOffset = (UINT)offsetof(VertexData, boneIndex);
+	skinInputElementDescs[3].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	skinInputElementDescs[3].InstanceDataStepRate = 0;
+
+	skinInputElementDescs[4].SemanticName = "BLENDWEIGHT";
+	skinInputElementDescs[4].SemanticIndex = 0;
+	skinInputElementDescs[4].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	skinInputElementDescs[4].InputSlot = 0;
+	skinInputElementDescs[4].AlignedByteOffset = (UINT)offsetof(VertexData, boneWeight);
+	skinInputElementDescs[4].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	skinInputElementDescs[4].InstanceDataStepRate = 0;
+
+	D3D12_INPUT_LAYOUT_DESC skinInputLayoutDesc{};
+	skinInputLayoutDesc.pInputElementDescs = skinInputElementDescs;
+	skinInputLayoutDesc.NumElements = _countof(skinInputElementDescs);
+
 
 	//BlendState
 	D3D12_BLEND_DESC blendDesc{};
@@ -479,13 +513,20 @@ void Object3dCommon::CreateStencilTestPipeline() {
 	auto ps = CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 
 	// Input Layout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[5] = {
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, (UINT)offsetof(VertexData, position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,        0, (UINT)offsetof(VertexData, texCoord), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, (UINT)offsetof(VertexData, normal), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	D3D12_INPUT_ELEMENT_DESC skinInputElementDescs[5] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, (UINT)offsetof(VertexData, position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,        0, (UINT)offsetof(VertexData, texCoord), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, (UINT)offsetof(VertexData, normal), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0,(UINT)offsetof(VertexData, boneIndex),D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,(UINT)offsetof(VertexData, boneWeight),D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
+
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
