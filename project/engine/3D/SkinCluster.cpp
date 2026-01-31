@@ -25,11 +25,13 @@ void SkinCluster::Initialize(DirectXCommon* dxCommon, size_t boneCount) {
 
     boneCount_ = static_cast<uint32_t>(clamped);
 
+    constexpr uint32_t kMaxBones = 256;
+
     // CPU 캐시
-    finalMatrices_.resize(boneCount_, MyMath::MakeIdentity4x4());
+    finalMatrices_.resize(kMaxBones, MyMath::MakeIdentity4x4());
 
     // CBV 규칙(256B alignment)로 사이즈 산출
-    const size_t rawSize = sizeof(Matrix4x4) * static_cast<size_t>(boneCount_);
+    const size_t rawSize = sizeof(Matrix4x4) * static_cast<size_t>(kMaxBones);
     const size_t cbSize = Align256(rawSize);
 
     // 업로드 버퍼 생성 + 매핑

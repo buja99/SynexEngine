@@ -2,19 +2,25 @@
 #include <Windows.h>
 #include "Object3d.h"
 #include "Object3dCommon.h"
+#include <d3dx12.h>
 #include <fstream>
 #ifdef _DEBUG
 #include "imgui.h"
 #endif // _DEBUG
 #include "TextureUploader.h"
 #include "StringUtility.h"
+#include "Logger.h"
 using namespace StringUtility;
-
+using namespace Logger;
 Object3d::~Object3d() {
 	//OutputDebugStringA("Object3d Destructor Called\n");
 	Cleanup();
 }
+static inline UINT Align256(UINT size) { return (size + 255) & ~255u; }
 
+struct DummySkinPaletteCB {
+	Matrix4x4 bones[256]; 
+};
 void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldTransform)
 {
 	assert(object3dCommon != nullptr);
@@ -35,6 +41,48 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WorldTransform* worldT
 	//materialData_->useEnvironmentMap = 0;
 
 	this->camera = object3dCommon->GetDefaultCamera();
+}
+
+void Object3d::CreateDummySkinPalette() {
+	if (dummySkinPaletteVA_ != 0) { return; } 
+
+	// Identity 팔레트 만들기
+	DummySkinPaletteCB dummy{};
+	for (int i = 0; i < 256; i++) { // ← MAX_BONES로 맞춰
+		dummy.bones[i] = MyMath::MakeIdentity4x4(); // 너 프로젝트의 단위행렬 함수로 교체
+	}
+
+	// 업로드 힙 상수버퍼 생성 (가장 단순/안전)
+	Microsoft::WRL::ComPtr<ID3D12Resource> dummyResource;
+	const UINT cbSize = Align256(sizeof(DummySkinPaletteCB));
+
+	auto device = object3dCommon_->GetDxCommon()->GetDevice();
+	// ↑ 이 라인은 네 구조에 맞게 디바이스 얻는 함수로 바꿔야 함
+	// (예: DirectXCommon::GetDevice())
+
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC   resDesc = CD3DX12_RESOURCE_DESC::Buffer(cbSize);
+
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&dummyResource)
+	);
+	assert(SUCCEEDED(hr));
+
+	// CPU에서 쓰기
+	void* mapped = nullptr;
+	dummyResource->Map(0, nullptr, &mapped);
+	memcpy(mapped, &dummy, sizeof(dummy));
+	dummyResource->Unmap(0, nullptr);
+
+	// 리소스는 살아있어야 하므로 멤버로 들고 있어야 함!
+	// 그래서 아래 멤버도 추가해줘야 함.
+	dummySkinPaletteResource_ = dummyResource;
+	dummySkinPaletteVA_ = dummySkinPaletteResource_->GetGPUVirtualAddress();
 }
 
 void Object3d::Update()
@@ -98,10 +146,14 @@ void Object3d::Update()
 				Vector3    scl = sampleVec3(useCh->scale.keyframes, localTime, transform.scale);
 				Quaternion rot = sampleQuat(useCh->rotate.keyframes, localTime, MyMath::EulerToQuaternion(transform.rotate));
 
+
 				// 4) transform에 반영
 				transform.translate = pos;
 				transform.scale = scl;
 				transform.rotate = MyMath::QuaternionToEuler(rot);
+
+
+				;
 			}
 		}
 	}
@@ -147,6 +199,8 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
+	
+
 	if (!model_ || !object3dCommon_ || !camera || !worldTransform_) return;
 
 	//obj3d
@@ -158,14 +212,27 @@ void Object3d::Draw()
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, ambientLightResource_->GetGPUVirtualAddress());
 	object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, areaLightResource_->GetGPUVirtualAddress());
-	
+	const D3D12_GPU_VIRTUAL_ADDRESS skinVA = skinCluster_.GetGPUVirtualAddress();
+	if (skinVA != 0) {
+		object3dCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(11, skinVA);
+	}
 	if (materialData_ && materialData_->useEnvironmentMap != 0) {
 		object3dCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(10, envMapSrvHandle_);
 	}
-
 	// 모델 그리기
 	const Matrix4x4& viewProj = camera->GetViewProjectionMatrix();
 	model_->DrawRecursive(model_->GetModelData().rootNode, worldTransform_->matWorld_, viewProj, transformationMatrixData);
+
+	char buf[128];
+	sprintf_s(buf, "Object3d::Draw called. skinVA=%llx\n",
+		static_cast<unsigned long long>(skinVA));
+	Log(buf);
+	char buf2[128];
+	sprintf_s(buf2, "Object3d::Draw called.  dummyVA=%llx\n",
+		static_cast<unsigned long long>(dummySkinPaletteVA_));
+	Log(buf2);
+	
+
 }
 
 void Object3d::Cleanup()
@@ -264,10 +331,18 @@ ComPtr<ID3D12Resource> Object3d::CreateBufferResource(ComPtr<ID3D12Device> devic
 
 void Object3d::SetModel(const std::string& filePath)
 {
-	modelName_ = filePath;  
+	modelName_ = filePath;
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
+
 	if (!model_) {
 		OutputDebugStringA(("Model not found: " + filePath + "\n").c_str());
+		return;
+	}
+
+	if (model_->HasSkeleton()) { 
+		uint32_t boneCount =static_cast<uint32_t>(model_->GetSkeleton().GetBoneCount());
+
+		skinCluster_.Initialize(object3dCommon_->GetDxCommon(),boneCount);
 	}
 }
 

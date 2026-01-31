@@ -14,6 +14,8 @@
 #include "Camera.h"
 #include "Matrix4x4.h"
 #include "WorldTransform.h"
+#include "SkinCluster.h"
+#include "Animator.h"
 
 //struct ParallelLight {
 //	Vector4 color;     
@@ -35,6 +37,8 @@ class Object3d
 	/// <summary>Object3d基本リソース初期化</summary>
 	void Initialize(Object3dCommon* object3dCommon, WorldTransform* worldTransform);
 	
+	void CreateDummySkinPalette();
+
 	/// <summary>Transform・アニメーション・行列更新</summary>
 	void Update();
 	void Draw();
@@ -120,6 +124,10 @@ private:
 	ComPtr<ID3D12Resource> cameraResource_;
 	CameraForGPU* cameraData_ = nullptr;
 
+	SkinCluster skinCluster_;
+	Animator animator_;
+	bool isSkinningInitialized_ = false;
+
 	//void CreateVertexBuffer();
 	//void InitializeMaterial();
 	void InitializeTransformationMatrix();
@@ -138,5 +146,7 @@ private:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE envMapSrvHandle_{};
 
+	D3D12_GPU_VIRTUAL_ADDRESS dummySkinPaletteVA_ = 0;
+	ComPtr<ID3D12Resource> dummySkinPaletteResource_;
 };
 

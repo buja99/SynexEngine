@@ -2,7 +2,8 @@
 #include "Logger.h"
 #include "StringUtility.h"
 #include <d3dx12.h>
-
+#include "VertexData.h"
+#include <cstddef>
 using namespace Logger;
 using namespace StringUtility;
 
@@ -182,7 +183,7 @@ void Object3dCommon::CreateRootSignature()
 	descriptionRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	//複数設定できるので配列。今回は結果１つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[11] = {};
+	D3D12_ROOT_PARAMETER rootParameters[12] = {};
 	// b0: Material Constant Buffer
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
@@ -229,6 +230,11 @@ void Object3dCommon::CreateRootSignature()
 	rootParameters[10].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[10].DescriptorTable.pDescriptorRanges = &descriptorRange[1];
 	rootParameters[10].DescriptorTable.NumDescriptorRanges = 1;
+
+	rootParameters[11].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[11].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[11].Descriptor.ShaderRegister = 8;
+	rootParameters[11].Descriptor.RegisterSpace = 0;
 
 	descriptionRootSignature.pParameters = rootParameters; //rootParameters配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters); //配列の長さ
@@ -293,20 +299,48 @@ void Object3dCommon::CreateGraphicsPipeline()
 
 
 	// InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[5] = {};
 
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[0].InputSlot = 0;
+	inputElementDescs[0].AlignedByteOffset = (UINT)offsetof(VertexData, position);
+	inputElementDescs[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	inputElementDescs[0].InstanceDataStepRate = 0;
+
 	inputElementDescs[1].SemanticName = "TEXCOORD";
 	inputElementDescs[1].SemanticIndex = 0;
 	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[1].InputSlot = 0;
+	inputElementDescs[1].AlignedByteOffset = (UINT)offsetof(VertexData, texCoord);
+	inputElementDescs[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	inputElementDescs[1].InstanceDataStepRate = 0;
+
 	inputElementDescs[2].SemanticName = "NORMAL";
 	inputElementDescs[2].SemanticIndex = 0;
 	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[2].InputSlot = 0;
+	inputElementDescs[2].AlignedByteOffset = (UINT)offsetof(VertexData, normal);
+	inputElementDescs[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	inputElementDescs[2].InstanceDataStepRate = 0;
+
+	inputElementDescs[3].SemanticName = "BLENDINDICES";
+	inputElementDescs[3].SemanticIndex = 0;
+	inputElementDescs[3].Format = DXGI_FORMAT_R32G32B32A32_UINT;
+	inputElementDescs[3].InputSlot = 0;
+	inputElementDescs[3].AlignedByteOffset = (UINT)offsetof(VertexData, boneIndex);
+	inputElementDescs[3].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	inputElementDescs[3].InstanceDataStepRate = 0;
+
+	inputElementDescs[4].SemanticName = "BLENDWEIGHT";
+	inputElementDescs[4].SemanticIndex = 0;
+	inputElementDescs[4].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs[4].InputSlot = 0;
+	inputElementDescs[4].AlignedByteOffset = (UINT)offsetof(VertexData, boneWeight);
+	inputElementDescs[4].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	inputElementDescs[4].InstanceDataStepRate = 0;
+
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -445,10 +479,12 @@ void Object3dCommon::CreateStencilTestPipeline() {
 	auto ps = CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 
 	// Input Layout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,        0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[5] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, (UINT)offsetof(VertexData, position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,        0, (UINT)offsetof(VertexData, texCoord), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, (UINT)offsetof(VertexData, normal), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0,(UINT)offsetof(VertexData, boneIndex),D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,(UINT)offsetof(VertexData, boneWeight),D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;

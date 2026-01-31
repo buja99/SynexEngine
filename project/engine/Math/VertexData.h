@@ -9,6 +9,9 @@ struct  VertexData
 	Vector4 position;
 	Vector2 texCoord;
 	Vector3 normal;
+
+	uint32_t boneIndex[4]; // BLENDINDICES (uint4)
+	float    boneWeight[4]; // BLENDWEIGHT (float4)
 };
 
 /// <summary>スプライト描画用頂点データ</summary>

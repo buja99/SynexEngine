@@ -31,9 +31,9 @@ void ModelManager::Initialize(DirectXCommon* dxCommon)
 void ModelManager::LoadModel(const std::string& directorypath, const std::string& filePath)
 {
 
-    std::string fullPath = directorypath + "/" + filePath;
+    //std::string fullPath = directorypath + "/" + filePath;
 
-    if (models_.contains(fullPath)) {
+    if (models_.contains(filePath)) {
         return;
     }
     std::unique_ptr<Model> model = std::make_unique<Model>();

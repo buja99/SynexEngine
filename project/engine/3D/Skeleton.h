@@ -20,10 +20,15 @@ public:
     Bone* FindBone(const std::string& name);
     const Bone* FindBone(const std::string& name) const;
 
+    size_t GetBoneCount() const { return bones.size();}
+
+    bool IsValid() const {return !bones.empty() && rootIndex >= 0;}
+    
 public:
 
     std::vector<Bone> bones;
     std::unordered_map<std::string, int> boneIndexMap; // 이름→인덱스
     int rootIndex = -1;
+    
 };
 

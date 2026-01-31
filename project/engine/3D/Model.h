@@ -9,6 +9,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "Skeleton.h"
 
 class Object3dCommon;
 
@@ -58,6 +59,7 @@ struct ModelData
 	Node rootNode;
 	std::vector<AnimationData> animations;
 	std::vector<SubMesh>    subMeshes;
+	Skeleton skeleton;
 };
 
 /// <summary>モデルデータ読み込みとGPUリソース管理および描画</summary>
@@ -93,6 +95,9 @@ public:
 	
 	void InitializeIndexBuffer(const ModelData& modelData);
 
+	const Skeleton& GetSkeleton() const { return skeleton_; }
+	bool HasSkeleton() const {return !skeleton_.bones.empty();}
+
 private:
 	ModelCommon* modelCommon_ = nullptr;
 	// Obj file
@@ -114,6 +119,8 @@ private:
 
 	ComPtr<ID3D12Resource>      indexResource_;    
 	D3D12_INDEX_BUFFER_VIEW     indexBufferView_{};
+
+	Skeleton skeleton_;
 
 };
 

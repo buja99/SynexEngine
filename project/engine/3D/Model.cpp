@@ -1,6 +1,8 @@
 #include "Model.h"
 #include <fstream>
 #include "imgui.h"
+#include "Skeleton.h"
+#include <algorithm>
 
 void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon, const std::string& directorypath, const std::string& filename)
 {
@@ -27,7 +29,7 @@ void Model::Initialize(ModelCommon* modelCommon, Object3dCommon* object3dCommon,
 
 void Model::Draw()
 {
-
+	
 	// 1) VertexBuffer 설정
 	object3dCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	// 2) Texture SRV 설정
@@ -89,6 +91,10 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 
 	ModelData modelData;
 
+	Skeleton skeleton;
+	skeleton.Initialize(scene);
+
+
 	for (uint32_t m = 0; m < scene->mNumMeshes; ++m) {
 		aiMesh* mesh = scene->mMeshes[m];
 
@@ -101,13 +107,88 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 			aiVector3D tex = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][v] : aiVector3D(0, 0, 0);
 
 			VertexData out{};
+
+			for (int i = 0; i < 4; i++) {
+				out.boneIndex[i] = 0;
+				out.boneWeight[i] = 0.0f;
+			}
+
 			out.position = { pos.x, pos.y, pos.z, 1.0f };
 			out.normal = { norm.x, norm.y, norm.z };
 			out.texCoord = { tex.x, tex.y };
 
 			modelData.vertices.push_back(out);
 		}
+		const uint32_t vertexCount = mesh->mNumVertices;
 
+		struct Influence { uint32_t idx; float w; };
+		std::vector<std::vector<Influence>> influences(vertexCount);
+		if (mesh->HasBones() && mesh->mNumBones > 0) {
+
+			for (uint32_t b = 0; b < mesh->mNumBones; ++b) {
+				aiBone* aibone = mesh->mBones[b];
+				std::string boneName = aibone->mName.C_Str();
+
+				// (A) boneName -> skeleton index 매핑
+				auto it = skeleton.boneIndexMap.find(boneName);
+				if (it == skeleton.boneIndexMap.end()) {
+					continue; // 스켈레톤에 없으면 스킵
+				}
+				const uint32_t skelIndex = static_cast<uint32_t>(it->second);
+
+				// (B) offsetMatrix(inverse bind pose)도 여기서 세팅 (필수)
+				aiMatrix4x4 offset = aibone->mOffsetMatrix;
+				offset.Transpose();
+				skeleton.bones[skelIndex].offsetMatrix = MyMath::ConvertMatrix(offset);
+
+				// (C) 각 정점에 웨이트 기록
+				for (uint32_t w = 0; w < aibone->mNumWeights; ++w) {
+					const uint32_t vId = aibone->mWeights[w].mVertexId;
+					const float    val = aibone->mWeights[w].mWeight;
+
+					if (vId < vertexCount && val > 0.0f) {
+						influences[vId].push_back({ skelIndex, val });
+					}
+				}
+			}
+
+			// (D) influences -> 실제 VertexData에 4개만 채우고 정규화
+			for (uint32_t v = 0; v < vertexCount; ++v) {
+				auto& inf = influences[v];
+
+				// 큰 웨이트 우선
+				std::sort(inf.begin(), inf.end(),
+					[](const Influence& a, const Influence& b) { return a.w > b.w; });
+
+				if (inf.size() > 4) {
+					inf.resize(4);
+				}
+
+				// 채울 대상 정점 (modelData.vertices는 메쉬별로 baseVertex가 있음)
+				VertexData& dst = modelData.vertices[baseVertex + v];
+
+			
+
+				// 기본값(스킨 없는 정점 대비)
+				dst.boneIndex[0] = 0; dst.boneIndex[1] = 0; dst.boneIndex[2] = 0; dst.boneIndex[3] = 0;
+				dst.boneWeight[0] = 1.0f; dst.boneWeight[1] = 0.0f; dst.boneWeight[2] = 0.0f; dst.boneWeight[3] = 0.0f;
+
+				if (!inf.empty()) {
+					float sum = 0.0f;
+					for (auto& x : inf) sum += x.w;
+
+					if (sum > 0.0f) {
+						// 일단 0으로 초기화
+						dst.boneWeight[0] = dst.boneWeight[1] = dst.boneWeight[2] = dst.boneWeight[3] = 0.0f;
+
+						for (size_t i = 0; i < inf.size(); ++i) {
+							dst.boneIndex[i] = inf[i].idx;
+							dst.boneWeight[i] = inf[i].w / sum; // 정규화
+						}
+					}
+				}
+			}
+		}
 		SubMesh sub{};
 		sub.indexStart = static_cast<uint32_t>(modelData.indices.size());
 		sub.materialIndex = 0;
@@ -137,23 +218,6 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 
 	modelData.rootNode = ReadNode(scene->mRootNode);
 
-	for (uint32_t m = 0; m < scene->mNumMeshes; ++m) {
-		aiMesh* mesh = scene->mMeshes[m];
-		for (uint32_t b = 0; b < mesh->mNumBones; ++b) {
-			aiBone* aibone = mesh->mBones[b];
-			std::string boneName = aibone->mName.C_Str();
-
-			aiMatrix4x4 offset = aibone->mOffsetMatrix; // inverse bind
-			offset.Transpose();
-			Matrix4x4 converted = MyMath::ConvertMatrix(offset);
-
-			/*auto it = skeleton.boneIndexMap.find(boneName);
-			if (it != skeleton.boneIndexMap.end()) {
-				skeleton.bones[it->second].offsetMatrix = converted;
-			}*/
-
-		}
-	}
 
 	// 애니메이션 로딩 추가 
 	if (scene->HasAnimations()) {
@@ -204,6 +268,7 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 			modelData.animations.push_back(animData);
 		}
 	}
+	modelData.skeleton = skeleton;
 	return modelData;
 }
 
